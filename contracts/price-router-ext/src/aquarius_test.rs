@@ -26,7 +26,7 @@ impl StubPool {
         env.storage().instance().set(&symbol_short!("mode"), &0u32);
     }
     /// 0 ok, 1 get_reserves traps, 2 estimate_swap traps, 3 estimate_swap returns 0,
-    /// 4 get_reserves returns three entries.
+    /// 4 get_reserves returns three entries, 5 estimate_swap returns u128::MAX.
     pub fn set_mode(env: Env, mode: u32) {
         env.storage().instance().set(&symbol_short!("mode"), &mode);
     }
@@ -49,6 +49,7 @@ impl StubPool {
         match mode {
             2 => panic!("swap down"),
             3 => 0,
+            5 => u128::MAX,
             _ => in_amount * 2,
         }
     }
@@ -451,7 +452,7 @@ fn failing_pool_returns_none_and_never_panics() {
     let asset = Asset::Stellar(token.clone());
     // The stub quotes 2x the probe: a clean $2 price.
     assert_eq!(router.lastprice(&asset).unwrap().price, 2 * ONE_USD_14);
-    for mode in [1u32, 2, 3, 4] {
+    for mode in [1u32, 2, 3, 4, 5] {
         stub.set_mode(&mode);
         assert!(router.lastprice(&asset).is_none(), "mode {mode}");
         let c = router.check(&token);
@@ -682,4 +683,14 @@ fn guard_mode_is_still_unsupported() {
         err(a.router.try_set_asset_config(&a.admin, &a.token, &g)),
         RouterError::UnsupportedMode
     );
+}
+
+#[test]
+fn ratio_never_traps_on_oversized_factors() {
+    let env = Env::default();
+    assert_eq!(ratio(&env, &[u128::MAX, u128::MAX, u128::MAX], &[1]), None);
+    assert_eq!(ratio(&env, &[1], &[u128::MAX, u128::MAX, u128::MAX]), None);
+    assert_eq!(ratio(&env, &[5], &[0]), None);
+    assert_eq!(ratio(&env, &[u128::MAX, 2], &[1]), None); // result does not fit u128
+    assert_eq!(ratio(&env, &[10, 10], &[3]), Some(33));
 }

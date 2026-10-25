@@ -217,23 +217,19 @@ fn bits(x: u128) -> u32 {
 /// overflow 256 bits (checked conservatively through bit lengths), a denominator is zero or the
 /// result does not fit a `u128`. Never traps.
 fn ratio(env: &Env, nums: &[u128], dens: &[u128]) -> Option<u128> {
-    let mut nb = 0u32;
-    let mut db = 0u32;
+    // Bound the sizes BEFORE any host multiplication: a 256-bit overflow would trap the host call.
+    let nb: u32 = nums.iter().map(|x| bits(*x)).sum();
+    let db: u32 = dens.iter().map(|x| bits(*x)).sum();
+    if nb > 255 || db > 255 || dens.iter().any(|x| *x == 0) {
+        return None;
+    }
     let mut n = U256::from_u32(env, 1);
     let mut d = U256::from_u32(env, 1);
     for x in nums {
-        nb += bits(*x);
         n = n.mul(&U256::from_u128(env, *x));
     }
     for x in dens {
-        if *x == 0 {
-            return None;
-        }
-        db += bits(*x);
         d = d.mul(&U256::from_u128(env, *x));
-    }
-    if nb > 255 || db > 255 {
-        return None;
     }
     n.div(&d).to_u128()
 }

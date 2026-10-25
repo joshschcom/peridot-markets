@@ -186,7 +186,7 @@ fn upgrade(admin, new_wasm_hash) -> Result<(), RouterError>;   // immediate
 
 `PriceConfig::AquariusOnly(AquariusOnlyCfg { pool, quote_token })` prices a token that has no Reflector feed (a graduated
 launchpad token) from its Aquarius pool, for use by its lending market. No trait change: same ABI as above, Wasm about
-23.5 KB unoptimized, 20.3 KB optimized (`stellar contract build --package price-router-ext`). `RouterError` gains
+23.7 KB unoptimized, 20.4 KB optimized (`stellar contract build --package price-router-ext`). `RouterError` gains
 `7 InvalidPool`, `8 QuoteTokenNotConfigured`, `9 EmptyPool` (the phase 1 codes are unchanged). The text above that says
 `AquariusOnly` is rejected with `UnsupportedMode` is superseded: only `ReflectorWithAquariusGuard` still is.
 
