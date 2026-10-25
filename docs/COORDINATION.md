@@ -115,3 +115,7 @@ Next: fix 1 to 5 (and 6, 7), re-run tests, ask Codex to re-review, then ask Josh
 
 [A] READY: mainnet phase-1
 - Tag `phase-1` set locally (not pushed, no remote). Complete: lending core, DeFindex route, margin enabled, rewards with a real claim. Pending, tracked above: Blend fee vault and route, group 1 liquidator (Lead B), a margin position open/close from the app.
+
+**[A] 2026-10-25 18:10 WET: Blend route live on mainnet**
+- Peridot Blend fee vault `CCHILGAYU4DQXLWSTOA5BQYZD7QJMWUU5PQLS4Z25FLI2WP6IVV3X337` (Fixed V2 pool, 10% take rate, XLM and USDC reserves), allowlisted in the factory. Group 3 "BlendDemo" has an XLM market routed to it through the Blend adapter; supply of 5 XLM and full withdraw verified on mainnet (`docs/DEMO-MAINNET.md`). The fee-vault admin is the deployer key; claim fees with `claim_fees`. USDC markets routed to Blend work the same way (`YieldRoute::Blend { fee_vault }` at `add_market`, then `attach_yield`); the route is fixed at market creation in phase 1.
+- Lead B wizard: offer Blend for XLM and USDC markets using `is_yield_vault_allowed(fee_vault)`; the fee vault id is in `deployments/mainnet.json` as `external.blend_fee_vault`.

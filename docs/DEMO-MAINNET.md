@@ -53,3 +53,20 @@ reward distributor `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF`. R
 | Supply 5 XLM | [29eef561...](https://stellar.expert/explorer/public/tx/29eef56125c0b967ab099795274e1fee6ce6d30c421332010b01068db911e4fc) |
 | `claim` (17,000 stroops paid after 85 s) | [b492b6e9...](https://stellar.expert/explorer/public/tx/b492b6e91ee347d46e2b92ad7b73c4eea127b98776e154f2ea76c18cb960f77b) |
 | Withdraw all | [70799c6f...](https://stellar.expert/explorer/public/tx/70799c6f9f6756d8afb5521fcb2cbf58720260b4fb4310fa611ada7f97843002) |
+
+## Blend route (group 3 "BlendDemo")
+
+Peridot-administered Blend fee vault `CCHILGAYU4DQXLWSTOA5BQYZD7QJMWUU5PQLS4Z25FLI2WP6IVV3X337` on the Blend Fixed V2 pool `CAJJZSGMMM3PD7N33TAPHGBUGTB43OC73HVIK2L2G6BNGGGYOSSYBXBD`, 10% take rate, reserves XLM and USDC enabled.
+Fee-vault Wasm built from script3/fee-vault `1ab9835` (not byte identical to an upstream release; sha256 `adc84e97...`). Group 3 controller `CBGLMNCDWF7GTSGWU5DT5ZGAVM6JABAMJH3G3SMNGKDQQ2NTIG3RU2O2`,
+XLM market `CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM`, Blend adapter `CDLLNAM63H5BVYH4BCNIWY6AULTDO6H455M4NF3HIYUW4XBXW6TPOPIX`.
+
+| Step | Transaction |
+|---|---|
+| `add_reserve_vault` XLM | [516ce844...](https://stellar.expert/explorer/public/tx/516ce8449c634675bfc6b13db2143c28b6e5129e39a2212c8734217f4133d4a7) |
+| `add_reserve_vault` USDC | [87ea39ef...](https://stellar.expert/explorer/public/tx/87ea39ef224051852df1cd4790bd9f0c1f0bf706204e84c0ba6946452fb9ca2f) |
+| Allowlist the fee vault in the factory | [9890568a...](https://stellar.expert/explorer/public/tx/9890568ac336140c351f1c211c6c90be60dcb793a5e705572373778f151dc69b) |
+| `activate_market` XLM (group 3) | [96e91524...](https://stellar.expert/explorer/public/tx/96e91524b862b781719952805323def5e0719b062b2d43e1a0f7dd5e40dd323a) |
+| `attach_yield` (adapter deployed, 20% idle buffer) | [78d937d5...](https://stellar.expert/explorer/public/tx/78d937d5e5c45d294ae51d7462d401862385a529bbb8884fc888bfb1d8939922) |
+| `enter_market` | [6e2f9c20...](https://stellar.expert/explorer/public/tx/6e2f9c202133a430909f02db1ca91743e6a3394feb15d225aa2362279127b5fd) |
+| Supply 5 XLM (4 XLM sent to Blend, adapter value 39,999,999 stroops) | [9af448d3...](https://stellar.expert/explorer/public/tx/9af448d3603385adddacba91b103dbeda8c67946fd32c76090be8bb319658db9) |
+| Withdraw all | [0dafc04e...](https://stellar.expert/explorer/public/tx/0dafc04e651ff663e1a0b8bfe47823d29d7218110ba0c1e3e32a5b33e7fc991c) |
