@@ -144,7 +144,31 @@ fn upgrade(admin, new_wasm_hash) -> Result<(), RouterError>;   // immediate
 
 ## Blend route
 
-_Blend adapter agent (02)._
+`contracts/blend-vault-adapter` is a `YieldVault` over a Blend **fee vault** (script3/fee-vault, Blend's own integration
+contract). One Peridot-administered fee vault wraps one Blend V2 pool with one reserve vault per asset; each market's adapter is
+a single `user` inside it, so the fee vault take rate is Peridot revenue.
+
+- **ABI.** `__constructor(admin, market, underlying, cfg: BlendAdapterConfig { fee_vault, blend_pool })` checks that
+  `fee_vault.get_pool() == blend_pool` and that the fee vault has a reserve vault for `underlying`. All `YieldVault` calls match
+  the trait. Added: `total_supply() -> i128` (the receipt-vault calls it on every boosted redemption, so every boosted vault must
+  expose it; `mock-yield-vault` and the trait do not), plus getters `admin`, `keeper`, `config`. `invest` is ignored (always
+  invests). Errors are a `#[contracterror]` enum (`NotMarket`, `Paused`, `SlippageExceeded`, `LiquidityShortfall`, ...).
+- **Accounting.** Position value is `fee_vault.get_underlying_tokens(underlying, adapter)`; tokens sent straight to the adapter
+  are ignored. `deposit` (only `from == market`) pulls exactly `token.transfer(market, this, amount)`, mints shares at
+  `amount * total_shares / value_before` rounded down (first deposit 1:1, zero shares rejected), then supplies to the fee vault.
+  `withdraw` pays `shares * value / total_shares` rounded down, enforces `min_amounts_out[0]`, and stays open while paused (`pause`
+  blocks deposits only). `get_asset_amounts_per_shares` never panics (`[0]` on any read failure or zero shares).
+- **Auth.** The fee vault's `user.require_auth()` is satisfied because the adapter is the direct caller. The pool's nested
+  `submit(fee_vault, adapter, adapter, [Supply])` and its child `token.transfer(adapter, pool, amount)` need the adapter's
+  authorization, so `deposit` calls `authorize_as_current_contract` with that nested tree (transfer is a CHILD of `submit`, unlike
+  the Aquarius router). `withdraw` needs none. Tests run with enforced auth and a negative control.
+- **Liquidity and emissions.** If Blend lacks liquidity, `withdraw` fails with `LiquidityShortfall` and changes nothing, which the
+  receipt-vault surfaces as a withdraw shortfall; the market's idle buffer (`set_idle_cash_buffer_bps`) is what protects users.
+  BLND emissions are claimable only by the fee vault admin (`claim_emissions` is admin only), never by depositors, so `harvest`
+  returns 0 (keeper auth required) and `apy_hint_bps` is 0. The fee vault admin should be a Peridot key, not the market-factory
+  (the factory has no passthrough for `claim_fees`, `claim_emissions` or `set_fee_mode`).
+- **Verified.** Tests use the real fee-vault Wasm (`testdata/fee_vault.wasm`) behind a mock Blend pool and the real receipt-vault,
+  controller and jump-rate Wasm. Mainnet Fixed V2 pool `CAJJZ...` has XLM, USDC and EURC reserves.
 
 ## DeFindex route
 
