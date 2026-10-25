@@ -1,3 +1,4 @@
+import { loadMarginRegistry } from './margin-registry';
 /** Staged V3 flow and recovery adapted from PeridotV2Full@86ae3795:
  * lib/stellar-margin.ts, use-stellar-margin-open.ts, use-stellar-margin-close.ts,
  * and marginMath.ts. All addresses/config are resolved per group. */
@@ -10,7 +11,7 @@ import type { Group, MarginInfo } from './types';
 export type Side='Long'|'Short';
 export interface PoolRoute { pool:string; poolId:Uint8Array; tokens:string[] }
 export interface MarginStatus extends MarginInfo { incentive_applied:boolean; incentive_apply_after:bigint; applied_liquidation_incentive:bigint; pair_liquidation_incentive:bigint; maintenance_margin:bigint }
-export interface MarginContext { group:Group; info:MarginInfo; markets:MarketView[]; status?:MarginStatus }
+export interface MarginContext { group:Group; info:MarginInfo; markets:MarketView[]; limits?:Record<string,number>; status?:MarginStatus }
 export interface Position {
   id:bigint; owner:string; side:Side; collateral_asset:string; debt_asset:string; collateral_ptokens:bigint;
   status:string; entry_price_scaled:bigint; opened_at:bigint;
@@ -62,7 +63,8 @@ export async function marginContext(group:Group,markets:MarketView[]):Promise<Ma
   if(network.useMocks)return {group,markets,info:{controller:group.margin_controller,swap_adapter:'mock-swap',variant:{tag:'Audited',values:undefined},cfg:{variant:{tag:'Audited',values:undefined},max_leverage:3n,max_slippage:10000n,liquidation_incentive:1080000n,liquidation_fee:0n},enabled_markets:markets.filter(m=>m.config.margin_enabled).map(m=>m.address)}};
   const info=normalizeContract<MarginStatus|undefined>(await readContract(getDeployments().margin_factory,'get_margin_status',[uint(group.id,'u32')]));
   if(!info||info.controller!==group.margin_controller)throw new Error('Margin configuration does not match this group.');
-  return {group,info,markets,status:info};
+  const limits=Object.fromEntries(await Promise.all(markets.map(async market=>[market.address,Number(await readContract<bigint>(getDeployments().margin_factory,'effective_max_leverage',[uint(group.id,'u32'),addr(market.address)]))] as const)));
+  return {group,info,markets,limits,status:info};
 }
 const read=<T>(ctx:MarginContext,method:string,args:xdr.ScVal[]=[])=>readContract<T>(ctx.info.controller,method,args);
 async function write(ctx:MarginContext,method:string,args:xdr.ScVal[],signer:Signer,onProgress?:(p:Progress)=>void) {
@@ -153,12 +155,15 @@ export async function findRoute(ctx:MarginContext,margin:string,base:string):Pro
     const aa=new Address(a).toScAddress().toXDR(),bb=new Address(b).toScAddress().toXDR();
     for(let i=0;i<aa.length;i++){if(aa[i]!==bb[i])return aa[i]-bb[i];}return 0;
   });
-  const router=getDeployments().external.aquarius_router;
+  const {router}=await loadMarginRegistry();
   if(typeof router!=='string'||!router)throw new Error('Aquarius router is not configured for this network.');
   const pools=decodeMarginPoolRegistry(await readContractRaw(router,'get_pools',[xdr.ScVal.scvVec(sorted.map(addr))]));
   for(const {poolId,pool} of pools){
     const allowed=await readContract<boolean>(ctx.info.swap_adapter,'is_pool_binding_allowed',[xdr.ScVal.scvBytes(Buffer.from(poolId)),addr(pool)]);
-    if(allowed)return {pool,poolId:new Uint8Array(poolId),tokens:sorted};
+    if(!allowed||!await readContract<boolean>(ctx.info.swap_adapter,'is_pool_allowed',[addr(pool)]))continue;
+    const tokens=await readContract<string[]>(pool,'get_tokens');
+    if(tokens.length!==2||tokens.some((token,i)=>token!==sorted[i]))continue;
+    return {pool,poolId:new Uint8Array(poolId),tokens};
   }
   throw new Error('No approved pool route connects these assets. Ask the group owner to configure one.');
 }
@@ -171,7 +176,8 @@ export async function quoteOpen(ctx:MarginContext,owner:string,margin:MarketView
   if(margin.address===base.address)throw new Error('Choose two different assets.');
   if(!ctx.info.enabled_markets.includes(margin.address)||!ctx.info.enabled_markets.includes(base.address))throw new Error('Both markets must have leverage enabled.');
   if(margin.token.decimals!==7||base.token.decimals!==7)throw new Error('This margin version supports tokens with seven decimals.');
-  const effective=effectiveLeverage(Number(ctx.info.cfg.max_leverage),(side==='Long'?base:margin).config.collateral_factor);
+  const collateral=side==='Long'?base:margin;
+  const effective=network.useMocks?effectiveLeverage(Number(ctx.info.cfg.max_leverage),collateral.config.collateral_factor):Number(await readContract<bigint>(getDeployments().margin_factory,'effective_max_leverage',[uint(ctx.group.id,'u32'),addr(collateral.address)]));
   if(!Number.isInteger(leverage)||leverage<2||leverage>Math.floor(effective))throw new Error(`Leverage must be an integer between 2 and ${Math.floor(effective)}.`);
   if(shares<=0n)throw new Error('Enter margin greater than zero.');
   if(network.useMocks)return {margin,base,side,shares,leverage,route:{pool:'mock',poolId:new Uint8Array(32),tokens:[margin.token.address,base.token.address]},minOut:shares*BigInt(leverage),expectedOut:shares*BigInt(leverage),feeShares:0n,closeFeeBps:0n,totalShares:shares,freeMargin:0n,maxLeverage:effective,slippageBps};

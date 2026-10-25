@@ -3,7 +3,7 @@ import { network, getDeployments } from './network';
 import { readContract, submitContract, getPendingTransaction, isDefinitivelyExpired, reconcilePendingTransaction, TransactionRejectedError, type PendingTransaction } from './rpc';
 import type { Group, MarketConfig, RateModel, PriceConfig, GroupMarginConfig, MarginInfo } from './types';
 import { tokenInfo, readRewards, type TokenInfo, type Signer, type Progress } from './group-client';
-import { getGroup, getMarketConfig, normalizeContract, isPriceFeedAllowed, isYieldVaultAllowed } from './factory';
+import { getGroup, getMarketConfig, normalizeContract, isPriceFeedAllowed, validateYieldRoute } from './factory';
 
 export type { Signer, Progress };
 export interface MarketProposalSnapshot {cf?:{cf:bigint;execute_after:bigint};price?:{config:PriceConfig;execute_after:bigint};}
@@ -15,7 +15,7 @@ export interface ControlState { pairSync:PairSyncState|null; group: Group; marke
 export const addr = (v:string) => new Address(v).toScVal();
 const u = (v:bigint|number,type:'u32'|'u128'|'u64'='u128') => nativeToScVal(v,{type});
 const sym = (v:string) => xdr.ScVal.scvSymbol(v);
-const struct = (v:Record<string,xdr.ScVal>) => xdr.ScVal.scvMap(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([key,val])=>new xdr.ScMapEntry({key:sym(key),val})));
+const struct = (v:Record<string,xdr.ScVal>) => xdr.ScVal.scvMap(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,val])=>new xdr.ScMapEntry({key:sym(key),val})));
 export function encodeRates(v:RateModel) {return struct({base:u(v.base),multiplier:u(v.multiplier),jump:u(v.jump),kink:u(v.kink)});}
 export function encodePrice(v:PriceConfig) {
   if(v.tag!=='ReflectorOnly') throw new Error('Only Reflector pricing is available in phase 1.');
@@ -164,7 +164,7 @@ function savePairSync(id:number,state:PairSyncState|null) {
   if(state)window.localStorage.setItem(pairSyncKey(id),JSON.stringify(state));else window.localStorage.removeItem(pairSyncKey(id));
 }
 export class CollateralSyncError extends Error {
-  constructor(public readonly receipt:{hash:string},public readonly syncError:unknown){super(`Collateral changes were applied${receipt.hash?` in transaction ${receipt.hash}`:''}. Leverage synchronization is still required. Use Sync leverage limits to continue. ${syncError instanceof Error?syncError.message:String(syncError)}`);this.name='CollateralSyncError';}
+  constructor(public readonly receipt:{hash:string},public readonly syncError:unknown){super(`Market changes were applied${receipt.hash?` in transaction ${receipt.hash}`:''}. Leverage synchronization is still required. Use Sync leverage limits to continue. ${syncError instanceof Error?syncError.message:String(syncError)}`);this.name='CollateralSyncError';}
 }
 /** Ignore a global pending transaction reported before this invocation started simulation. */
 export function captureControlTransaction(progress:Progress,started:boolean,method:string,contractId:string,shared:PendingTransaction|null,previous?:PendingTransaction):PendingTransaction|undefined {
@@ -175,7 +175,7 @@ export function captureControlTransaction(progress:Progress,started:boolean,meth
 }
 /** Keep the first receipt even if the independent second transaction is rejected or unconfirmed. */
 export async function applyCollateralAndSync<T extends {hash:string}>(id:number,apply:(progress:(p:Progress)=>void)=>Promise<T>,sync:()=>Promise<unknown>,onProgress?:(p:Progress)=>void,owner?:string):Promise<T> {
-  if(readPairSync(id))throw new Error('Resolve the previous leverage synchronization with Sync leverage limits before applying another collateral change.');
+  if(readPairSync(id))throw new Error('Resolve the previous leverage synchronization with Sync leverage limits before applying another market change.');
   const state:PairSyncState={applyConfirmed:false};savePairSync(id,state);
   let receipt:T,started=false;
   try{
@@ -205,8 +205,8 @@ export async function syncLeverageLimits(id:number,signer:Signer,onProgress?:(p:
         state.applyConfirmed=true;savePairSync(id,state);
       }else if(result.status==='FAILED'||!!state.applyTransaction&&isDefinitivelyExpired(state.applyTransaction,result)){
         if(getPendingTransaction(signer.address)?.hash===state.applyHash)await reconcilePendingTransaction(signer.address);
-        savePairSync(id,null);throw new Error('The collateral transaction did not succeed. Refresh and review its pending proposal.');
-      }else throw new Error('The collateral transaction remains unconfirmed. Do not repeat it; check again before synchronizing leverage.');
+        savePairSync(id,null);throw new Error('The market change transaction did not succeed. Refresh and review its pending proposal.');
+      }else throw new Error('The market change transaction remains unconfirmed. Do not repeat it; check again before synchronizing leverage.');
     }
   }
   if(state?.syncTransaction&&!network.useMocks){
@@ -243,8 +243,7 @@ export async function syncLeverageLimits(id:number,signer:Signer,onProgress?:(p:
 }
 export async function applyPending(id:number,pending:PendingChange|undefined,signer:Signer,onProgress?:(p:Progress)=>void) {
   const group=await getGroup(id);
-  const hasCollateral=pending?.kind==='risk'||!!pending?.marketProposals?.cf||!pending;
-  if(group.margin_controller&&hasCollateral)return applyCollateralAndSync(id,p=>applyPendingTransaction(id,pending,signer,p),()=>syncLeverageLimits(id,signer,onProgress),onProgress,signer.address);
+  if(group.margin_controller&&pending?.kind!=='margin')return applyCollateralAndSync(id,p=>applyPendingTransaction(id,pending,signer,p),()=>syncLeverageLimits(id,signer,onProgress),onProgress,signer.address);
   return applyPendingTransaction(id,pending,signer,onProgress);
 }
 async function applyPendingTransaction(id:number,pending:PendingChange|undefined,signer:Signer,onProgress?:(p:Progress)=>void) {
@@ -288,7 +287,7 @@ export async function withdrawRewards(id:number,to:string,amount:bigint,signer:S
 export async function transferOwnership(id:number,to:string,signer:Signer,onProgress?:(p:Progress)=>void) {
   Address.fromString(to);if(to===signer.address)throw new Error('Enter a different owner address.');
   if(network.useMocks)return mockWrite(id,'transfer_ownership',signer,state=>{assertOwner(state,id,signer).owner=to;},onProgress);
-  return factoryWrite('transfer_ownership',[...ownerArgs(id,signer),addr(to)],signer,onProgress);
+  throw new Error('Ownership transfer requires both owners to authorize. This app does not yet support the second signature.');
 }
 export async function updateMargin(id:number,cfg:GroupMarginConfig,signer:Signer,onProgress?:(p:Progress)=>void) {
   validateMargin(cfg);
@@ -391,11 +390,7 @@ async function validateNewMarket(id:number,cfg:MarketConfig,signer:Signer) {
   if(group.reward_distributor)throw new Error('Markets cannot be added after group rewards are enabled.');
   if(cfg.supply_reward_per_sec!==0n||cfg.borrow_reward_per_sec!==0n)throw new Error('Creation reward speeds must be zero. Set emissions after activation and enabling rewards.');
   if(!await isPriceFeedAllowed(cfg.token,cfg.price))throw new Error('The price feed tuple is not approved for this token by the factory.');
-  const route=cfg.yield_route;
-  if(route.tag!=='None'){
-    const vault=route.tag==='Defindex'?route.values[0].vault:route.tag==='Blend'?route.values[0].fee_vault:'';
-    if(!vault||!await isYieldVaultAllowed(vault))throw new Error('The yield vault is not approved by this factory.');
-  }
+  await validateYieldRoute(cfg.token,cfg.yield_route);
 }
 export async function addControlMarket(id:number,cfg:MarketConfig,token:TokenInfo,signer:Signer,onProgress?:(p:Progress)=>void) {
   await validateNewMarket(id,cfg,signer);
@@ -428,6 +423,7 @@ export async function attachMarketYield(id:number,market:string,signer:Signer,on
   if(!record.active)throw new Error('Activate the market before attaching yield.');
   if(record.boosted_vault||record.adapter)throw new Error('Yield is already attached. Refresh the addition status.');
   if(record.cfg.yield_route.tag==='None')throw new Error('This market has no yield route to attach.');
+  await validateYieldRoute(record.cfg.token,record.cfg.yield_route);
   if(network.useMocks)return mockWrite(id,'attach_yield',signer,state=>{const route=record.cfg.yield_route;state.pending[`market-record:${id}:${market}`]={active:true,boosted_vault:route.tag==='Defindex'?route.values[0].vault:`mock-adapter-${market}`,adapter:route.tag==='Blend'?`mock-adapter-${market}`:undefined};},onProgress);
   return factoryWrite('attach_yield',[...ownerArgs(id,signer),addr(market)],signer,onProgress);
 }

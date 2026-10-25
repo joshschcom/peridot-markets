@@ -4,7 +4,7 @@ import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { network } from './network';
 import { readContract, submitContract } from './rpc';
 import { parseAmount } from './amount';
-import { getTokenMetadata } from './factory';
+import { canonicalTokenSymbol, getTokenMetadata } from './factory';
 import { readMockState, mutateMockState, writeMockEvent } from './mock';
 import type { Group, MarketConfig, PriceCheck, VaultState } from './types';
 
@@ -17,7 +17,7 @@ export const enumName = (value: unknown): string => typeof value === 'string' ? 
 export interface TokenInfo { address: string; symbol: string; decimals: number }
 export interface MarketView {
   address: string; config: MarketConfig; token: TokenInfo; supplied: bigint; borrowed: bigint;
-  liquidity: bigint; receiptBalance: bigint; walletBalance: bigint; debt: bigint; exchangeRate: bigint;
+  liquidity: bigint; receiptBalance: bigint; walletBalance: bigint; needsTrustline:boolean; debt: bigint; exchangeRate: bigint;
   supplyApr: number; borrowApr: number; utilization: number; price: PriceCheck | null;
   priceError?: string; vault: VaultState | null; vaultError?: string; entered: boolean;
 }
@@ -32,7 +32,7 @@ export async function tokenInfo(token: string): Promise<TokenInfo> {
   if (network.useMocks) return { address: token, ...await getTokenMetadata(token) };
   const [symbol, decimals] = await Promise.all([readContract<string>(token,'symbol',[]),readContract<number>(token,'decimals',[])]);
   if (!Number.isInteger(decimals) || decimals < 0 || decimals > 18) throw new Error('Unsupported token precision.');
-  return { address:token, symbol, decimals };
+  return { address:token, symbol:canonicalTokenSymbol(token,symbol), decimals };
 }
 export function rateApr(config: MarketConfig, cash: bigint, borrowed: bigint, reserves = 0n) {
   const total = cash + borrowed - reserves;
@@ -44,17 +44,34 @@ export function rateApr(config: MarketConfig, cash: bigint, borrowed: bigint, re
   const supply=(borrow*(1_000_000n-config.reserve_factor)/1_000_000n)*util/1_000_000n;
   return { borrowApr:Number(borrow)/10000, supplyApr:Number(supply)/10000, utilization:Number(util)/10000 };
 }
+/** Recognize only SAC's explicit missing-trustline diagnostic for this token and account. */
+export function isMissingTrustlineError(error:unknown,token:string,owner:string):boolean {
+  if(!(error instanceof Error))return false;
+  const message=error.message;
+  return message.includes('Error(Contract, #13)')&&message.includes(`contract:${token},`)
+    &&new RegExp(`\"trustline entry is missing for account\"\\s*,\\s*${owner}\\s*\\]`).test(message);
+}
+export async function readWalletTokenBalance(token:string,owner:string,read:(contract:string,method:string,args:xdr.ScVal[])=>Promise<unknown>=readContract):Promise<{balance:bigint;needsTrustline:boolean}> {
+  try {
+    const balance=await read(token,'balance',[addr(owner)]);
+    if(typeof balance!=='bigint'||balance<0n)throw new Error('Token returned an invalid wallet balance.');
+    return {balance,needsTrustline:false};
+  } catch(error) {
+    if(isMissingTrustlineError(error,token,owner))return {balance:0n,needsTrustline:true};
+    throw error;
+  }
+}
 export async function readMarket(group: Group, market: string, config: MarketConfig, owner: string | null): Promise<MarketView> {
   const token=await tokenInfo(config.token);
   if(network.useMocks) {
     const account=mockAccount(group,market,owner||'');
     const supplied=100_000n*10n**BigInt(token.decimals)+BigInt(account.supplied), borrowed=20_000n*10n**BigInt(token.decimals)+BigInt(account.debt);
-    return { address:market,config,token,supplied,borrowed,liquidity:supplied-borrowed,receiptBalance:BigInt(account.supplied),walletBalance:10_000n*10n**BigInt(token.decimals)-BigInt(account.supplied)+BigInt(account.debt),debt:BigInt(account.debt),exchangeRate:1_000_000n,...rateApr(config,supplied-borrowed,borrowed),price:{mode:'ReflectorOnly',reflector_price:100_000_000n,aquarius_price:undefined,deviation_bps:undefined,status:'ok',timestamp:BigInt(Math.floor(Date.now()/1000))},vault:null,entered:account.entered };
+    return { address:market,config,token,supplied,borrowed,liquidity:supplied-borrowed,receiptBalance:BigInt(account.supplied),walletBalance:10_000n*10n**BigInt(token.decimals)-BigInt(account.supplied)+BigInt(account.debt),needsTrustline:false,debt:BigInt(account.debt),exchangeRate:1_000_000n,...rateApr(config,supplied-borrowed,borrowed),price:{mode:'ReflectorOnly',reflector_price:100_000_000n,aquarius_price:undefined,deviation_bps:undefined,status:'ok',timestamp:BigInt(Math.floor(Date.now()/1000))},vault:null,entered:account.entered };
   }
-  const [supplied,borrowed,liquidity,exchangeRate,reserves,receiptBalance,walletBalance,debt,enteredMarkets] = await Promise.all([
+  const [supplied,borrowed,liquidity,exchangeRate,reserves,receiptBalance,walletState,debt,enteredMarkets] = await Promise.all([
     readContract<bigint>(market,'get_total_underlying',[]),readContract<bigint>(market,'get_total_borrowed',[]),readContract<bigint>(market,'get_available_liquidity',[]),readContract<bigint>(market,'get_exchange_rate',[]),readContract<bigint>(market,'get_total_reserves',[]),
     owner?readContract<bigint>(market,'get_ptoken_balance',[addr(owner)]):0n,
-    owner?readContract<bigint>(config.token,'balance',[addr(owner)]):0n,
+    owner?readWalletTokenBalance(config.token,owner):{balance:0n,needsTrustline:false},
     owner?readContract<bigint>(market,'get_user_borrow_balance',[addr(owner)]):0n,
     owner?readContract<string[]>(group.controller,'get_user_markets',[addr(owner)]):[],
   ]);
@@ -72,17 +89,18 @@ export async function readMarket(group: Group, market: string, config: MarketCon
     } catch(e) { vaultError=String(e); }
   }
   // Config rate curve is an APR quote, not a historical compounded yield.
-  return {address:market,config,token,supplied,borrowed,liquidity,exchangeRate,receiptBalance,walletBalance,debt,...rateApr(config,supplied+reserves-borrowed,borrowed,reserves),price,priceError,vault,vaultError,entered:(enteredMarkets as string[]).includes(market)};
+  return {address:market,config,token,supplied,borrowed,liquidity,exchangeRate,receiptBalance,walletBalance:walletState.balance,needsTrustline:walletState.needsTrustline,debt,...rateApr(config,supplied+reserves-borrowed,borrowed,reserves),price,priceError,vault,vaultError,entered:(enteredMarkets as string[]).includes(market)};
 }
 export type LendingAction='Supply'|'Withdraw'|'Borrow'|'Repay'|'Enable collateral';
 export async function lend(group:Group,market:MarketView,action:LendingAction,amount:string,signer:Signer,onProgress?:(p:Progress)=>void,all=false) {
+  if(market.needsTrustline&&action!=='Enable collateral')throw new Error(`Add a ${market.token.symbol} trustline with your wallet before receiving or using this asset, then refresh balances.`);
   const units=action==='Enable collateral'||(all&&(action==='Withdraw'||action==='Repay'))?0n:parseAmount(amount,market.token.decimals);
   if(action!=='Enable collateral' && units<=0n && !all) throw new Error('Enter an amount greater than zero.');
   if(network.useMocks) {
     onProgress?.({status:'simulating',message:`Demo ${action.toLowerCase()}`});
     const book=mockBook(),key=mockKey(group,market.address,signer.address),old=mockAccount(group,market.address,signer.address);
     let supplied=BigInt(old.supplied),debt=BigInt(old.debt);
-    if(action==='Supply') { if(units>market.walletBalance)throw new Error('Amount exceeds your wallet balance.'); supplied+=units; }
+    if(action==='Supply') { if(group.reward_distributor&&!old.entered)throw new Error('Enable this market before supplying to earn rewards.'); if(units>market.walletBalance)throw new Error('Amount exceeds your wallet balance.'); supplied+=units; }
     if(action==='Withdraw') { if(!all&&units>supplied) throw new Error('Amount exceeds your supplied balance.'); supplied=all?0n:supplied-units; }
     if(action==='Borrow') { if(!old.entered)throw new Error('Enable this market before borrowing its asset.'); if(units>market.liquidity)throw new Error('The market has insufficient liquidity.'); debt+=units; }
     if(action==='Repay') debt=all?0n:debt-(units>debt?debt:units);
@@ -108,6 +126,10 @@ export async function lend(group:Group,market:MarketView,action:LendingAction,am
     onProgress?.({status:'success',message:'Demo action saved. No onchain transaction.'}); return {hash:'',value:undefined};
   }
   let contractId=market.address,method=action.toLowerCase(),args=[addr(signer.address),uint(units)];
+  if(action==='Supply'&&group.reward_distributor){
+    const entered=await readContract<string[]>(group.controller,'get_user_markets',[addr(signer.address)]);
+    if(!entered.includes(market.address))throw new Error('Enable this market before supplying to earn rewards.');
+  }
   if(action==='Supply') { method='deposit'; if(units>market.walletBalance) throw new Error('Amount exceeds your wallet balance.'); }
   if(action==='Enable collateral') {contractId=group.controller;method='enter_market';args=[addr(signer.address),addr(market.address)];}
   if(action==='Withdraw') {
@@ -153,5 +175,8 @@ export async function claimRewards(group:Group,signer:Signer,onProgress?:(p:Prog
     });
     onProgress?.({status:'success',message:'Demo claim saved. No real tokens moved.'});return {hash:'',value:undefined};
   }
+  const rewardToken=await readContract<string>(group.reward_distributor!,'reward_token');
+  const recipient=await readWalletTokenBalance(rewardToken,signer.address);
+  if(recipient.needsTrustline)throw new Error('Add the reward token trustline with your wallet before claiming. Refresh after confirmation.');
   return submitContract({contractId:group.controller,method:'claim',args:[addr(signer.address)],signer,onProgress});
 }

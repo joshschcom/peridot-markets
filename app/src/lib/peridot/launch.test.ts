@@ -25,6 +25,9 @@ test('launch preserves confirmed steps and never duplicates a recovered group',a
   assert.ok(validateMarketDraft({...markets[0],decimals:6}).some(e=>e.includes('seven')));
   const draft={name:'ResumeTest',description:'',markets,rewardsEnabled:true,rewardToken:MOCK_USDC,rewardSymbol:'USDC',rewardDecimals:7,rewardFunding:'100',marginEnabled:true,maxLeverage:'3',slippage:'1',liquidationIncentive:'108',liquidationFee:'0',marginPools:await discoverMarginPools(markets)};
   assert.deepEqual(validateLaunch(draft),[]);
+  const order=launchSteps(draft).map(s=>s.id);
+  assert.ok(order.indexOf('activate:0')<order.indexOf('market:1'));
+  assert.ok(order.indexOf('rewards')>order.indexOf('applymargin'));
   assert.ok(validateLaunch({...draft,markets:[markets[0],markets[0]]}).some(e=>e.includes('only one market')));
   assert.ok(validateLaunch({...draft,liquidationFee:'51'}).some(e=>e.includes('50%')));
   assert.ok(validateLaunch({...draft,liquidationIncentive:'111'}).some(e=>e.includes('110%')));
@@ -152,4 +155,21 @@ test('exact feed mapping is required before group creation and rechecked before 
  await assert.rejects(runNextLaunchStep(changed,signer),/token, oracle and asset mapping/);
  assert.equal(Object.keys(readMockState().configs).length,configs,'a saved launch cannot bypass the current tuple preflight');
  assert.deepEqual(loadLaunch(created.scope)?.receipts,created.receipts);
+});
+
+
+test('lending-only deployment rejects leverage before creating a group or saving a transaction',async()=>{
+ const {network}=await import('./network');
+ const {validateLaunch,runNextLaunchStep}=await import('./launch');
+ const {newMarketDraft}=await import('./market-config');
+ const {MOCK_OWNER,MOCK_USDC,MOCK_ORACLE}=await import('./mock');
+ const market={...newMarketDraft(),token:MOCK_USDC,symbol:'USDC',price:{tag:'ReflectorOnly' as const,values:[{oracle:MOCK_ORACLE,asset:{tag:'Other' as const,values:['USDC'] as const}}] as const}};
+ const draft={name:'NoMargin',description:'',markets:[market],rewardsEnabled:false,rewardToken:'',rewardSymbol:'',rewardDecimals:7,rewardFunding:'0',marginEnabled:true,maxLeverage:'3',slippage:'1',liquidationIncentive:'108',liquidationFee:'0',marginPools:[]};
+ const wasMock=network.useMocks;
+ try{
+  Object.assign(network,{useMocks:false});
+  assert.ok(validateLaunch(draft).some(error=>error.includes('Leverage is not deployed')));
+  const session={version:1 as const,id:'unavailable',scope:'unused',draft,markets:{},receipts:[],completed:false};
+  await assert.rejects(runNextLaunchStep(session,{address:MOCK_OWNER,signTransaction:async()=>{throw new Error('Must never sign');}}),/Leverage is not deployed/);
+ }finally{Object.assign(network,{useMocks:wasMock});}
 });

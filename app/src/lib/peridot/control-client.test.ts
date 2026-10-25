@@ -263,7 +263,7 @@ test('companion CF apply persists sync recovery and removes the proposal even if
   await c.updateRisk(1,market,{...cfg,collateral_factor:650000n},signer);
   await c.updatePrice(1,market,{tag:'ReflectorOnly',values:[{oracle:mocks.MOCK_ORACLE,asset:{tag:'Other',values:['USDC']}}]},signer);
   const proposal=(await c.loadControl(1)).pending.find(p=>p.kind==='price')!;now+=60000;
-  await assert.rejects(c.applyPending(1,proposal,signer,p=>{if(p.message?.startsWith('Syncing leverage limits'))throw new Error('Rejected second-step signature');}),/Collateral changes were applied/);
+  await assert.rejects(c.applyPending(1,proposal,signer,p=>{if(p.message?.startsWith('Syncing leverage limits'))throw new Error('Rejected second-step signature');}),/Market changes were applied/);
   assert.equal((await factory.getMarketConfig(1,market)).collateral_factor,650000n);
   assert.equal((await c.loadControl(1)).pending.length,0);assert.equal((await c.loadControl(1)).pairSync!.applyConfirmed,true);
   await assert.rejects(c.applyPending(1,proposal,signer),/previous leverage synchronization/);
@@ -299,4 +299,32 @@ test('manual leverage synchronization is permissionless without changing group s
  assert.deepEqual(await factory.getGroup(1),before);
  assert.ok(mocks.readMockState().pending['pair-caps:1']);
  assert.equal(c.readPairSync(1),null);
+});
+
+for(const marginEnabled of [true,false])test(`price-only factory apply ${marginEnabled?'synchronizes pairs':'skips sync for non-margin groups'}`,async()=>{
+ const {c,factory,mocks,signer}=await load();const oldNow=Date.now;let now=1800000000000;Date.now=()=>now;
+ try{
+  if(!marginEnabled)mocks.mutateMockState(state=>{state.groups.find(g=>g.id===1)!.margin_controller=undefined;});
+  const market=(await factory.getGroup(1)).markets[0],before=await factory.getMarketConfig(1,market);
+  await c.updatePrice(1,market,{tag:'ReflectorOnly',values:[{oracle:mocks.MOCK_ORACLE,asset:{tag:'Stellar',values:[mocks.MOCK_USDC]}}]},signer);
+  const pending=(await c.loadControl(1)).pending[0];assert.equal(pending.kind,'price');assert.equal(pending.marketProposals?.cf,undefined);
+  now+=60000;await c.applyPending(1,pending,signer);
+  const history=mocks.readMockState().history['1'];
+  assert.equal(history.filter(event=>event.method==='apply_pending').length,1);
+  assert.equal(history.filter(event=>event.method==='sync_pairs').length,marginEnabled?1:0);
+  assert.equal((await factory.getMarketConfig(1,market)).collateral_factor,before.collateral_factor);
+  assert.equal((await c.loadControl(1)).pending.length,0);assert.equal(c.readPairSync(1),null);
+ }finally{Date.now=oldNow;}
+});
+
+test('separate margin configuration apply does not call sync_pairs',async()=>{
+ const {c,mocks,signer}=await load();const oldNow=Date.now;let now=1800000000000;Date.now=()=>now;
+ try{
+  const margin=(await c.loadControl(1)).margin!;
+  await c.updateMargin(1,{...margin.cfg,liquidation_incentive:1100000n},signer);
+  const pending=(await c.loadControl(1)).pending[0];assert.equal(pending.kind,'margin');
+  now+=60000;await c.applyPending(1,pending,signer);
+  assert.equal(mocks.readMockState().history['1'].filter(event=>event.method==='sync_pairs').length,0);
+  assert.equal(c.readPairSync(1),null);
+ }finally{Date.now=oldNow;}
 });

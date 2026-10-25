@@ -25,3 +25,9 @@ export function getDeployments(): Deployments {
 export function transactionUrl(hash: string): string {
   return `${network.explorerUrl}/tx/${encodeURIComponent(hash)}`;
 }
+
+export function isMarginAvailable(): boolean {
+  if (network.useMocks) return true;
+  try { const d = getDeployments(); return !!d.margin_factory && StrKey.isValidContract(d.margin_factory) && !!d.wasm?.margin && !!d.wasm?.swap_adapter; }
+  catch { return false; }
+}

@@ -58,3 +58,37 @@ test('rate display clamps utilization at core maximum and preserves reserve dedu
   assert.equal(rates.borrowApr,27.2);
   assert.equal(rates.supplyApr,24.48);
 });
+
+
+test('missing SAC trustline becomes a specific zero balance state without hiding unrelated read failures',async()=>{
+ const {readWalletTokenBalance,isMissingTrustlineError}=await import('./group-client');
+ const {MOCK_USDC,MOCK_XLM,MOCK_OWNER}=await import('./mock');
+ const missing=new Error(`Unable to read balance: HostError: Error(Contract, #13)\nEvent log (newest first):\n0: [Diagnostic Event] contract:${MOCK_USDC}, topics:[error, Error(Contract, #13)], data:["trustline entry is missing for account", ${MOCK_OWNER}]`);
+ const [usdc,xlm]=await Promise.all([
+  readWalletTokenBalance(MOCK_USDC,MOCK_OWNER,async()=>{throw missing;}),
+  readWalletTokenBalance(MOCK_XLM,MOCK_OWNER,async()=>123n),
+ ]);
+ assert.deepEqual(usdc,{balance:0n,needsTrustline:true});
+ assert.deepEqual(xlm,{balance:123n,needsTrustline:false});
+ assert.deepEqual(await readWalletTokenBalance(MOCK_USDC,MOCK_OWNER,async()=>0n),{balance:0n,needsTrustline:false});
+ assert.equal(isMissingTrustlineError(missing,MOCK_XLM,MOCK_OWNER),false,'a different token diagnostic must propagate');
+ assert.equal(isMissingTrustlineError(missing,MOCK_USDC,'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5'),false,'a different account diagnostic must propagate');
+ for(const error of [new Error('RPC unavailable'),new Error('HostError: Error(Contract, #13)'),new Error('trustline entry is missing for account')])await assert.rejects(readWalletTokenBalance(MOCK_USDC,MOCK_OWNER,async()=>{throw error;}),candidate=>candidate===error);
+ await assert.rejects(readWalletTokenBalance(MOCK_XLM,MOCK_OWNER,async()=>{throw missing;}),candidate=>candidate===missing);
+});
+
+test('missing trustline blocks token movements but still allows market entry and another market',async()=>{
+ const c=await load();const missing={...c.usdc,needsTrustline:true};
+ for(const action of ['Supply','Withdraw','Borrow','Repay'] as const)await assert.rejects(c.lend(c.group,missing,action,'1',c.signer),/trustline with your wallet/);
+ await c.lend(c.group,missing,'Enable collateral','',c.signer);
+ assert.equal(c.mockAccount(c.group,c.usdc.address,c.signer.address).entered,true);
+ await c.lend(c.group,c.xlm,'Supply','1',c.signer);
+ assert.equal(c.mockAccount(c.group,c.xlm.address,c.signer.address).supplied,'10000000');
+});
+
+
+test('reward-bearing supply requires entry before changing a balance',async()=>{
+ const c=await load();const group={...c.group,id:987,reward_distributor:'mock-distributor'};
+ await assert.rejects(c.lend(group,c.usdc,'Supply','1',c.signer),/Enable this market before supplying/);
+ assert.equal(c.mockAccount(group,c.usdc.address,c.signer.address).supplied,'0');
+});

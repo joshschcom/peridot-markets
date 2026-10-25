@@ -1,8 +1,9 @@
+import { loadMarginRegistry, isMarginPoolUsable } from './margin-registry';
 import { Address, StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 import type { GroupMarginConfig, MarketConfig } from './types';
-import { getDeployments, network } from './network';
+import { getDeployments, isMarginAvailable, network } from './network';
 import { parseAmount } from './amount';
-import { encodeMarketConfig, getTokenMetadata, isPriceFeedAllowed, isYieldVaultAllowed, normalizeContract, scBool, scAddress, scEnum, scI128, scMap, scSymbol, scU128, scU32, writeFactory } from './factory';
+import { encodeMarketConfig, getTokenMetadata, isPriceFeedAllowed, validateYieldRoute, normalizeContract, scBool, scAddress, scEnum, scI128, scMap, scSymbol, scU128, scU32, writeFactory } from './factory';
 import { assertRpcNetwork, getPendingTransaction, getRpc, isDefinitivelyExpired, readContract, readContractRaw, reconcilePendingTransaction, submitContract, TransactionRejectedError, type PendingTransaction, type Signer, type TxProgress } from './rpc';
 import { mockCreateMarket, mockActivateMarket, mutateMockState, readMockState, writeMockEvent } from './mock';
 import { marketDraftToConfig, validateMarketDraft, type MarketDraft } from './market-config';
@@ -69,25 +70,28 @@ export function validateLaunch(d:LaunchDraft):string[] {
     if(!StrKey.isValidContract(d.rewardToken)||!d.rewardSymbol)errors.push('Verify the reward token before launching.');
     try {parseAmount(d.rewardFunding,d.rewardDecimals);}catch(e){errors.push(e instanceof Error?e.message:'Invalid reward funding.');}
   }
+  if(d.marginEnabled&&!isMarginAvailable())errors.push('Leverage is not deployed on this network. Launch a lending group with leverage disabled.');
   if(d.marginEnabled){try{marginConfig(d);}catch(e){errors.push(e instanceof Error?e.message:'Invalid leverage configuration.');}if(d.markets.filter(m=>m.marginEnabled).length>4)errors.push('This margin controller supports at most four margin markets.');if(d.markets.filter(m=>m.marginEnabled).length<2)errors.push('Select at least two seven-decimal markets for leverage.');}
   if(d.marginEnabled){for(const market of d.markets.filter(m=>m.marginEnabled)){if(!(d.marginPools||[]).some(p=>p.tokens.includes(market.token)))errors.push(`Discover a verified pool route for ${market.symbol||'each margin token'}.`);}}
   return errors;
 }
 export function launchSteps(d:LaunchDraft):LaunchStep[] {
   const steps:LaunchStep[]=[{id:'create',label:'Create isolated group',kind:'create'}];
-  d.markets.forEach((m,i)=>steps.push({id:`market:${i}`,label:`Add ${m.symbol||`market ${i+1}`}`,kind:'market',marketIndex:i}));
-  d.markets.forEach((m,i)=>steps.push({id:`activate:${i}`,label:`Activate ${m.symbol||`market ${i+1}`}`,kind:'activate',marketIndex:i}));
-  d.markets.forEach((m,i)=>{if(m.route!=='None')steps.push({id:`yield:${i}`,label:`Attach ${m.route} for ${m.symbol}`,kind:'yield',marketIndex:i});});
-  if(d.rewardsEnabled){
-    steps.push({id:'rewards',label:`Set ${d.rewardSymbol} rewards`,kind:'rewards'});
-    if(parseAmount(d.rewardFunding,d.rewardDecimals)>0n)steps.push({id:'fund',label:`Fund ${d.rewardFunding} ${d.rewardSymbol} rewards`,kind:'fund'});
-    d.markets.forEach((m,i)=>steps.push({id:`speed:${i}`,label:`Set ${m.symbol} reward speeds`,kind:'speed',marketIndex:i}));
-  }
+  d.markets.forEach((m,i)=>{
+    steps.push({id:`market:${i}`,label:`Add ${m.symbol||`market ${i+1}`}`,kind:'market',marketIndex:i});
+    steps.push({id:`activate:${i}`,label:`Activate ${m.symbol||`market ${i+1}`}`,kind:'activate',marketIndex:i});
+    if(m.route!=='None')steps.push({id:`yield:${i}`,label:`Attach ${m.route} for ${m.symbol}`,kind:'yield',marketIndex:i});
+  });
   if(d.marginEnabled){
     steps.push({id:'margin',label:'Create group margin controller',kind:'margin'});
     (d.marginPools||[]).forEach((pool,i)=>{steps.push({id:`pool:${i}`,label:`Allow verified pool ${i+1}`,kind:'pool',poolIndex:i});steps.push({id:`binding:${i}`,label:`Bind pool ${i+1} to its router ID`,kind:'binding',poolIndex:i});});
     d.markets.forEach((market,i)=>{if(market.marginEnabled)steps.push({id:`marginmarket:${i}`,label:`Enable ${market.symbol} leverage`,kind:'marginmarket',marketIndex:i});});
     steps.push({id:'applymargin',label:'Apply staged liquidation incentive',kind:'applymargin'});
+  }
+  if(d.rewardsEnabled){
+    steps.push({id:'rewards',label:`Set ${d.rewardSymbol} rewards`,kind:'rewards'});
+    if(parseAmount(d.rewardFunding,d.rewardDecimals)>0n)steps.push({id:'fund',label:`Fund ${d.rewardFunding} ${d.rewardSymbol} rewards`,kind:'fund'});
+    d.markets.forEach((m,i)=>steps.push({id:`speed:${i}`,label:`Set ${m.symbol} reward speeds`,kind:'speed',marketIndex:i}));
   }
   return steps;
 }
@@ -161,6 +165,7 @@ export function launchProgressState(step:string,previous:LaunchSession['pending'
   return {step,status:progress.status,started,hash,transaction};
 }
 export async function runNextLaunchStep(session:LaunchSession,signer:Signer,onProgress?:(progress:TxProgress)=>void):Promise<LaunchSession>{
+  if(session.draft.marginEnabled&&!isMarginAvailable())throw new Error('Leverage is not deployed on this network. No launch transaction was submitted.');
   assertOwner(session,signer);
   if(session.pending)throw new Error('Resolve the saved pending step before continuing.');
   const step=nextStep(session);if(!step)return session;
@@ -171,11 +176,16 @@ export async function runNextLaunchStep(session:LaunchSession,signer:Signer,onPr
     saveLaunch(pending);onProgress?.(p);
   };
   try {
-    if(step.kind==='create'||step.kind==='market'||step.kind==='activate'){
+    if(!network.useMocks&&session.draft.marginEnabled&&(step.kind==='create'||step.kind==='pool'||step.kind==='binding')){
+      const registry=await loadMarginRegistry();
+      const pools=step.kind==='create'?(session.draft.marginPools||[]):[session.draft.marginPools![step.poolIndex!]];
+      for(const pool of pools)if(!await isMarginPoolUsable(registry,pool.pool))throw new Error('A selected margin pool is not trusted or was denied. Review the pool configuration before continuing.');
+    }
+    if(step.kind==='create'||step.kind==='market'||step.kind==='activate'||step.kind==='yield'){
       const checked=step.kind==='create'?session.draft.markets:[session.draft.markets[step.marketIndex!]];
       await Promise.all(checked.map(async market=>{
         if(!market.price||!await isPriceFeedAllowed(market.token,market.price))throw new Error(`The token, oracle and asset mapping for ${market.symbol} is not approved by the factory.`);
-        if(market.route!=='None'&&!await isYieldVaultAllowed(market.routeAddress))throw new Error(`The yield vault for ${market.symbol} is not approved by the factory.`);
+        await validateYieldRoute(market.token,marketDraftToConfig(market,session.draft.rewardDecimals).yield_route);
       }));
     }
     if(network.useMocks){
@@ -299,17 +309,19 @@ export async function discoverMarginPools(markets:MarketDraft[]):Promise<MarginP
   const enabled=markets.filter(m=>m.marginEnabled);
   if(enabled.length<2||enabled.length>4)throw new Error('Select between two and four markets for leverage.');
   const found:MarginPoolDraft[]=[];
+  const registry=network.useMocks?null:await loadMarginRegistry();
   for(let i=0;i<enabled.length;i++)for(let j=i+1;j<enabled.length;j++){
     const tokens=[enabled[i].token,enabled[j].token].sort((a,b)=>{
       const aa=new Address(a).toScAddress().toXDR(),bb=new Address(b).toScAddress().toXDR();
       for(let n=0;n<aa.length;n++)if(aa[n]!==bb[n])return aa[n]-bb[n];return 0;
     });
     if(network.useMocks){found.push({pool:`mock-pool-${i}-${j}`,poolId:(i*4+j).toString(16).padStart(64,'0'),tokens});continue;}
-    const router=getDeployments().external.aquarius_router;
+    const router=registry!.router;
     if(typeof router!=='string'||!StrKey.isValidContract(router))throw new Error('The verified Aquarius router is not configured.');
     const pools=decodeMarginPoolRegistry(await readContractRaw(router,'get_pools',[xdr.ScVal.scvVec(tokens.map(scAddress))]));
     let selected:MarginPoolDraft|undefined;
     for(const {poolId,pool} of pools){
+      if(!await isMarginPoolUsable(registry!,pool))continue;
       const live=await readContract<string[]>(pool,'get_tokens');
       if(live.length===2&&live.every((token,index)=>token===tokens[index])){selected={pool,poolId,tokens};break;}
     }
