@@ -110,6 +110,16 @@ export interface Trade {
   at: string;
 }
 
+/** Any other curve event (graduation steps, phase changes, fee claims), kept for the activity list. */
+export interface HistoryEvent {
+  name: string;
+  hash: string;
+  ledger: number;
+  at: string;
+  data: Record<string, unknown>;
+}
+export interface CurveActivity { trades: Trade[]; history: HistoryEvent[]; /** True when the scan stopped before reaching the latest ledger. */ partial: boolean }
+
 export interface LaunchDraft {
   name: string;
   symbol: string;
