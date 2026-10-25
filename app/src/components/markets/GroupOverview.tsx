@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowRight, Gift, Layers3, Scale, Sprout } from 'lucide-react';
 import { getMarketConfig, listGroups } from '@/lib/peridot/factory';
-import { readMarket, type MarketView } from '@/lib/peridot/group-client';
+import { readMarketSummary, type MarketSummary } from '@/lib/peridot/group-client';
 import { useWallet } from '@/lib/peridot/wallet';
 import type { Group } from '@/lib/peridot/types';
 import { Badge, Meter, Skeleton, EmptyState } from '@/components/ui/primitives';
 import { fmtCompact, fmtPct } from '@/components/ui/format';
 
-export interface GroupSummary { group: Group; markets: MarketView[] | null; error?: string }
+export interface GroupSummary { group: Group; markets: MarketSummary[] | null; error?: string }
 
 /** Lists groups, then loads each group's market views in parallel so cards fill in progressively.
  * Uses only the existing read functions; one failing group does not hide the others. */
@@ -25,7 +25,7 @@ export function useGroupSummaries() {
       setLoading(false);
       list.forEach(group => {
         Promise.all(group.markets.map(m => getMarketConfig(group.id, m)))
-          .then(configs => Promise.all(group.markets.map((m, i) => readMarket(group, m, configs[i], null))))
+          .then(configs => Promise.all(group.markets.map((m, i) => readMarketSummary(group, m, configs[i]))))
           .then(markets => { if (alive) setGroups(old => old.map(s => s.group.id === group.id ? { ...s, markets } : s)); })
           .catch(e => { if (alive) setGroups(old => old.map(s => s.group.id === group.id ? { ...s, markets: [], error: e instanceof Error ? e.message : String(e) } : s)); });
       });

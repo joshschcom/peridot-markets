@@ -29,40 +29,52 @@ export default function GroupDashboard({id}:{id:string}) {
   const [loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[progress,setProgress]=useState<Progress|null>(null),[hashes,setHashes]=useState<string[]>([]);
   const [active,setActive]=useState<string|null>(null),[action,setAction]=useState<LendingAction>('Supply'),[amount,setAmount]=useState(''),[useAll,setUseAll]=useState(false),[tab,setTab]=useState<'markets'|'leverage'>('markets');
   const [marginMarket,setMarginMarket]=useState(''),[baseMarket,setBaseMarket]=useState(''),[marginAmount,setMarginAmount]=useState(''),[side,setSide]=useState<Side>('Long'),[leverage,setLeverage]=useState(2),[slippage,setSlippage]=useState('1'),[review,setReview]=useState<OpenQuote|null>(null);
+  const [refreshing,setRefreshing]=useState(false),[loadedAddress,setLoadedAddress]=useState<string|null|undefined>(undefined),[marginLoading,setMarginLoading]=useState(false),[marginError,setMarginError]=useState('');
   const [closeReview,setCloseReview]=useState<Position|null>(null);
   const [residualAmount,setResidualAmount]=useState('');
   const flight=useRef(false),generation=useRef(0);
   const refresh=useCallback(async()=>{
     const version=++generation.current;
+    setRefreshing(true);setMarginLoading(true);setMarginError('');setReview(null);setCloseReview(null);setRewards(null);setMargin(null);setPositionList([]);
     try {
       if(!/^\d+$/.test(id)||Number(id)>4294967295)throw new Error('Invalid group ID.');
       const g=await getGroup(Number(id));
       const configs=await Promise.all(g.markets.map(m=>getMarketConfig(g.id,m)));
       const views=await Promise.all(g.markets.map((m,i)=>readMarket(g,m,configs[i],wallet.address)));
-      const [r,ctx]=await Promise.all([readRewards(g,wallet.address),marginContext(g,views)]);
-      const p=ctx&&wallet.address?await positions(ctx,wallet.address):[];
       if(version!==generation.current)return;
-      setGroup(g);setMarkets(views);setRewards(r);setMargin(ctx);setPositionList(p);
-      const eligible=views.filter(m=>ctx?.info.enabled_markets.includes(m.address));
-      setMarginMarket(old=>eligible.some(m=>m.address===old)?old:eligible[0]?.address||'');
-      setBaseMarket(old=>eligible.some(m=>m.address===old)?old:eligible[1]?.address||'');setError('');
-    }catch(e){if(version===generation.current)setError(readable(e));}finally{if(version===generation.current)setLoading(false);}
+      setGroup(g);setMarkets(views);setLoadedAddress(wallet.address);setLoading(false);setRefreshing(false);setError('');
+      const rewardsTask=readRewards(g,wallet.address).then(r=>{if(version===generation.current)setRewards(r);}).catch(e=>{if(version===generation.current){setRewards(null);setError(`Rewards unavailable: ${readable(e)}`);}});
+      const marginTask=(async()=>{
+        try{
+          const ctx=await marginContext(g,views);
+          const p=ctx&&wallet.address?await positions(ctx,wallet.address):[];
+          if(version!==generation.current)return;
+          setMargin(ctx);setPositionList(p);
+          const eligible=views.filter(m=>ctx?.info.enabled_markets.includes(m.address));
+          setMarginMarket(old=>eligible.some(m=>m.address===old)?old:eligible[0]?.address||'');
+          setBaseMarket(old=>eligible.some(m=>m.address===old)?old:eligible[1]?.address||'');
+        }catch(e){if(version===generation.current){setMargin(null);setPositionList([]);setMarginError(readable(e));}}
+        finally{if(version===generation.current)setMarginLoading(false);}
+      })();
+      await Promise.all([rewardsTask,marginTask]);
+    }catch(e){if(version===generation.current){setError(readable(e));setLoadedAddress(undefined);setMarginLoading(false);}}finally{if(version===generation.current){setLoading(false);setRefreshing(false);}}
   },[id,wallet.address]);
+  const refreshRef=useRef(refresh);refreshRef.current=refresh;
   useEffect(()=>{void refresh();return()=>{generation.current++;};},[refresh]);
   useEffect(()=>{setReview(null);setCloseReview(null);},[wallet.address,id,marginAmount,marginMarket,baseMarket,side,leverage,slippage]);
   const report=(p:Progress)=>{setProgress(p);if(p.hash)setHashes(old=>old.includes(p.hash!)?old:[p.hash!,...old].slice(0,12));};
   const run=async(task:()=>Promise<unknown>,clearReview=true)=>{
     if(flight.current)return;
     flight.current=true;setBusy(true);setError('');setProgress(null);
-    try{await task();if(clearReview){setReview(null);setCloseReview(null);}await refresh();}catch(e){setError(readable(e));await refresh().catch(()=>{});setError(readable(e));}finally{flight.current=false;setBusy(false);}
+    try{await task();if(clearReview){setReview(null);setCloseReview(null);await refreshRef.current();}}catch(e){setError(readable(e));await refreshRef.current().catch(()=>{});setError(readable(e));}finally{flight.current=false;setBusy(false);}
   };
   const signer=()=>{if(!wallet.address)throw new Error('Connect your wallet first.');if(wallet.networkMismatch)throw new Error('Switch your wallet to the selected app network.');return {address:wallet.address,signTransaction:wallet.signTransaction};};
-  const selected=markets.find(m=>m.address===active),disabled=busy||!wallet.address||wallet.networkMismatch||network.readOnly;
+  const selected=markets.find(m=>m.address===active),disabled=busy||refreshing||loadedAddress!==wallet.address||!wallet.address||wallet.networkMismatch||network.readOnly;
   const needsMarketEntry=!!selected&&!selected.entered&&(action==='Borrow'||action==='Supply'&&!!group?.reward_distributor);
   const mAsset=markets.find(m=>m.address===marginMarket),bAsset=markets.find(m=>m.address===baseMarket);
   const maxLeverage=margin&&mAsset&&bAsset?Math.floor(margin.limits?.[(side==='Long'?bAsset:mAsset).address]??effectiveLeverage(Number(margin.info.cfg.max_leverage),(side==='Long'?bAsset:mAsset).config.collateral_factor)):2;
   if(loading)return <div className="page" aria-busy="true"><div className="page-heading"><div style={{display:'grid',gap:10,width:'min(100%,420px)'}}><Skeleton width={160} height={12}/><Skeleton width={260} height={32}/><Skeleton width={320} height={14}/></div></div><section className="card" role="status"><Skeleton width={120} height={20}/><div className="stack-sm mt-4">{[0,1].map(i=><div key={i} className="stack-sm"><Skeleton height={16}/><Skeleton height={6}/></div>)}</div><p className="sr-only">Loading group and market balances...</p></section></div>;
-  if(!group)return <div className="page"><EmptyState title="Group unavailable" role="alert" action={<div className="row"><button className="button" onClick={()=>void refresh()}>Retry</button><Link className="button ghost" href="/groups">All groups</Link></div>}><p>{error||'This group could not be loaded.'}</p></EmptyState></div>;
+  if(!group||group.id!==Number(id))return <div className="page"><EmptyState title="Group unavailable" role="alert" action={<div className="row"><button className="button" onClick={()=>void refresh()}>Retry</button><Link className="button ghost" href="/groups">All groups</Link></div>}><p>{error||'This group could not be loaded.'}</p></EmptyState></div>;
   // Display-only derivations.
   const held=markets.filter(m=>m.receiptBalance>0n||m.debt>0n);
   const routes=[...new Set(markets.map(m=>m.config.yield_route.tag))];
@@ -86,9 +98,10 @@ export default function GroupDashboard({id}:{id:string}) {
           <span className="subtle" style={{fontSize:12,display:'inline-flex',alignItems:'center',gap:6}}>Owner <Address value={group.owner} label="owner address"/></span>
         </div>
       </div>
-      <div className="page-actions"><button className="button secondary" onClick={()=>void refresh()} disabled={busy}><RefreshCw size={14} aria-hidden/>Refresh</button>{wallet.address===group.owner&&<Link className="button secondary" href={`/groups/${group.id}/control`}><Settings2 size={14} aria-hidden/>Control Panel</Link>}</div>
+      <div className="page-actions"><button className="button secondary" onClick={()=>void refresh()} disabled={busy||refreshing}><RefreshCw size={14} aria-hidden/>Refresh</button>{wallet.address===group.owner&&<Link className="button secondary" href={`/groups/${group.id}/control`}><Settings2 size={14} aria-hidden/>Control Panel</Link>}</div>
     </header>
     {network.useMocks&&<Notice tone="info" role="note">Demo mode. Balances and actions are simulated. Each market action advances one second of demo rewards.</Notice>}
+    {(refreshing||loadedAddress!==wallet.address)&&<Notice tone="info" role="status">Updating balances for this wallet. Actions will unlock when current balances are ready.</Notice>}
     {error&&<Notice tone="danger" role="alert">{error}</Notice>}
     {progress&&<Notice tone={progressTone} role="status">{progress.message||progressCopy[progress.status]}</Notice>}
     {!wallet.address&&<section className="card" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}><div className="row"><Wallet size={18} aria-hidden style={{color:'var(--accent-text)'}}/><p style={{margin:0}}>Connect your wallet to see your balances and use these markets.</p></div><button className="button" onClick={()=>void wallet.connect()} disabled={wallet.isConnecting}>Connect wallet</button></section>}
@@ -154,7 +167,7 @@ export default function GroupDashboard({id}:{id:string}) {
       </section>
     </>:<section className="card">
       <div className="card-header"><div><h2>Leverage</h2><p>Open long or short positions using supplied assets as margin. Positions can be liquidated when their health falls below 1.0.</p></div>{margin&&<Badge tone="info" icon={Scale}>Group max {margin.info.cfg.max_leverage.toString()}x</Badge>}</div>
-      {!margin?<p className="muted">Leverage has not been enabled for this group.</p>:<div className="stack">
+      {marginLoading?<p role="status">Loading leverage limits and positions...</p>:marginError?<Notice tone="danger" role="alert">Leverage unavailable: {marginError}. Refresh to retry.</Notice>:!margin?<p className="muted">Leverage has not been enabled for this group.</p>:<div className="stack">
         {margin.status&&!margin.status.incentive_applied&&<Notice tone="warn" role="status">A group liquidation-incentive change is pending. Current lending incentive: {Number(margin.status.applied_liquidation_incentive)/10000}%. Owner apply time: {new Date(Number(margin.status.incentive_apply_after)*1000).toLocaleString()}. Margin pairs use their configured incentive immediately.</Notice>}
         {margin.info.enabled_markets.length<2&&<Notice tone="warn" role="status">The owner must enable at least two approved markets and a pool route before new positions can open.</Notice>}
         <div className="two-col leverage-layout">

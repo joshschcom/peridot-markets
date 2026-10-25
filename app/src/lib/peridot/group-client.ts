@@ -62,19 +62,14 @@ export async function readWalletTokenBalance(token:string,owner:string,read:(con
   }
 }
 export async function readMarket(group: Group, market: string, config: MarketConfig, owner: string | null): Promise<MarketView> {
-  const token=await tokenInfo(config.token);
+  const tokenRequest=tokenInfo(config.token);
   if(network.useMocks) {
+    const token=await tokenRequest;
     const account=mockAccount(group,market,owner||'');
     const supplied=100_000n*10n**BigInt(token.decimals)+BigInt(account.supplied), borrowed=20_000n*10n**BigInt(token.decimals)+BigInt(account.debt);
     return { address:market,config,token,supplied,borrowed,liquidity:supplied-borrowed,receiptBalance:BigInt(account.supplied),walletBalance:10_000n*10n**BigInt(token.decimals)-BigInt(account.supplied)+BigInt(account.debt),needsTrustline:false,debt:BigInt(account.debt),exchangeRate:1_000_000n,...rateApr(config,supplied-borrowed,borrowed),price:{mode:'ReflectorOnly',reflector_price:100_000_000n,aquarius_price:undefined,deviation_bps:undefined,status:'ok',timestamp:BigInt(Math.floor(Date.now()/1000))},vault:null,entered:account.entered };
   }
-  const [supplied,borrowed,liquidity,exchangeRate,reserves,receiptBalance,walletState,debt,enteredMarkets] = await Promise.all([
-    readContract<bigint>(market,'get_total_underlying',[]),readContract<bigint>(market,'get_total_borrowed',[]),readContract<bigint>(market,'get_available_liquidity',[]),readContract<bigint>(market,'get_exchange_rate',[]),readContract<bigint>(market,'get_total_reserves',[]),
-    owner?readContract<bigint>(market,'get_ptoken_balance',[addr(owner)]):0n,
-    owner?readWalletTokenBalance(config.token,owner):{balance:0n,needsTrustline:false},
-    owner?readContract<bigint>(market,'get_user_borrow_balance',[addr(owner)]):0n,
-    owner?readContract<string[]>(group.controller,'get_user_markets',[addr(owner)]):[],
-  ]);
+  const details = (async () => {
   let price:PriceCheck|null=null,priceError:string|undefined,vault:VaultState|null=null,vaultError:string|undefined;
   try { price=await readContract<PriceCheck>(group.price_router,'check',[addr(config.token)]); } catch(e) { priceError=String(e); }
   if(config.yield_route.tag!=='None') {
@@ -88,8 +83,27 @@ export async function readMarket(group: Group, market: string, config: MarketCon
       }
     } catch(e) { vaultError=String(e); }
   }
+    return {price,priceError,vault,vaultError};
+  })();
+  const [supplied,borrowed,liquidity,exchangeRate,reserves,receiptBalance,walletState,debt,enteredMarkets,token,{price,priceError,vault,vaultError}] = await Promise.all([
+    readContract<bigint>(market,'get_total_underlying',[]),readContract<bigint>(market,'get_total_borrowed',[]),readContract<bigint>(market,'get_available_liquidity',[]),readContract<bigint>(market,'get_exchange_rate',[]),readContract<bigint>(market,'get_total_reserves',[]),
+    owner?readContract<bigint>(market,'get_ptoken_balance',[addr(owner)]):0n,
+    owner?readWalletTokenBalance(config.token,owner):{balance:0n,needsTrustline:false},
+    owner?readContract<bigint>(market,'get_user_borrow_balance',[addr(owner)]):0n,
+    owner?readContract<string[]>(group.controller,'get_user_markets',[addr(owner)]):[],
+    tokenRequest, details,
+  ]);
   // Config rate curve is an APR quote, not a historical compounded yield.
   return {address:market,config,token,supplied,borrowed,liquidity,exchangeRate,receiptBalance,walletBalance:walletState.balance,needsTrustline:walletState.needsTrustline,debt,...rateApr(config,supplied+reserves-borrowed,borrowed,reserves),price,priceError,vault,vaultError,entered:(enteredMarkets as string[]).includes(market)};
+}
+/** Overview cards need totals only, not account, price, vault or margin calls. */
+export type MarketSummary=Pick<MarketView,'address'|'config'|'token'|'supplied'|'borrowed'|'utilization'>;
+export async function readMarketSummary(group:Group,market:string,config:MarketConfig):Promise<MarketSummary>{
+  if(network.useMocks)return readMarket(group,market,config,null);
+  const [token,supplied,borrowed]=await Promise.all([tokenInfo(config.token),readContract<bigint>(market,'get_total_underlying'),readContract<bigint>(market,'get_total_borrowed')]);
+  if(supplied<0n||borrowed<0n)throw new Error('Invalid market totals.');
+  const utilization=supplied>0n?Math.min(100,Number(borrowed*10000n/supplied)/100):0;
+  return {address:market,config,token,supplied,borrowed,utilization};
 }
 export type LendingAction='Supply'|'Withdraw'|'Borrow'|'Repay'|'Enable collateral';
 export async function lend(group:Group,market:MarketView,action:LendingAction,amount:string,signer:Signer,onProgress?:(p:Progress)=>void,all=false) {

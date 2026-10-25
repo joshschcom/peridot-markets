@@ -1,5 +1,6 @@
 import { Account, Address, BASE_FEE, Contract, rpc, scValToNative, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { network } from './network';
+import { ReadScheduler, isRateLimited } from './read-scheduler';
 
 export interface TxProgress {
   status: 'simulating' | 'signing' | 'submitting' | 'confirming' | 'success' | 'unknown' | 'error';
@@ -45,7 +46,7 @@ function clearPending(address: string, hash: string) {
 }
 export function getRpc(): rpc.Server {
   if (!network.rpcUrl) throw new Error('Mainnet RPC is not configured. Set NEXT_PUBLIC_MAINNET_RPC_URL.');
-  if (!server) server = new rpc.Server(network.rpcUrl, { allowHttp: network.rpcUrl.startsWith('http://localhost') || network.rpcUrl.startsWith('http://127.0.0.1') });
+  if (!server) server = new rpc.Server(network.rpcUrl, { timeout: 30_000, allowHttp: network.rpcUrl.startsWith('http://localhost') || network.rpcUrl.startsWith('http://127.0.0.1') });
   return server;
 }
 const pendingKey = (address: string) => `peridot:pending:${network.name}:${address}`;
@@ -68,17 +69,38 @@ async function reconcilePendingTransactionLocked(address: string): Promise<'none
   const result = await getRpc().getTransaction(pending.hash);
   if (result.status === 'NOT_FOUND' && !isDefinitivelyExpired(pending, result)) return 'unknown';
   clearPending(address, pending.hash);
+  invalidateContractReads();
   return result.status === 'SUCCESS' ? 'success' : 'failed';
 }
 export async function reconcilePendingTransaction(address: string): Promise<'none' | 'success' | 'failed' | 'unknown'> {
   return withWalletLock(address, () => reconcilePendingTransactionLocked(address));
 }
-export async function readContractRaw(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<xdr.ScVal> {
+// Coalesce only simultaneous identical reads. Never cache settled financial state.
+const readScheduler = new ReadScheduler();
+const reading = new Map<string, Promise<xdr.ScVal>>();
+/** A new read after a mutation must not join a simulation started before that mutation. */
+export function invalidateContractReads(): void { reading.clear(); }
+export function readContractRaw(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<xdr.ScVal> {
+  const key = JSON.stringify([network.name, contractId, method, args.map(arg => arg.toXDR('base64'))]);
+  const existing = reading.get(key);
+  if (existing) return existing;
+  const request = performRead(contractId, method, args).finally(() => { if (reading.get(key) === request) reading.delete(key); });
+  reading.set(key, request);
+  return request;
+}
+async function performRead(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<xdr.ScVal> {
   await assertRpcNetwork();
   const tx = new TransactionBuilder(new Account('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', '0'), {
     fee: BASE_FEE, networkPassphrase: network.passphrase,
   }).addOperation(new Contract(contractId).call(method, ...args)).setTimeout(120).build();
-  const result = await getRpc().simulateTransaction(tx);
+  let result:Awaited<ReturnType<rpc.Server['simulateTransaction']>>;
+  for(let attempt=0;;attempt++){
+    try{result=await readScheduler.run(()=>getRpc().simulateTransaction(tx));break;}
+    catch(error){
+      if(!isRateLimited(error)||attempt>=2)throw error;
+      await new Promise(resolve=>setTimeout(resolve,1000*(attempt+1)));
+    }
+  }
   if (!rpc.Api.isSimulationSuccess(result) || !result.result) {
     throw new Error(`Unable to read ${method}: ${'error' in result ? result.error : 'No result returned.'}`);
   }
@@ -93,7 +115,8 @@ interface ContractInput {
 }
 export async function submitContract<T>(input: ContractInput): Promise<TxResult<T>> {
   if (network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
-  return withWalletLock(input.signer.address, () => submitContractLocked<T>(input));
+  try { return await withWalletLock(input.signer.address, () => submitContractLocked<T>(input)); }
+  finally { invalidateContractReads(); }
 }
 async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T>> {
   const { contractId, method, signer, onProgress } = input;

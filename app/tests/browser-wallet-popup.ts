@@ -31,7 +31,8 @@ async function main(){
   const popupReady=page.waitForEvent('popup');
   await connect.click();
   const popup=await popupReady;
-  await popup.waitForURL('https://albedo.link/confirm',{timeout:30_000});
+  await popup.waitForURL('https://albedo.link/confirm',{timeout:30_000,waitUntil:'domcontentloaded'}).catch(error=>{console.log(JSON.stringify({popupUrl:popup.url()}));throw error;});
+  console.log('Real Albedo popup reached.');
   assert.deepEqual(await page.evaluate(()=>(window as unknown as {popupGestures:boolean[]}).popupGestures),[true]);
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
   await expect(connect).toBeEnabled();
@@ -43,9 +44,10 @@ async function main(){
   await connect.click();
   await expect(page.getByRole('button',{name:'Connecting',exact:true})).toBeDisabled();
   await page.clock.fastForward(61_000);
-  await expect(page.getByRole('alert')).toContainText('wallet did not respond');
+  await expect(page.locator('.wallet-alert')).toContainText('wallet did not respond');
   await expect(connect).toBeEnabled();
   await context.close();
+  console.log('Connect, cancel and blocked-popup recovery passed.');
   // Isolated protocol fixture: public address only, never a wallet signature.
   // All transaction submission requests are blocked as a second safety boundary.
   const isolated=await browser.newContext();
@@ -81,13 +83,15 @@ async function main(){
   await flow.goto(base,{waitUntil:'domcontentloaded'});
   await flow.getByRole('button',{name:'Connect wallet',exact:true}).click({timeout:60_000});
   await expect(flow.locator('.wallet-button')).toContainText('GBTA',{timeout:30_000});
+  console.log('Isolated public-address fixture connected.');
   await flow.getByRole('link',{name:'Explore',exact:true}).first().click();
   // Navigate while preserving the connected provider through client-side routing.
   await flow.getByRole('link',{name:/Meridian/}).first().click({timeout:90_000});
-  await flow.getByRole('button',{name:'Manage XLM',exact:true}).click({timeout:90_000});
+  await flow.getByRole('button',{name:'Manage XLM',exact:true}).click({timeout:90_000}).catch(async error=>{console.log((await flow.locator('body').innerText()).slice(0,6000));throw error;});
   await flow.getByRole('button',{name:'Enable market',exact:true}).click();
   const dialog=flow.getByRole('dialog',{name:'Ready to sign with Albedo'});
   await expect(dialog).toBeVisible({timeout:90_000});
+  console.log('Unsigned transaction reached prepared-sign dialog.');
   await expect(dialog).toContainText('enter market');
   const signPopupReady=flow.waitForEvent('popup');
   await dialog.getByRole('button',{name:'Open Albedo to sign',exact:true}).click();
