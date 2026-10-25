@@ -427,4 +427,130 @@ _Launchpad agent (12), stage 1: token and bonding curve._
 
 ## XOXNO as a graduation venue
 
-_XOXNO research agent._
+_XOXNO research agent. Read-only research on 25 Oct 2026: mainnet RPC reads and simulations (`--send=no`), the public repos `XOXNO/rs-lending-xlm` (commit `30d5990`) and `XOXNO/xoxno-contract-sdk` 0.3.0, and Aquarius docs. Nothing was sent to the network._
+
+### Verdict
+
+| Question | Answer |
+|---|---|
+| What is `CCVENFSVCBYDHVOACFZXMNNYVOZ3LKXPZYU5LUI4N7KTXOKRVYD7F3TR`? | XOXNO's **swap aggregator router**, not a pool, lending market or launchpad |
+| Can XOXNO be the graduation venue (trading pool)? | **No.** XOXNO runs no AMM. Its router routes into other AMMs, Aquarius included |
+| Can XOXNO list the graduated token in its lending market? | **Not permissionlessly.** Listing is owner-only (governance timelock) and the token needs an oracle feed |
+| Is "launcher chooses Aquarius or XOXNO" feasible? | **Not today.** Define a `GraduationVenue` enum, implement only `Aquarius`. A real choice exists between Aquarius pool types |
+| Default venue | **Aquarius** (permissionless pool creation, verified on mainnet below). XOXNO is a routing and later-listing partner |
+
+### 1. What `CCVENFSV...` is
+
+- Identification. XOXNO's repo `rs-lending-xlm` lists it as `aggregator` in `configs/networks.json` and as "Swap aggregator router (`execute_strategy`)" in `skills/xoxno-lending/addresses.md`. The same config records `aggregator_wasm_hash = 18eb766e87ed578892828cbb8c14817731dd8e570cf3861771fb944b85c352e8`, which equals the wasm hash the contract runs now (stellar.expert API `/explorer/public/contract/<id>`).
+- Interface (`stellar contract info interface`, mainnet): `execute_strategy(sender: Address, total_in: i128, swap_xdr: Bytes) -> i128`, `add_referral`, `set_static_fee`, `add_to_whitelist`, `claim_referral_fees`, `claim_admin_fees`, `sweep_balance`, `upgrade`, `transfer_ownership` and `accept_ownership`. No pool or market creation.
+- What it does (`contracts/swap-aggregator/README.md`): runs multi-hop, multi-venue routes built off-chain and passed as bytes. Venues: Aquarius, Comet, Phoenix, Soroswap, Sushi (`src/venues/`), including Aquarius LP mint and burn.
+- Live state (read-only invokes): `admin()` and `get_owner()` = `GAVWFZK5BGCGBWH4O2CXAHXVRIYVAMGCTZJ24IPLVNLT2WQ2LJBDEEBP`, which `networks.json` calls the revenue `accumulator`; `static_fee_bps()` = 5; `referral_counter()` = 1; 5 fee-whitelisted tokens (USDT0, USDC, XLM, EURC, PYUSD). Created 18 Jul 2026, 133 direct invocations and 1635 sub-invocations, 3 wasm versions (so two upgrades by the owner).
+- The static fee applies only when the route carries an active `referral_id` (README, "Fees"). A Peridot referral id is therefore a plain integration step (the owner calls `add_referral`).
+- Relation to the lending contracts in 11-ADDRESSES.md: the lending controller `CAUCMIN5...` stores the router (`set_swap_aggregator`, governance op `SetSwapAggregator`) and uses it for `multiply`, `swap_collateral`, `swap_debt` and `repay_debt_with_collateral`. The controller treats the router as untrusted and checks balance deltas. Lending governance has no router-upgrade operation: the router owner key controls its upgrades (`docs/reference/endpoints.md`, "Swap aggregator").
+- A contract can call it, but the route is an off-chain product: XOXNO's quote server (`https://stellar-swap.xoxno.com`, `GET /api/v1/quote`) returns the `swap_xdr`. A permissionless on-chain `graduate()` cannot build one, so the router only fits keeper or UI flows (for example swapping fees into AQUA, see section 4).
+
+### 2. What XOXNO offers a launchpad
+
+| Form | Exists? | Evidence |
+|---|---|---|
+| (a) Trading venue with locked LP | No. XOXNO is a lender plus a router | Controller `CAUCMIN5...` exports lending verbs only (`supply`, `borrow`, `multiply`, ...); the router has no pool creation |
+| (b) Permissionless lending market for a new token | No | `create_liquidity_pool(hub_id, asset, params: MarketParamsRaw)`, `add_asset_to_spoke(SpokeAssetArgs)`, `edit_asset_in_spoke` are `#[only_owner]`; `create_hub` and `add_spoke` are owner or governance-guardian only (`contracts/controller/src/lib.rs`, `contracts/governance/README.md`) |
+
+Lending listing detail (all from `rs-lending-xlm`):
+
+- Owner is the governance contract `CC44PEQW7HSEPKAZ5ZRPH2JS5M5KVJXCUBLJ2ZX4E3WCDKMNFILHC2AD` (its `controller()` returns `CAUCMIN5...`). Changes go through `propose`, then `execute` after the timelock. `get_min_delay()` on mainnet returned `12` (the README counts it in ledgers; ask the team what delay proposals actually use).
+- Oracle gate: the price aggregator accepts `ProviderRef::{Reflector, RedStone, Xoxno, Chainlink}` only (`common/src/types/composable_oracle.rs`). Setting a feed is the owner-proposed `ConfigureAssetOracle` operation, validated by live probes with a sanity band. A brand-new token has no such feed, which is the same gap Peridot solves with `AquariusOnly` pricing.
+- Parameters a listing needs: `SpokeAssetArgs { asset, hub_id, spoke_id, ltv, threshold, bonus, liquidation_fees, supply_cap, borrow_cap, can_collateral, can_borrow, frozen, paused, no_seize }` (controller interface).
+- Isolation: a market is `HubAssetKey { hub_id, asset }`; hubs isolate books and a spoke is an account's risk profile (SDK README, 11-ADDRESSES.md). Mainnet spokes 5 and 8 already list Aquarius LP tokens (`XLMAQUA_LP`, `AQUAUSDC_LP`, in hub 3: `skills/xoxno-lending/addresses.md`), so there is precedent for XOXNO governance to list Aquarius-based assets after the fact.
+- SDK: `xoxno-contract-sdk = "0.3"` needs `soroban-sdk = "28"`, Rust 1.91+, stellar-cli 25.2+ (its `Cargo.toml` and README). This workspace is on soroban-sdk 25, so any direct XOXNO call from a launchpad contract needs its own workspace (same rule as `03-VAULT-XOXNO.md`). Graduation itself needs no XOXNO dependency.
+
+### 3. Aquarius pool creation (answers the open item in 12-LAUNCHPAD.md)
+
+Router `CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK` (`version()` = 220, `get_emergency_mode()` = false) exports pool creation. Signatures from `stellar contract info interface`:
+
+```rust
+fn init_standard_pool(user: Address, tokens: Vec<Address>, fee_fraction: u32) -> (BytesN<32>, Address);
+fn init_stableswap_pool(user: Address, tokens: Vec<Address>, fee_fraction: u32) -> (BytesN<32>, Address);
+fn init_concentrated_pool(user: Address, tokens: Vec<Address>, fee: u32) -> (BytesN<32>, Address);   // (pool_index, pool)
+fn share_id(tokens: Vec<Address>, pool_index: BytesN<32>) -> Address;                                // LP share token
+fn deposit(user: Address, tokens: Vec<Address>, pool_index: BytesN<32>, desired_amounts: Vec<u128>, min_shares: u128) -> (Vec<u128>, u128);
+```
+
+Verified by simulation on mainnet (identity `dev`, `--send=no`):
+
+| Check | Result |
+|---|---|
+| Creation payment | `get_init_pool_payment_token()` = AQUA `CAUIKL3IYGMERDRUN6YSCLWVAKIFG5Q4YJHUKM4S4NJZQIA3BAS6OJPK`; `get_standard_pool_payment_amount()`, `get_stable_pool_payment_amount()` and `get_conc_pool_payment_amount()` each return `3000000000000` = **300,000 AQUA** (7 decimals), sent to `get_init_pool_payment_address()` = `CCAHNRWJ4YX3BCXSBQLVT44HEJCDYEJS75CBBY7PP4GKJMS2E55O54FH`. Docs agree: "300,000 AQUA deployment cost" (docs.aqua.network/user-guides/pools/creating-a-pool). At the stellar.expert price of 0.000286 USD that is about 86 USD, but it is paid in AQUA |
+| Payer | `user` pays: the simulation reaches `AQUA.transfer(user, CCAHNRWJ..., 3000000000000)` and fails only because the `dev` account has no AQUA trustline. If the curve contract is `user`, the curve must hold 300,000 AQUA |
+| Existing pair | `init_standard_pool(XLM/USDC, 30)` returns the existing `(9ac7a9cd..., CARCLMAP...)` with no payment, so a repeat call is harmless |
+| Token order | Sorted ascending by contract id is required: `[USDC, PERI]` reaches the AQUA transfer, `[PERI, USDC]` fails with contract error 2002 (inferred as "unsorted tokens"). Sort in the adapter |
+| Standard pool fees | 10, 30 and 100 bps accepted (reach the AQUA transfer); 50 and 1000 rejected with error 302 |
+| Concentrated pool | Fee tiers 10 / 30 / 100 with tick spacing 20 / 60 / 200; the first deposit sets the starting price from the amount ratio; positions are keyed by owner + tick range, with no NFT (docs.aqua.network/developers/concentrated-liquidity). `init_concentrated_pool` also hits the AQUA transfer |
+| Permission | Permissionless. Docs: "Pool creation is permissionless ... Whitelisting is not required to create the pool, but it is required to receive protocol emissions" (docs.aqua.network/for-projects/for-projects) |
+| Minimum liquidity | None found in the interface or docs. Test on the testnet router `CBCFTQSPDBAIZ6R6PJQKSQWKNKWH2QIV3I4J72SHWBIK3ADRRAM5A6GD` |
+| LP lock | Standard pool shares are a SEP-41 token (`share_id` returns e.g. `CDLJFX3H3V4WJ4SYNBWUUFKMIYCZVZ3BMHSD6C53RKR7YBLYPBHFLF6X`, exporting `transfer` and `burn`). **Burning the shares, or sending them to a contract with no withdraw path, locks liquidity permanently.** There is no native lock feature. Concentrated positions have no token: lock means the curve contract holds the position and exposes no `withdraw_position` path (keep fee claims available) |
+| Admin switches | Pools export `kill_swap`, `kill_deposit`, `kill_claim` and `set_emergency_mode`; the router has `commit_upgrade` / `apply_upgrade` and `set_privileged_addrs`. Locked LP is only as safe as these keys |
+| Footprint | Not measurable from a read-only identity (simulation stops at the AQUA transfer). Qualitatively: deploys a pool and a share token, one AQUA transfer, two token transfers for the first deposit, then the lock. Run `stellar contract invoke ... --cost` on testnet; keep the `graduate_pool()` / `graduate_market()` split from 12-LAUNCHPAD.md |
+
+Auth for a contract caller: the curve is `user` for `init_standard_pool` and `deposit`. Authorize the AQUA transfer and both deposit transfers with `authorize_as_current_contract`, with the transfer entries at the **root** of the auth tree; the pools do not `require_auth` on swap or deposit (project memory, "Aquarius auth tree shape"). Verify the exact tree with a testnet simulation, since the mainnet check above could not get past the AQUA transfer.
+
+### 4. Recommendation
+
+**Default and only implemented venue: an Aquarius standard (constant product) pool, fee 30 bps, shares burned.** Reasons: permissionless creation is verified on mainnet, the Aquarius pricing and swap path already exists in Peridot (`AquariusOnly`, swap adapter, 11-ADDRESSES.md), and a constant-product pool needs no price range. Use concentrated only if a team wants range control; it needs tick math and an initial range.
+
+Funding decision for Lead A: the creating contract pays 300,000 AQUA. Options, in order of preference: (1) the factory charges a launch fee in XLM or USDC and a keeper swaps it to AQUA (XOXNO's router or Aquarius `swap_chained`; an XLM/AQUA pool exists) and pre-funds the curve; (2) the Peridot treasury pre-funds AQUA per launch; (3) the curve swaps part of the raise at graduation (not recommended: price impact and a larger transaction).
+
+`GraduationVenue` and the adapter, minimal interface:
+
+```rust
+#[contracttype] pub enum GraduationVenue { Aquarius(AquariusPoolKind) /* Xoxno reserved, not implemented */ }
+#[contracttype] pub enum AquariusPoolKind { Standard30, Concentrated30 }
+
+pub trait VenueAdapter {
+    /// Sorts tokens, pays the creation fee, creates the pool, seeds it, locks the LP.
+    fn create_pool_and_lock(
+        env: Env, token: Address, quote: Address,
+        token_amount: i128, quote_amount: i128, fee_bps: u32,
+    ) -> GraduatedPool;   // { pool: Address, pool_index: BytesN<32>, share_token: Address, locked_shares: u128 }
+    fn creation_fee(env: Env) -> (Address, u128);   // (AQUA, 3000000000000) read live from the router
+}
+```
+
+`pool` and `pool_index` feed `set_pool_binding` for the price router. The curve stores `GraduationVenue` at construction; an `Xoxno` variant must revert until XOXNO exposes something to call.
+
+Where XOXNO fits (neutral, all optional):
+
+| Role | What it needs | Effort |
+|---|---|---|
+| Day-one routability of the graduated token | XOXNO's quote server indexes Aquarius pools; confirm the new pair appears | 0 h, ask |
+| Swap UI on the token page via XOXNO's quote server and router, with a Peridot referral id | Frontend call to `GET /api/v1/quote`, `execute_strategy` via wallet; the XOXNO owner calls `add_referral` | 4 to 6 h |
+| Keeper swap of launch fees to AQUA | `execute_strategy` with a quoted route | 2 h |
+| Lending listing of the token or its LP in XOXNO | XOXNO governance proposal plus an oracle feed | External, their decision |
+
+Effort for the venue work: Aquarius adapter (sort, fee payment, creation, deposit, burn, testnet verification) **8 to 12 h**; `GraduationVenue` plumbing and tests 2 h; XOXNO graduation adapter **0 h** (nothing to call).
+
+### 5. Risks
+
+- **Thin new pool as collateral.** A freshly seeded pool is cheap to move. Keep the launchpad preset (collateral factor 25%, caps sized from pool depth, borrow cap 10% of supply cap, idle buffer 50%), require a minimum graduation target so depth is non-trivial, and rely on `max_pool_divergence_bps` against the quote asset. Never price a borrowable market from spot alone.
+- **Third-party admin keys.** Aquarius router upgrades and pool kill switches, and the XOXNO router owner key `GAVWFZK5...` (outside lending governance), can change the behavior of locked liquidity or routing. State this in the UI risk copy.
+- **AQUA price exposure** on the 300,000 AQUA creation fee, plus a trustline and balance requirement on the payer.
+- **Router drift.** The Aquarius router is at version 220 and the XOXNO aggregator has already been upgraded twice. Pin addresses from `11-ADDRESSES.md` and re-read `get_init_pool_payment_*` before each launch.
+- **Compliance.** Unchanged from 12-LAUNCHPAD.md; XOXNO involvement does not alter it.
+
+### 6. Questions for the XOXNO team at the event
+
+1. Is there a path to a permissionless or isolated listing for new tokens (a separate hub, supply-only, capped), or is governance listing always required? What are the listing criteria for an Aquarius-based asset (depth, age, holders)?
+2. Can the `Xoxno` or `Reflector` provider price a token from its Aquarius pool (TWAP), so graduated tokens could be listed without a CEX feed?
+3. Referral id terms for the swap router: fee share, who can call `add_referral`, and whether a Peridot id can be created.
+4. Do the quote server's venue indexers pick up newly created Aquarius pools automatically, and how fast?
+5. What delay does governance actually use for proposals (`get_min_delay` returns 12)? Is there a fast path for listing LP tokens?
+6. Is there a plan for an XOXNO-run AMM or a pool-creation hook the launchpad could call?
+7. Router upgrade policy: will the owner key move under governance, and is there notice before upgrades?
+
+### Sources
+
+- Router interface and live reads: `stellar contract info interface --id CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK --network mainnet-public`
+- Aggregator and lending: https://github.com/XOXNO/rs-lending-xlm (`contracts/swap-aggregator/README.md`, `configs/networks.json`, `docs/reference/endpoints.md`, `contracts/governance/README.md`, `contracts/price-aggregator/README.md`, `skills/xoxno-lending/addresses.md`, `skills/xoxno-swap-aggregator/SKILL.md`)
+- SDK: https://github.com/XOXNO/xoxno-contract-sdk (`crates/xoxno-contract-sdk/README.md`, `Cargo.toml`)
+- Aquarius: https://docs.aqua.network/user-guides/pools/creating-a-pool, https://docs.aqua.network/for-projects/for-projects, https://docs.aqua.network/developers/concentrated-liquidity, https://docs.aqua.network/developers/reference/router-and-pool-contracts
+- Contract metadata: https://api.stellar.expert/explorer/public/contract/CCVENFSVCBYDHVOACFZXMNNYVOZ3LKXPZYU5LUI4N7KTXOKRVYD7F3TR
