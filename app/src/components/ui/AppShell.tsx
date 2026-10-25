@@ -33,9 +33,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="header-actions">
           <span className="badge accent" title={`Network: ${network.name}`}><span className="live-dot" aria-hidden />{networkLabel}</span>
           {!network.useMocks && <select aria-label="Wallet provider" value={wallet.walletId} disabled={wallet.isConnecting || !!wallet.address} onChange={e => wallet.selectWallet(e.target.value as 'albedo' | 'freighter')}><option value="albedo">Albedo</option><option value="freighter">Freighter</option></select>}
-          <button className={`button wallet-button${wallet.address ? ' connected' : ''}`} disabled={wallet.isConnecting||!wallet.isReady} onClick={() => wallet.address ? wallet.disconnect() : void wallet.connect()}>
+          <button className={`button wallet-button${wallet.address ? ' connected' : ''}`} disabled={wallet.isConnecting||(!wallet.isReady&&!wallet.error)} onClick={() => wallet.address ? wallet.disconnect() : void wallet.connect()}>
             <Wallet size={15} aria-hidden />
-            {wallet.address ? network.useMocks ? 'Demo account' : `${wallet.address.slice(0, 4)}…${wallet.address.slice(-4)}` : wallet.isConnecting ? 'Connecting' : !wallet.isReady ? 'Loading wallet...' : 'Connect wallet'}
+            {wallet.address ? network.useMocks ? 'Demo account' : `${wallet.address.slice(0, 4)}…${wallet.address.slice(-4)}` : wallet.isConnecting ? 'Connecting' : !wallet.isReady && !wallet.error ? 'Loading wallet...' : 'Connect wallet'}
             {wallet.address && <ChevronDown size={13} aria-hidden />}
           </button>
           {wallet.isConnecting && <button className="button ghost" onClick={wallet.disconnect}>Cancel</button>}
@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </header>
     <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}<span className="badge accent"><span className="live-dot" aria-hidden />{networkLabel}</span></nav>
-    {(wallet.error || wallet.networkMismatch) && <div className="wallet-alert" role="alert">{wallet.error || `Switch your wallet to ${network.name} before signing.`}</div>}
+    {(wallet.error || wallet.networkMismatch) && <div className="wallet-alert" role="alert">{wallet.error || `Switch your wallet to ${network.name} before signing, then return to this page. If this message stays, disconnect and connect again.`}</div>}
     <main className="site-main">{children}</main>
     <footer className="site-footer">
       <div className="site-footer-inner">

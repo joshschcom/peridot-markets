@@ -21,3 +21,21 @@ test('rejects changed transaction, wrong account, network and unsigned response'
  const valid=TransactionBuilder.fromXDR(unsigned,Networks.PUBLIC);valid.sign(signer);
  assert.throws(()=>validateWalletSignature(unsigned,valid.toXDR(),signer.publicKey(),Networks.PUBLIC,other.publicKey()),/another account/);
 });
+import {describeWalletError,signingWindowMs,SIGN_TIMEOUT_MS,EXPIRY_GUARD_MS} from './kit';
+test('wallet errors become actionable messages',()=>{
+ assert.match(describeWalletError({code:-1,message:'Freighter is not connected'},'freighter').message,/Install and unlock the Freighter extension/);
+ assert.match(describeWalletError({code:-4,message:'Action rejected by user'},'albedo').message,/declined the request in Albedo/);
+ assert.match(describeWalletError({message:'The user rejected this request.'},'freighter').message,/declined the request in Freighter/);
+ const own=new Error('Wallet request cancelled. Close its window before trying again.');
+ assert.equal(describeWalletError(own,'albedo'),own);
+ assert.match(describeWalletError({message:'Some specific wallet text'},'albedo').message,/Some specific wallet text/);
+ assert.match(describeWalletError(undefined,'albedo').message,/Try again/);
+});
+test('the signing window never outlives the transaction timebound',()=>{
+ const now=1_700_000_000_000;
+ const tx=(max:number)=>{const t=new TransactionBuilder(new Account(signer.publicKey(),'1'),{fee:'100',networkPassphrase:Networks.PUBLIC}).addOperation(new Contract(contract).call('symbol')).setTimebounds(0,max).build();return t;};
+ assert.equal(signingWindowMs(tx(Math.floor(now/1000)+120),now),120_000-EXPIRY_GUARD_MS);
+ assert.equal(signingWindowMs(tx(Math.floor(now/1000)+3600),now),SIGN_TIMEOUT_MS);
+ assert.ok(signingWindowMs(tx(Math.floor(now/1000)-5),now)<0);
+ assert.equal(signingWindowMs(tx(0),now),SIGN_TIMEOUT_MS);
+});
