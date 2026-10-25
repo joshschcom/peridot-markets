@@ -23,6 +23,9 @@ members = [
   "contracts/price-router-ext",
   "contracts/blend-vault-adapter",
   "contracts/margin-factory",
+  "contracts/launchpad-token",
+  "contracts/launchpad-curve",
+  "contracts/launchpad-factory",
 ]
 
 [workspace.dependencies]

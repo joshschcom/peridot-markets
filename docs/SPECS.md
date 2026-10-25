@@ -420,3 +420,11 @@ fn effective_max_leverage(group_id, market) -> u128;              // min(group m
 - **Admin.** Swap adapter needs both `set_pool_allowed` and `set_pool_binding` (Aquarius pool index) per pool; the margin controller is itself allowlisted on its adapter before it initializes. Audited controller and adapter upgrades are the built-in propose then execute path (60s).
 - **Events**: `margin_enabled`, `margin_updated`, `market_margin_set`, `pool_allowed`, `pool_binding_set`, `upgraded`, `upgrade_proposed`, `wasm_set`, `pool_trust_set`.
 
+
+## Launchpad
+
+_Launchpad agent (12), stage 1: token and bonding curve._
+
+## XOXNO as a graduation venue
+
+_XOXNO research agent._

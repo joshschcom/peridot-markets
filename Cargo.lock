@@ -825,6 +825,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "launchpad-curve"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
+ "soroban-sdk",
+]
+
+[[package]]
+name = "launchpad-factory"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
+ "soroban-sdk",
+]
+
+[[package]]
+name = "launchpad-token"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.175"
 source = "registry+https://github.com/rust-lang/crates.io-index"
