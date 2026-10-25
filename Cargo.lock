@@ -203,6 +203,8 @@ checksum = "55248b47b0caf0546f7988906588779981c43bb1bc9d0c44087278f80cdb44ba"
 name = "blend-vault-adapter"
 version = "0.1.0"
 dependencies = [
+ "mock-reflector",
+ "mock-token",
  "peridot-interfaces",
  "soroban-sdk",
 ]
@@ -875,6 +877,9 @@ dependencies = [
 name = "margin-factory"
 version = "0.1.0"
 dependencies = [
+ "mock-aquarius-pool",
+ "mock-reflector",
+ "mock-token",
  "peridot-interfaces",
  "soroban-sdk",
 ]
@@ -883,6 +888,10 @@ dependencies = [
 name = "market-factory"
 version = "0.1.0"
 dependencies = [
+ "mock-price-router",
+ "mock-reflector",
+ "mock-token",
+ "mock-yield-vault",
  "peridot-interfaces",
  "soroban-sdk",
 ]
@@ -904,6 +913,14 @@ dependencies = [
 name = "mock-depth-fixture"
 version = "0.1.0"
 dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
+name = "mock-price-router"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
  "soroban-sdk",
 ]
 
@@ -1061,6 +1078,8 @@ dependencies = [
 name = "price-router-ext"
 version = "0.1.0"
 dependencies = [
+ "mock-reflector",
+ "mock-token",
  "peridot-interfaces",
  "soroban-sdk",
 ]
@@ -1158,6 +1177,7 @@ dependencies = [
 name = "reward-distributor"
 version = "0.1.0"
 dependencies = [
+ "mock-token",
  "peridot-interfaces",
  "soroban-sdk",
 ]

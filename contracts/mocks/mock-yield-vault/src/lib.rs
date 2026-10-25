@@ -20,6 +20,22 @@ enum Key {
     Shares(Address),
 }
 
+/// Same shape as the DeFindex vault's `get_assets` return, so the factory's attach validation can be tested.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Strategy {
+    pub address: Address,
+    pub name: soroban_sdk::String,
+    pub paused: bool,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AssetStrategySet {
+    pub address: Address,
+    pub strategies: Vec<Strategy>,
+}
+
 #[contract]
 pub struct MockYieldVault;
 
@@ -93,6 +109,23 @@ impl MockYieldVault {
 
     pub fn get_asset_amounts_per_shares(env: Env, shares: i128) -> Vec<i128> {
         vec![&env, value_of(&env, shares)]
+    }
+
+    pub fn get_assets(env: Env) -> Vec<AssetStrategySet> {
+        vec![
+            &env,
+            AssetStrategySet {
+                address: Self::underlying(env.clone()),
+                strategies: vec![
+                    &env,
+                    Strategy {
+                        address: env.current_contract_address(),
+                        name: soroban_sdk::String::from_str(&env, "mock"),
+                        paused: false,
+                    },
+                ],
+            },
+        ]
     }
 
     pub fn underlying(env: Env) -> Address {
