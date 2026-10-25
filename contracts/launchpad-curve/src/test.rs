@@ -639,7 +639,7 @@ impl Lcg {
     }
 }
 
-fn run_property_sequence(seed: u64, params: CurveParams, steps: u32) -> u32 {
+fn run_property_sequence(seed: u64, params: CurveParams, steps: u32, min_buys: u32, min_sells: u32) -> u32 {
     let c = setup(params.clone());
     let m = Model::new(&params);
     let supply = params.curve_supply + params.lp_supply;
@@ -716,13 +716,14 @@ fn run_property_sequence(seed: u64, params: CurveParams, steps: u32) -> u32 {
         }
         assert!(s.creator_bought <= (params.curve_supply * params.creator_cap_bps as i128) / 10_000);
     }
-    assert!(buys >= 3 && sells >= 5, "sequence must exercise both sides ({buys} buys, {sells} sells, {closed} reverts)");
+    std::println!("property seed {seed:#x}: buys {buys} sells {sells} reverts {closed} graduatable steps {graduatable_steps}");
+    assert!(buys >= min_buys && sells >= min_sells, "sequence must exercise both sides ({buys} buys, {sells} sells, {closed} reverts)");
     graduatable_steps
 }
 
 #[test]
 fn property_random_sequence_standard_params() {
-    run_property_sequence(0xC0FFEE, std_params(), 400);
+    run_property_sequence(0xC0FFEE, std_params(), 400, 50, 50);
 }
 
 #[test]
@@ -739,6 +740,6 @@ fn property_random_sequence_reaches_target_on_a_small_curve() {
         creator_cap_bps: 2_000,
     };
     assert_eq!(validate(&p), Ok(()));
-    let g = run_property_sequence(42, p, 400);
+    let g = run_property_sequence(42, p, 400, 3, 5);
     assert!(g > 0, "the walk must reach the graduation target at least once");
 }
