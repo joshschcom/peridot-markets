@@ -1,0 +1,2108 @@
+{
+  "generators": {
+    "address": 35,
+    "nonce": 0,
+    "mux_id": 0
+  },
+  "auth": [
+    [],
+    [],
+    []
+  ],
+  "ledger": {
+    "protocol_version": 25,
+    "sequence_number": 0,
+    "timestamp": 0,
+    "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
+    "base_reserve": 0,
+    "min_persistent_entry_ttl": 4096,
+    "min_temp_entry_ttl": 16,
+    "max_entry_ttl": 6312000,
+    "ledger_entries": [
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARQG5"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2ZMN"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4BV5"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6J5N"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB6KO"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDWC6"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABFO3O"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHGT6"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI7IO"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABKXA6"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABR4OP"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABTUG7"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVM7P"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXEX7"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABY5MP"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB2VE7"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4N5P"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB6FV7"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBKTY"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDC3I"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACF2CY"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PerpsPairConfig"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACHSKI"
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "Long"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "liquidation_incentive_scaled"
+                    },
+                    "val": {
+                      "u128": "10000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "maintenance_margin_scaled"
+                    },
+                    "val": {
+                      "u128": "50000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_leverage"
+                    },
+                    "val": {
+                      "u128": "5"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 1000000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": "ledger_key_contract_instance",
+              "durability": "persistent",
+              "val": {
+                "contract_instance": {
+                  "executable": {
+                    "wasm": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  "storage": null
+                }
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_code": {
+              "ext": "v0",
+              "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "code": ""
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      }
+    ]
+  },
+  "events": []
+}

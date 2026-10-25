@@ -37,7 +37,7 @@ pub const DEFAULT_INIT_ADMIN: &str = "GATFXAP3AVUYRJJCXZ65EPVJEWRW6QYE3WOAFEXAIA
 /// Basis-point denominator.
 const BPS: u128 = 10_000u128;
 /// Upgrade timelock, matching the other Peridot contracts.
-const UPGRADE_TIMELOCK_SECS: u64 = 24 * 60 * 60;
+const UPGRADE_TIMELOCK_SECS: u64 = 60;
 
 const TTL_THRESHOLD: u32 = 500_000;
 const TTL_EXTEND_TO: u32 = 1_000_000;

@@ -472,7 +472,7 @@ fn expected_admin_config() -> &'static str {
 
 const TTL_THRESHOLD: u32 = 500_000;
 const TTL_EXTEND_TO: u32 = 1_000_000;
-const UPGRADE_TIMELOCK_SECS: u64 = 24 * 60 * 60;
+const UPGRADE_TIMELOCK_SECS: u64 = 60;
 
 #[cfg(test)]
 mod test;

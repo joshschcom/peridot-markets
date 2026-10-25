@@ -52,7 +52,7 @@ pub const REWARD_RATE_SCALE: u128 = 10_000_000u128;
 pub const MIN_DEPLOY_AMOUNT: u128 = 10_000u128;
 
 /// Upgrade timelock, matching the other Peridot contracts.
-pub const UPGRADE_TIMELOCK_SECS: u64 = 24 * 60 * 60;
+pub const UPGRADE_TIMELOCK_SECS: u64 = 60;
 
 /// Default slippage guard applied to internal rebalancing swaps (1%).
 pub const DEFAULT_SLIPPAGE_BPS: u32 = 100u32;
