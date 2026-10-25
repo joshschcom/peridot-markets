@@ -1,2 +1,36 @@
-.launch-page{padding-bottom:70px}.launch-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0 0 32px;padding:0;list-style:none}.launch-steps button{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:0;border-bottom:2px solid var(--border);background:none;color:var(--muted);font-size:13px}.launch-steps button>span{width:25px;height:25px;border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;font-size:11px}.launch-steps button.selected{color:var(--text);border-bottom-color:var(--accent)}.launch-steps button.selected>span,.launch-steps button.visited>span{background:var(--accent);border-color:var(--accent);color:#102719}.launch-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}.launch-content{padding:32px;min-width:0}.launch-content>.eyebrow{margin-bottom:12px}.launch-summary{position:sticky;top:20px}.launch-summary>svg{color:var(--accent);margin-bottom:20px}.launch-summary>.eyebrow{font-size:8px;margin-bottom:10px}.launch-summary h3{font-size:25px;margin-bottom:25px;overflow-wrap:anywhere}.launch-summary>div{display:flex;justify-content:space-between;gap:10px;margin:14px 0;font-size:12px}.launch-summary>div>span{color:var(--muted)}.launch-summary strong{font-weight:400}.launch-summary hr{border:0;border-top:1px solid var(--border);margin:22px 0}.launch-summary p.muted{font-size:11px}.launch-navigation{display:flex;align-items:center;justify-content:space-between;margin-top:34px;padding-top:24px;border-top:1px solid var(--border)}.launch-market{border:1px solid var(--border);border-radius:9px;margin-bottom:16px;background:#111a14}.launch-market summary{display:flex;align-items:center;gap:12px;padding:16px}.launch-market summary>strong{font-weight:500}.launch-market summary>.muted{margin-left:auto;font-size:10px}.launch-market-number{display:grid;place-items:center;width:25px;height:25px;border-radius:6px;background:#253b2c;color:var(--accent);font-size:11px}.launch-market-body{padding:22px;border-top:1px solid var(--border)}.remove-market{margin-top:25px;color:#ffb4a5!important}.launch-toggle{display:flex;align-items:center;gap:12px;margin:20px 0;cursor:pointer}.launch-toggle small{display:block;font-size:10px;margin-top:3px}.launch-emissions{padding-top:24px;margin-top:24px;border-top:1px solid var(--border)}.launch-emissions h3{font-size:17px}.launch-margin-assets{margin-top:25px}.launch-review{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding:19px 0}.launch-review span{display:block;color:var(--muted);font-size:11px}.launch-review strong{display:block;margin-top:5px;font-size:14px;font-weight:500;overflow-wrap:anywhere}.transaction-list{padding:0;margin:28px 0;list-style:none;border:1px solid var(--border);border-radius:10px;overflow:hidden}.transaction-list li{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border);font-size:12px}.transaction-list li:last-child{border-bottom:0}.transaction-list strong{font-weight:400}.transaction-list small{display:block;color:var(--muted);font-size:10px}.transaction-list li>a{margin-left:auto;color:var(--accent);font-size:10px}.transaction-marker{display:grid;place-items:center;width:25px;height:25px;border:1px solid var(--border);border-radius:50%;color:var(--muted)}.transaction-list .confirmed .transaction-marker{background:#21452e;color:var(--accent)}.transaction-list .pending{background:#253a2c}.launch-error{border-color:#754434;color:#ffcbb8;margin:18px 0}.launch-error ul{padding-left:20px;margin-bottom:0}.launch-resume{margin-bottom:20px}.launch-success{text-align:center;padding:25px 0}.launch-success>svg{color:var(--accent);display:block;margin:0 auto 16px}.launch-success>.button{margin:8px}.launch-submit>.muted{font-size:12px;margin-top:14px}.launch-content table{font-size:12px}.launch-content .table-scroll{margin:10px -12px}.launch-content .field>span{font-size:11px}.launch-content h3{font-size:18px}
-@media(max-width:1000px){.launch-layout{grid-template-columns:minmax(0,1fr) 225px;gap:15px}.launch-content{padding:24px}.launch-market-body{padding:17px}}@media(max-width:760px){.launch-layout{grid-template-columns:1fr}.launch-summary{display:none}.launch-content{padding:20px}.launch-steps{gap:2px;margin-bottom:22px}.launch-steps button{flex-direction:column;padding:9px 2px;gap:7px;font-size:10px}.launch-steps button>span{width:23px;height:23px}.launch-market-body{padding:14px}.launch-market summary{padding:12px;gap:8px}.launch-market summary>.muted{font-size:9px}.launch-review{grid-template-columns:1fr 1fr}.launch-content h2{font-size:25px}.transaction-list li{padding:12px 9px}.launch-success>.button{display:flex}.launch-market .field-grid{grid-template-columns:1fr}}
+.launch-page { padding-bottom: 64px; }
+.launch-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+.launch-content { padding: 24px; min-width: 0; }
+.launch-content h2 { font-size: 22px; }
+.launch-summary { display: grid; gap: 14px; }
+.launch-summary hr { margin: 0; }
+.launch-navigation { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.launch-markets { display: grid; gap: 12px; }
+.launch-market { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); }
+.launch-market summary { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.launch-market summary > strong { font-weight: 600; }
+.launch-market summary > .chips { margin-left: auto; }
+.launch-market summary .chev { color: var(--text-3); transition: transform 0.15s; flex: 0 0 auto; }
+.launch-market[open] summary .chev { transform: rotate(180deg); }
+.launch-market-body { padding: 18px 16px 16px; border-top: 1px solid var(--border); background: var(--surface); border-radius: 0 0 var(--r-md) var(--r-md); }
+.remove-market { margin-top: 16px; }
+.launch-emissions { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--border); }
+.launch-emissions:first-of-type { padding-top: 0; margin-top: 0; border-top: 0; }
+.launch-emissions h4 { margin-bottom: 8px; }
+.launch-success { text-align: center; padding: 20px 0; display: grid; gap: 8px; justify-items: center; }
+.launch-success > svg { color: var(--accent); }
+.launch-submit { margin-top: 20px; display: grid; gap: 10px; justify-items: start; }
+.launch-submit > .muted { font-size: 12px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 1000px) {
+  .launch-layout { grid-template-columns: 1fr; }
+  .launch-summary { order: 2; }
+}
+@media (max-width: 760px) {
+  .launch-content { padding: 16px; }
+  .launch-content h2 { font-size: 20px; }
+  .launch-market summary { padding: 12px; gap: 8px; flex-wrap: wrap; }
+  .launch-market summary > .chips { margin-left: 0; width: 100%; }
+  .launch-market-body { padding: 14px 12px 12px; }
+}
