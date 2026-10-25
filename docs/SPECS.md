@@ -182,6 +182,58 @@ fn upgrade(admin, new_wasm_hash) -> Result<(), RouterError>;   // immediate
   BLND testnet tokens from 11-ADDRESSES, so use the external feed with symbols on testnet. The wizard should call
   `assets()` on both feeds to build its price picker.
 
+### AquariusOnly mode (phase 3)
+
+`PriceConfig::AquariusOnly(AquariusOnlyCfg { pool, quote_token })` prices a token that has no Reflector feed (a graduated
+launchpad token) from its Aquarius pool, for use by its lending market. No trait change: same ABI as above, Wasm about
+23.5 KB unoptimized, 20.3 KB optimized (`stellar contract build --package price-router-ext`). `RouterError` gains
+`7 InvalidPool`, `8 QuoteTokenNotConfigured`, `9 EmptyPool` (the phase 1 codes are unchanged). The text above that says
+`AquariusOnly` is rejected with `UnsupportedMode` is superseded: only `ReflectorWithAquariusGuard` still is.
+
+- **Configuration (`set_asset_config`).** Accepted only if the pool answers `get_tokens` with exactly two tokens that are
+  `{token, quote_token}` (else `InvalidPool`; `token == quote_token` and the router itself as pool are also `InvalidPool`),
+  `quote_token` already has a `ReflectorOnly` config in this router (else `QuoteTokenNotConfigured`, so configure the quote
+  asset first), `get_reserves` returns two non-zero reserves (else `EmptyPool`), and both tokens answer SEP-41 `decimals()`
+  with at most 18 (else `InvalidPool`). The pool's token index of `token` and both decimals are read once and stored in
+  instance storage (`AqMeta`), so `lastprice` does not call `get_tokens` or the tokens. Reconfiguring a token clears its
+  metadata and its guard anchor.
+- **Price (`lastprice(Asset::Stellar(token))`).** `get_reserves`, then a probe quote
+  `pool.estimate_swap(token_idx, quote_idx, probe)` with `probe = max(1, reserve_token / 1000)` capped at the reserve. The
+  probe is 0.1% of the pool's token reserve rather than one unit because the quote of a tiny trade is the cheapest to move
+  (one dust swap shifts the marginal price) and says nothing about executable depth; a probe proportional to the pool makes
+  the price depth-weighted and the pool fee and 0.1% impact are part of the price (it is a sell price, slightly conservative
+  for collateral). USD price per whole token at the router's decimals is
+  `out * quote_usd * 10^token_dec / (probe * 10^quote_dec)` in 256-bit arithmetic (None if the factors could overflow 256
+  bits, on zero or non-positive results). `quote_usd` is this router's own `ReflectorOnly` price of `quote_token`, and the
+  router checks its Reflector age itself (`timestamp + 2 * resolution < now` or in the future gives None), because the
+  returned timestamp is the LEDGER time (there is no oracle timestamp) and so the controller's staleness rule always passes.
+- **Depth floor.** No price when the pool is empty, a call fails or returns an unexpected shape, the quote is zero, or either
+  side is worth less than `MIN_DEPTH_USD = 500` (quote side at the quote token's Reflector price, token side at the derived
+  price). Constants, not storage: `PROBE_DIVISOR = 1000`, `MIN_DEPTH_USD = 500`, `MAX_STEP_BPS = 2000`,
+  `MIN_INTERVAL_SECS = 300`; changing them is an `upgrade`. Every external call goes through `try_` clients; every failure
+  is `None` (borrows and liquidations for the market are blocked, like a missing Reflector price).
+- **Step guard.** Instance storage holds the last accepted anchor `(price, ledger_time)` per token (no extra ledger entry).
+  A spot that differs from the anchor by more than 20% while the anchor is younger than 300 s is refused (None). In
+  range it is served and the anchor stays (so drift inside an interval is bounded to 20% of the anchor, not 20% per call).
+  An anchor of 300 s or more is replaced by the new price and served. `lastprice` writes the anchor, `check` never does.
+  This is a mitigation, not a guarantee: it needs the anchor to be fresh, and any `lastprice` call (a keeper poke, a
+  borrow) refreshes it only once it is 300 s old, so an attacker who waits for the anchor to age gets one accepted jump. Run
+  a keeper that calls `lastprice` for each AquariusOnly token at least every ~150 s. A single-transaction manipulation
+  (swap, borrow, swap back) is limited by the 0.1% probe and the 20% step only when the anchor is fresh; the real backstops
+  are the factory's 50% collateral factor cap and caps sized from pool depth. Spot in a CL pool is still manipulable.
+- **`check(token)`.** `mode` "aquarius", `status` "ok" | "unavailable" | "deviation" ("deviation" = the step guard would
+  refuse), `aquarius_price` the derived price, `reflector_price` the quote token's USD price, `deviation_bps` the distance
+  from the anchor (None without an anchor), `timestamp` the ledger time. Never panics, never writes.
+- **Controller interaction (verified against `core/simple-peridottroller`).** The controller caches each token's price and
+  reuses it for `k * resolution` = 600 s of the price timestamp, so a drained pool or a refused jump blocks borrows only
+  after the cache expires, and the 300 s guard interval is shorter than the cache: the guard only bites when something
+  other than the controller refreshed the anchor (keeper poke) inside the last 300 s. Footprint: a borrow in a two-market
+  group that must refresh both prices inside the borrow transaction is 95 / 98 ledger entries (first / repeat borrow) with
+  Reflector prices and 100 / 103 with an AquariusOnly collateral market (mock pool, 4 more entries; the mainnet XLM/USDC
+  concentrated pool needs 3: instance, code, one `TickChunk`; verified by read-only simulation), over the 100 entry limit
+  on repeat borrows. A borrow that hits a warm controller cache is 83 entries. So the app or a keeper must pre-warm with
+  the controller's public `cache_price(token)` (own transaction) before borrows on AquariusOnly groups.
+
 ## Blend route
 
 `contracts/blend-vault-adapter` is a `YieldVault` over a Blend **fee vault** (script3/fee-vault, Blend's own integration

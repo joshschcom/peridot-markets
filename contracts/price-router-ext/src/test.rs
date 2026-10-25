@@ -298,14 +298,16 @@ fn phase3_modes_are_rejected() {
         quote_token: Address::generate(&f.env),
         max_dev_bps: 300,
     });
+    // The guard mode stays out of scope; AquariusOnly is live (see aquarius_test.rs) and an address
+    // that is not an Aquarius pool is refused with InvalidPool.
+    let r = f.router.try_set_asset_config(&f.admin, &f.token, &guard);
+    assert_eq!(r.unwrap_err().unwrap(), RouterError::UnsupportedMode);
     let aq = PriceConfig::AquariusOnly(AquariusOnlyCfg {
         pool: Address::generate(&f.env),
         quote_token: Address::generate(&f.env),
     });
-    for c in [guard, aq] {
-        let r = f.router.try_set_asset_config(&f.admin, &f.token, &c);
-        assert_eq!(r.unwrap_err().unwrap(), RouterError::UnsupportedMode);
-    }
+    let r = f.router.try_set_asset_config(&f.admin, &f.token, &aq);
+    assert_eq!(r.unwrap_err().unwrap(), RouterError::InvalidPool);
     assert!(f.router.get_asset_config(&f.token).is_none());
 }
 
