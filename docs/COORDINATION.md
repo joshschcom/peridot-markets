@@ -28,3 +28,12 @@ Interface change requests, blockers and second-opinion summaries go here too.
 - **Build constraint that shapes deployment:** every core Wasm bakes in its permitted initial admin at compile time (`*_INIT_ADMIN`). Wasm for a network must be built with `INIT_ADMIN` = that network's market-factory address (`scripts/build_core.sh`). Deploy order per network: deploy market-factory, build core Wasm with its address, upload, `set_wasm`. Unit tests use the fixed address `TEST_ADMIN_ADDRESS` and the committed Wasm in `build/test/`.
 - Staged controller params (verified in `set_oracle`, `set_market_cf`): the FIRST oracle and the FIRST market CF on a fresh controller apply immediately. Later changes stage for 60s and need the same call repeated after the delay (what `apply_pending` does). So `create_group` and `add_market` do not need to wait.
 - Mocks available: `core/mocks/mock-token`, `mock-aquarius-pool`, `mock-depth-fixture`, `contracts/mocks/mock-reflector`, `contracts/mocks/mock-yield-vault`.
+
+[A] READY: scaffold
+- Time 2026-10-25 13:05 WET. Lead B can import `app/` now. Everything is committed locally in `../peridot-markets` (commits 3833c42, 206cf00, 411f6e5 and the one after this entry). Push is pending the GitHub repo.
+- Interfaces for B: `contracts/peridot-interfaces/ts/index.ts` (types, `GUARDRAILS`), market-factory signatures in `docs/SPECS.md` "Factory". The factory ABI will be generated into TS bindings once the Wasm exists.
+
+**[A] 2026-10-25 13:05 WET: design decisions (supersede wording in 00/06)**
+- Two admin addresses: market-factory is admin of everything in a group except `margin-controller` and `swap-adapter`, whose admin is margin-factory (compile-time `INIT_ADMIN`/`MARGIN_INIT_ADMIN`). `wire_margin`, `link_margin_market`, `update_margin_params` on market-factory are callable only by the margin-factory (06 option a).
+- Factory constructors take no Wasm hashes; `set_wasm` after deploy. `WasmHashes.swap_adapter` moved to `MarginWasmHashes`.
+- `close factor` and `liquidation incentive` always stage for 60s on the controller (defaults exist), so margin config changes of `liquidation_incentive` need `apply_pending` after 60s. The UI should show "applies in 60s" for those, like CF and oracle changes after the first set. `liquidation fee` is immediate.

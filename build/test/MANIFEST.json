@@ -1,7 +1,14 @@
 {
   "init_admin": "CANYX4H5FXYBQKA4UF4NDUDAGRX3W5XXVZSJUGL5DNBLJUELNS6ALSXY",
+  "margin_init_admin": "CBU45Z6S42LXHP3KVBEEQG5YVLRNJXZCUY5GKTXWHE6SKO2VJ4E6KM26",
   "core_commit": "47858c1a13c2588970395faa2212e7b68bd33060",
   "wasm": [
-    {"crate": "receipt-vault", "file": "receipt_vault.wasm", "bytes": 94975, "sha256": "4109a7e0c01aacf948b6bdd5bc5c8e8d39ab95bc7e98e67777ccb2e7bdf2f26f"},    {"crate": "simple-peridottroller", "file": "simple_peridottroller.wasm", "bytes": 77472, "sha256": "a25e7612cba392f1cf79b580e9a5de1be6dfc5523d07a1e8f2fa70bb9c06f34e"},    {"crate": "jump-rate-model", "file": "jump_rate_model.wasm", "bytes": 9213, "sha256": "f0538c545ea5e27f4b95f719a809b1bebaee4f165832dc5626f83eb3cd8d3e1d"},    {"crate": "swap-adapter", "file": "swap_adapter.wasm", "bytes": 13484, "sha256": "5239de67c56a5ef6081bb7f87c00f66176a4188343fc652a0df8d93affafdef2"},    {"crate": "price-router", "file": "price_router.wasm", "bytes": 38628, "sha256": "9ccfe7d94fda40ff2e411ff2f332bc0489cca3bd37ce8f6d54a81d1199f63513"},    {"crate": "margin-controller", "file": "margin_controller.wasm", "bytes": 102236, "sha256": "98559f399a873403d97584331cdb33f7b8f366b13c16a40d6e4e8040a97ba2c2"},    {"crate": "aquarius-lp-vault", "file": "aquarius_lp_vault.wasm", "bytes": 70292, "sha256": "945ed28f3a2112cd192db11a2abc7937b9927a4c27f72da4d95af9486cbe92b8"}
+    {"crate": "receipt-vault", "file": "receipt_vault.wasm", "bytes": 94975, "sha256": "4109a7e0c01aacf948b6bdd5bc5c8e8d39ab95bc7e98e67777ccb2e7bdf2f26f"},
+    {"crate": "simple-peridottroller", "file": "simple_peridottroller.wasm", "bytes": 77472, "sha256": "a25e7612cba392f1cf79b580e9a5de1be6dfc5523d07a1e8f2fa70bb9c06f34e"},
+    {"crate": "jump-rate-model", "file": "jump_rate_model.wasm", "bytes": 9213, "sha256": "f0538c545ea5e27f4b95f719a809b1bebaee4f165832dc5626f83eb3cd8d3e1d"},
+    {"crate": "swap-adapter", "file": "swap_adapter.wasm", "bytes": 13484, "sha256": "4e46da1ef6a15f561b182c2906dc64d2c3efb06953cd9af9cb4c1b3bf6bffd5e"},
+    {"crate": "price-router", "file": "price_router.wasm", "bytes": 38628, "sha256": "9ccfe7d94fda40ff2e411ff2f332bc0489cca3bd37ce8f6d54a81d1199f63513"},
+    {"crate": "margin-controller", "file": "margin_controller.wasm", "bytes": 102236, "sha256": "9b192af6b5a1a5d781d545847f464b78ab66f80395f4d49584f04831246f7983"},
+    {"crate": "aquarius-lp-vault", "file": "aquarius_lp_vault.wasm", "bytes": 70292, "sha256": "945ed28f3a2112cd192db11a2abc7937b9927a4c27f72da4d95af9486cbe92b8"}
   ]
 }

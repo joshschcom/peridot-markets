@@ -154,10 +154,19 @@ pub struct WasmHashes {
     pub jump_rate: BytesN<32>,
     pub price_router: BytesN<32>,
     pub reward_distributor: BytesN<32>,
-    pub swap_adapter: BytesN<32>,
     pub blend_adapter: Option<BytesN<32>>,
     pub aquarius_vault: Option<BytesN<32>>,
     pub aquarius_reserve: Option<BytesN<32>>,
     pub zenex_adapter: Option<BytesN<32>>,
     pub xoxno_adapter: Option<BytesN<32>>,
+}
+
+/// Wasm hashes the margin factory deploys per group. Built with INIT_ADMIN = margin-factory address.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MarginWasmHashes {
+    pub audited: BytesN<32>,
+    /// Phase 3.
+    pub custom: Option<BytesN<32>>,
+    pub swap_adapter: BytesN<32>,
 }

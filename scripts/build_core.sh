@@ -19,10 +19,13 @@ LABEL=${OUT_LABEL:-${INIT_ADMIN:0:8}}
 OUT="$ROOT/build/$LABEL"
 mkdir -p "$OUT"
 
+MARGIN_INIT_ADMIN=${MARGIN_INIT_ADMIN:-$INIT_ADMIN}
 for var in RECEIPT_VAULT_INIT_ADMIN SIMPLE_PERIDOTTROLLER_INIT_ADMIN JUMP_RATE_MODEL_INIT_ADMIN \
-  SWAP_ADAPTER_INIT_ADMIN AQUARIUS_LP_VAULT_INIT_ADMIN PRICE_ROUTER_INIT_ADMIN \
-  MARGIN_CONTROLLER_INIT_ADMIN PERIDOT_TOKEN_INIT_ADMIN; do
+  AQUARIUS_LP_VAULT_INIT_ADMIN PRICE_ROUTER_INIT_ADMIN PERIDOT_TOKEN_INIT_ADMIN; do
   export "$var=${!var:-$INIT_ADMIN}"
+done
+for var in SWAP_ADAPTER_INIT_ADMIN MARGIN_CONTROLLER_INIT_ADMIN; do
+  export "$var=${!var:-$MARGIN_INIT_ADMIN}"
 done
 
 # crate:wasm file name
@@ -64,9 +67,10 @@ core_commit=$(cat "$ROOT/core/CORE_COMMIT" 2>/dev/null || echo unknown)
 {
   echo "{"
   echo "  \"init_admin\": \"$INIT_ADMIN\","
+  echo "  \"margin_init_admin\": \"$MARGIN_INIT_ADMIN\","
   echo "  \"core_commit\": \"$core_commit\","
   echo "  \"wasm\": ["
-  (IFS=$',\n'; echo "${entries[*]}")
+  for i in "${!entries[@]}"; do if (( i < ${#entries[@]} - 1 )); then echo "${entries[$i]},"; else echo "${entries[$i]}"; fi; done
   echo "  ]"
   echo "}"
 } >"$OUT/MANIFEST.json"

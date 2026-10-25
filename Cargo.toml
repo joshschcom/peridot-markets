@@ -17,6 +17,11 @@ members = [
   "contracts/peridot-interfaces",
   "contracts/mocks/mock-reflector",
   "contracts/mocks/mock-yield-vault",
+  "contracts/market-factory",
+  "contracts/reward-distributor",
+  "contracts/price-router-ext",
+  "contracts/blend-vault-adapter",
+  "contracts/margin-factory",
 ]
 
 [workspace.dependencies]

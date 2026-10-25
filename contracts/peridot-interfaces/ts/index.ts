@@ -149,12 +149,17 @@ export interface WasmHashes {
   jump_rate: Buffer;
   price_router: Buffer;
   reward_distributor: Buffer;
-  swap_adapter: Buffer;
   blend_adapter: Buffer | undefined;
   aquarius_vault: Buffer | undefined;
   aquarius_reserve: Buffer | undefined;
   zenex_adapter: Buffer | undefined;
   xoxno_adapter: Buffer | undefined;
+}
+
+export interface MarginWasmHashes {
+  audited: Buffer;
+  custom: Buffer | undefined;
+  swap_adapter: Buffer;
 }
 
 // 6.5 deployments/<network>.json

@@ -18,3 +18,7 @@ pub use types::*;
 /// `build/test/`) treats as the permitted initial admin. In tests, register the contract that must act
 /// as admin at this address: `env.register_at(&Address::from_str(&env, TEST_ADMIN_ADDRESS), Contract, args)`.
 pub const TEST_ADMIN_ADDRESS: &str = "CANYX4H5FXYBQKA4UF4NDUDAGRX3W5XXVZSJUGL5DNBLJUELNS6ALSXY";
+
+/// Fixed contract address that unit-test Wasm treats as the margin-factory (initial admin of the
+/// `margin-controller` and `swap-adapter` Wasm in `build/test/`).
+pub const TEST_MARGIN_FACTORY_ADDRESS: &str = "CBU45Z6S42LXHP3KVBEEQG5YVLRNJXZCUY5GKTXWHE6SKO2VJ4E6KM26";
