@@ -1,8 +1,22 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { WalletProvider } from '@/lib/peridot/wallet';
-import { AppShell } from '@/components/peridot/AppShell';
+import { AppShell } from '@/components/ui/AppShell';
+import { themeScript } from '@/components/ui/ThemeToggle';
 import './globals.css';
-export const metadata: Metadata = { title: 'Peridot Markets | Your token. Your money market.', description: 'Launch isolated lending markets on Stellar with configurable rates, yield routes, rewards and leverage.' };
+
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+
+export const metadata: Metadata = {
+  title: 'Peridot Markets | Any Stellar token gets its own money market',
+  description: 'Any Stellar token gets its own money market in a few transactions: lending, borrowing, leverage and rewards, with idle liquidity routed into the best yield on Stellar.',
+  icons: { icon: '/peridot.ico' },
+};
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: [{ media: '(prefers-color-scheme: dark)', color: '#0b100d' }, { media: '(prefers-color-scheme: light)', color: '#f4f7f4' }] };
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><WalletProvider><AppShell>{children}</AppShell></WalletProvider></body></html>;
+  return <html lang="en" data-theme="dark" suppressHydrationWarning className={inter.variable}>
+    <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+    <body><WalletProvider><AppShell>{children}</AppShell></WalletProvider></body>
+  </html>;
 }
