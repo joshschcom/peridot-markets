@@ -27,7 +27,7 @@ Statuses track verified delivery in this HackMeridian repository. Prior work alo
 | 2.3 | Pricing for new tokens without a CEX listing: Reflector Stellar-assets feed, bounded by Aquarius pool quotes | Partial | Trusted Reflector asset discovery implemented; Aquarius price guards and live evidence pending. |
 | 2.4 | Optional leveraged margin per group | Partial | Staged V3 margin UI and liquidator implemented; live position evidence pending. |
 | 2.5 | Owner Control Panel: add markets later and change parameters inside guardrails | Partial | Control Panel and staged changes implemented; adding markets after rewards currently blocked by pinned core. |
-| 2.6 | Live on Stellar mainnet with the frontend connected | Not started | Pending: live URL, deployments/mainnet.json |
+| 2.6 | Live on Stellar mainnet with the frontend connected | Partial | Frontend demo deployed; mainnet contracts, connected live flows and fresh-wallet evidence pending. See [DEMO.md](DEMO.md) |
 
 ## Added during the event (beyond intake)
 
@@ -36,3 +36,4 @@ Statuses track verified delivery in this HackMeridian repository. Prior work alo
 | A1 | Own reward token per group with per-market emissions | Partial | Funded rewards flow implemented; live claim evidence pending. |
 | A2 | Hosted keeper (DigitalOcean subscription) or self-hosted | Partial | Self-hosted liquidation and refresh workers implemented; hosted subscription and live service pending. |
 | A3 | Custom margin with per-asset leverage and trading fees | Not started | Pending |
+| A4 | Token launchpad (bonding curve, ICO) that graduates tokens into an Aquarius pool and their own market group | Not started | Added in [launchpad handoff](handoff/12-LAUNCHPAD.md); begins only after phase 1 is tagged on mainnet |
