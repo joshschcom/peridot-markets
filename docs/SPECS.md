@@ -740,3 +740,9 @@ Effort for the venue work: Aquarius adapter (sort, fee payment, creation, deposi
 - SDK: https://github.com/XOXNO/xoxno-contract-sdk (`crates/xoxno-contract-sdk/README.md`, `Cargo.toml`)
 - Aquarius: https://docs.aqua.network/user-guides/pools/creating-a-pool, https://docs.aqua.network/for-projects/for-projects, https://docs.aqua.network/developers/concentrated-liquidity, https://docs.aqua.network/developers/reference/router-and-pool-contracts
 - Contract metadata: https://api.stellar.expert/explorer/public/contract/CCVENFSVCBYDHVOACFZXMNNYVOZ3LKXPZYU5LUI4N7KTXOKRVYD7F3TR
+
+### Launchpad: findings from the real testnet run
+
+- LP lock: the Aquarius share token's `burn` requires authorization of another address than the holder, so the curve transfers the LP shares to the all-zero account (`DEAD_ADDRESS` in `launchpad-curve/src/graduation.rs`) instead of burning them. The shares exist but nobody holds a key for them: liquidity locked permanently. This supersedes "burned" in the stage 2 text above.
+- Testnet needs: the payer holds the AQUA trustline and at least 1 AQUA (swap XLM through the router, 50 XLM gave about 1,660 AQUA), the market-factory has `set_launchpad(launchpad_factory)`, the XLM price mapping and the Reflector feed allowed, and the launchpad factory has `set_graduation` and `set_quote_price`. Full run recorded in `docs/DEMO-TESTNET.md`.
+- Testnet rent: the very high rent measured earlier (about 51,000 XLM for `create_group`) has gone; a testnet `create_group` now simulates at about 38 XLM. Rent on testnet varies with network state, so treat both numbers as observations.

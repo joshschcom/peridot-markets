@@ -10,7 +10,32 @@
     "jump_rate": "b8a565a4913eb27bae3905060eb03d99bb1480d03e179f10128563d9a1b386cc",
     "swap_adapter": "7b4f5d19b1d2d739a7c1c12db50a97a1c7db91c29431f54f66729813efdfcc46",
     "margin": "ac0a59519a35e8c05fa18f509cd34335bbb5e4d8798c831cd9920c0e97d7751a",
-    "price_router": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876",
-    "reward_distributor": "2e5790ce46581ad46de216e36ad543b8190ba12cc24b1e3fc3b3f1c10ceb4b71"
+    "price_router": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5",
+    "reward_distributor": "2e5790ce46581ad46de216e36ad543b8190ba12cc24b1e3fc3b3f1c10ceb4b71",
+    "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739",
+    "launchpad_token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
+    "launchpad_curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
+    "launchpad_factory": "385eac04f7f0755f1fa2f39fd136e332e8f4d6ea35cf5c1446028fdfdda61df6"
+  },
+  "launchpad_factory": "CBYQC54BS5HIWEO6KQNVGZ6XRNOTG3OMT6UZYBUD2NESGHBQMALGSBWC",
+  "demo": {
+    "launchpad": {
+      "first": {
+        "token": "CDOV4QVKFFLGXD7DE33JFXQDCP2XOHZYT2FGO7HZD4MTZ7N5FDNXPZBT",
+        "curve": "CAAK6ARU4T5V4U3ACNMI76C3UEFZXLV2LTJECQRKWNVC74IV3BZKNHWH",
+        "target_xlm": 25000
+      },
+      "graduated": {
+        "token": "CBYIF7IQLULTFO2WIX2WFGEZ6PZL5QLEAYYIZLDXYTS7GFOK3LPA2UGF",
+        "symbol": "PGRAD",
+        "curve": "CAIA6FUZGSY4454KNTOYQ3MT7CGTQMUZBOWUP2C3JNXXH44QPT3B5EFT",
+        "pool": "CBZADNRMC7O6IL344YXEIB3PBD2PPAJLHHI5KWJORWXJR67UNOUUTO3G",
+        "group_id": 1,
+        "controller": "CDTTKNM6ECPRZ3MLHV6Z3J5ZHLORCCWEEPRJBN57OMD6APLHU6N6TTAC",
+        "token_market": "CACVHBJNML7WTR2S56WRAPA5KGIBGWLCXJI2KSRKK27DJDPV2QL6MTGX",
+        "quote_market": "CA5Y5BWWRFP4H5THHNFAMET7JVOIO2MR4CS5KYJ6QUTGX5IRT6L4C55T",
+        "target_xlm": 500
+      }
+    }
   }
 }

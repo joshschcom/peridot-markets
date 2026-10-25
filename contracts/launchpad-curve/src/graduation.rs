@@ -8,6 +8,8 @@
 //!   calls `user.require_auth()` again and pulls both tokens: the entry is `pool.deposit(..)` with the two
 //!   `transfer(curve, pool, amount)` calls nested under it.
 //! - `authorize_as_current_contract` only covers the NEXT contract call, so every read happens before it.
+/// All-zero ed25519 account: no private key exists, so LP shares sent here are locked for good.
+pub const DEAD_ADDRESS: &str = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 use peridot_interfaces::{AquariusOnlyCfg, MarketConfig, PriceConfig, RateModel, YieldRoute};
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
@@ -152,7 +154,11 @@ pub fn pool_step(env: &Env, cfg: &Config, payer: &Address, real_quote: i128) -> 
     if lp_balance <= 0 {
         return Err(CurveError::NothingBurned);
     }
-    share_client.burn(&this, &lp_balance);
+    // Lock the liquidity: send every LP share to the all-zero account, which has no key, so nobody can ever withdraw.
+    // (Found on testnet: the Aquarius share token's `burn` requires authorization from another address than the
+    // holder, so burning is not possible for a holder; a transfer is a plain SEP-41 call the curve signs as invoker.)
+    let dead = Address::from_str(env, DEAD_ADDRESS);
+    share_client.transfer(&this, &dead, &lp_balance);
     if share_client.balance(&this) != 0 {
         return Err(CurveError::NothingBurned);
     }

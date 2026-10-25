@@ -287,11 +287,13 @@ fn check_full_path(g: &G) {
     assert_eq!(grad.quote_in_pool, before.real_quote);
     assert_eq!(grad.token_in_pool, g.params.lp_supply);
 
-    // ---- LP locked: every share burned, none left anywhere ----
+    // ---- LP locked: every share sits on the all-zero account (no key), none left with the curve ----
     let share = MockTokenClient::new(&g.env, &grad.share_token);
+    let dead = Address::from_str(&g.env, crate::graduation::DEAD_ADDRESS);
     assert_eq!(share.balance(&g.curve_addr), 0);
-    assert_eq!(share.total_supply(), 0);
+    assert_eq!(share.balance(&dead), share.total_supply());
     assert!(grad.lp_shares_burned > 0);
+    assert_eq!(share.balance(&dead), grad.lp_shares_burned);
 
     // ---- unsold burned: the fixed supply shrank by exactly the unsold tokens ----
     let unsold = g.params.curve_supply - sold;
