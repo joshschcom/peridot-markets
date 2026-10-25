@@ -753,11 +753,11 @@ fn aquarius_only_markets_are_for_the_launchpad_only() {
     assert_eq!(f.mf.try_add_market(&launchpad, &gid, &aq(&f, 600_000)).err().unwrap().unwrap(), FactoryError::CollateralFactorTooHigh);
     let m = f.mf.add_market(&launchpad, &gid, &aq(&f, 250_000));
     f.mf.activate_market(&launchpad, &gid, &m);
-    // margin is never allowed on such a market
+    // margin flag is allowed on such a market; the margin-factory caps its pairs at 2x
     let mut c = aq(&f, 250_000);
     c.token = f.usdc.clone();
     c.margin_enabled = true;
-    assert_eq!(f.mf.try_add_market(&launchpad, &gid, &c).err().unwrap().unwrap(), FactoryError::MarginNotAllowedForMode);
+    f.mf.add_market(&launchpad, &gid, &c);
     // and the price mode cannot be switched to AquariusOnly later
     let (id2, m2) = group_with_market(&f);
     let p = PriceConfig::AquariusOnly(peridot_interfaces::AquariusOnlyCfg { pool: Address::generate(&f.env), quote_token: f.xlm.clone() });

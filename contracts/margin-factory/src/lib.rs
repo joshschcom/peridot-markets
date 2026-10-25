@@ -541,7 +541,7 @@ impl MarginFactory {
     }
 
     /// Enable or disable margin trading for one market of the group.
-    /// Enabling requires: market belongs to the group, price mode is not AquariusOnly, 7-decimal
+    /// Enabling requires: market belongs to the group, 7-decimal
     /// underlying, and an allowlisted pool that trades the underlying. Disabling sets every pair
     /// that touches the market to 1x, which blocks new opens while existing positions can still be
     /// closed and liquidated; the vault link is left in place on purpose.
@@ -565,9 +565,8 @@ impl MarginFactory {
         let idx = rec.markets.first_index_of(&market);
 
         if enabled {
-            if let PriceConfig::AquariusOnly(_) = mf.get_market_config(&group_id, &market).price {
-                return Err(MarginError::PriceModeNotAllowed);
-            }
+            // Pool-priced (graduated) tokens may be margin-enabled by explicit owner choice, but every pair that
+            // touches one is capped at POOL_PRICED_MAX_LEVERAGE (see `set_pair`).
             if token::TokenClient::new(&env, &token).decimals() != REQUIRED_UNDERLYING_DECIMALS {
                 return Err(MarginError::UnsupportedDecimals);
             }
@@ -757,7 +756,11 @@ impl MarginFactory {
         let group = group_of(&env, group_id);
         let cf = GroupControllerClient::new(&env, &group.controller).get_market_cf(&market);
         let by_cf = if cf >= SCALE { u128::MAX } else { SCALE / (SCALE - cf) };
-        Ok(by_cf.min(rec.cfg.max_leverage))
+        let mut eff = by_cf.min(rec.cfg.max_leverage);
+        if eff > POOL_PRICED_MAX_LEVERAGE && pool_priced(&env, &rec, &rec.tokens.get(i).unwrap()) {
+            eff = POOL_PRICED_MAX_LEVERAGE;
+        }
+        Ok(eff)
     }
 
     /// Peridot admin only: remove a pool from a group's swap adapter (incident response).
@@ -981,11 +984,26 @@ fn capped_leverage(env: &Env, rec: &MarginRecord, margin_asset: &Address, levera
     by_cf.min(leverage).max(1)
 }
 
+/// True when the market of `token` is priced from its Aquarius pool (a graduated launchpad token) instead of Reflector.
+fn pool_priced(env: &Env, rec: &MarginRecord, token: &Address) -> bool {
+    let Some(i) = rec.tokens.first_index_of(token) else { return false };
+    let market = rec.markets.get(i).unwrap();
+    let mf = MarketFactoryClient::new(env, &market_factory(env));
+    matches!(mf.get_market_config(&rec.group_id, &market).price, PriceConfig::AquariusOnly(_))
+}
+
+/// Pairs touching a pool-priced token are capped at 2x: a spot-priced new token is much easier to push around than a
+/// Reflector-priced one, so the owner may enable leverage on it but never at the group maximum.
+const POOL_PRICED_MAX_LEVERAGE: u128 = 2;
+
 fn set_pair(env: &Env, rec: &MarginRecord, a: &Address, b: &Address, leverage: u128) {
     let xf = env.current_contract_address();
     let mc = MarginControllerClient::new(env, &rec.controller);
     let li = pair_incentive(rec.cfg.liquidation_incentive);
-    let leverage = capped_leverage(env, rec, a, leverage);
+    let mut leverage = capped_leverage(env, rec, a, leverage);
+    if leverage > POOL_PRICED_MAX_LEVERAGE && (pool_priced(env, rec, a) || pool_priced(env, rec, b)) {
+        leverage = POOL_PRICED_MAX_LEVERAGE;
+    }
     for side in [PositionSide::Long, PositionSide::Short] {
         mc.set_perps_pair_config(&xf, a, b, &side, &leverage, &MAINTENANCE_MARGIN, &li);
         // V3 reads per-pair execution limits, not the global slippage: enforce the group's max slippage on

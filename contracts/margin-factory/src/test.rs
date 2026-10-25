@@ -662,23 +662,26 @@ fn market_without_allowlisted_pool_cannot_be_enabled() {
 }
 
 #[test]
-fn aquarius_only_market_cannot_be_margin_enabled() {
-    let w = world(500_000);
-    w.x().enable_margin(&w.owner, &GROUP, &cfg(3));
-    w.x().set_pool_allowed(&w.owner, &GROUP, &w.pool, &true);
-    // Flip the XLM market to AquariusOnly pricing in the fixture.
-    let mut c = market_cfg(&w.xlm, &w.reflector, 500_000);
+fn pool_priced_market_can_be_margin_enabled_but_capped_at_2x() {
+    let w = world(750_000);
+    let mc = w.enable_all(5);
+    // Flip the XLM market to AquariusOnly pricing in the fixture and re-apply pairs.
+    let mut c = market_cfg(&w.xlm, &w.reflector, 750_000);
     c.price = PriceConfig::AquariusOnly(AquariusOnlyCfg {
         pool: w.pool.clone(),
         quote_token: w.usdt.clone(),
     });
     MockMarketFactoryClient::new(&w.env, &w.mf).put_market(&GROUP, &w.xvault, &c);
-    assert_eq!(
-        err(w.x().try_set_market_margin(&w.owner, &GROUP, &w.xvault, &true)),
-        MarginError::PriceModeNotAllowed
-    );
-    // The Reflector-priced market is fine.
-    w.x().set_market_margin(&w.owner, &GROUP, &w.uvault, &true);
+    w.x().sync_pairs(&GROUP);
+    for (a, b) in [(&w.usdt, &w.xlm), (&w.xlm, &w.usdt)] {
+        assert_eq!(
+            w.mcc(&mc).get_perps_pair_config(a, b, &mcw::PositionSide::Long).unwrap().max_leverage,
+            2
+        );
+    }
+    assert_eq!(w.x().effective_max_leverage(&GROUP, &w.xvault), 2);
+    // the Reflector-priced side alone is still limited only by group max and CF (4x at 75% CF)
+    assert_eq!(w.x().effective_max_leverage(&GROUP, &w.uvault), 4);
 }
 
 #[test]

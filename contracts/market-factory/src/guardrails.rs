@@ -94,8 +94,5 @@ pub fn check_market_config(cfg: &MarketConfig) -> Result<(), FactoryError> {
     check_rates(&cfg.rates)?;
     check_speed(cfg.supply_reward_per_sec)?;
     check_speed(cfg.borrow_reward_per_sec)?;
-    if cfg.margin_enabled && matches!(cfg.price, PriceConfig::AquariusOnly(_)) {
-        return Err(FactoryError::MarginNotAllowedForMode);
-    }
     Ok(())
 }
