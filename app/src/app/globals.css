@@ -607,6 +607,14 @@ tr:last-child > td { border-bottom: 0; }
 .review-card { border-color: var(--accent); }
 .history code { font-size: 12px; }
 
+/* Market config editor */
+.editor { display: grid; gap: 4px; }
+.editor-step { display: grid; gap: 14px; padding: 18px 0; border-top: 1px solid var(--border); }
+.editor-step:first-child { border-top: 0; padding-top: 4px; }
+.editor-step-head { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; }
+.editor-step-head h3 { margin: 0 0 2px; font-size: 15px; }
+.editor-step .status.danger { display: block; }
+
 /* Utilities */
 .fade-in { animation: fadeIn 0.25s ease both; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
