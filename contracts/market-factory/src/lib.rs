@@ -28,7 +28,10 @@ use soroban_sdk::{
 pub use errors::FactoryError;
 pub use storage::{MarketRecord, PendingCf, PendingPrice};
 
-use ext::{ControllerClient, DefindexVaultClient, FeeVaultReadClient, MarketVaultClient, RateModelClient, TokenReadClient};
+use ext::{
+    ControllerClient, DefindexVaultClient, FeeVaultReadClient, LaunchpadViewClient, MarketVaultClient, RateModelClient,
+    TokenReadClient,
+};
 use storage::DataKey;
 
 // Deployment kinds, part of every salt.
@@ -231,7 +234,7 @@ impl MarketFactory {
         Ok(())
     }
 
-    /// The launchpad contract allowed to create `AquariusOnly` markets (graduated tokens).
+    /// The launchpad FACTORY: its curves (`is_curve`) are the only owners allowed to create `AquariusOnly` markets.
     pub fn set_launchpad(env: Env, admin: Address, launchpad: Address) -> Result<(), FactoryError> {
         require_admin(&env, &admin)?;
         env.storage().instance().set(&DataKey::Launchpad, &launchpad);
@@ -376,9 +379,14 @@ impl MarketFactory {
         }
         guardrails::check_market_config(&cfg)?;
         if matches!(cfg.price, PriceConfig::AquariusOnly(_)) {
-            // only the registered launchpad may pick a pool-priced market (the pool is the one it created)
+            // only a curve deployed by the registered launchpad factory may pick a pool-priced market
+            // (the pool is the one that curve created at graduation)
             let lp: Option<Address> = env.storage().instance().get(&DataKey::Launchpad);
-            if lp != Some(owner.clone()) {
+            let ok = match lp {
+                Some(lp) => matches!(LaunchpadViewClient::new(&env, &lp).try_is_curve(&owner), Ok(Ok(true))),
+                None => false,
+            };
+            if !ok {
                 return Err(FactoryError::PriceModeNotAllowed);
             }
         }

@@ -828,7 +828,8 @@ dependencies = [
 name = "launchpad-curve"
 version = "0.1.0"
 dependencies = [
- "peridot-interfaces",
+ "launchpad-token",
+ "mock-token",
  "soroban-sdk",
 ]
 
@@ -836,7 +837,7 @@ dependencies = [
 name = "launchpad-factory"
 version = "0.1.0"
 dependencies = [
- "peridot-interfaces",
+ "mock-token",
  "soroban-sdk",
 ]
 
@@ -844,8 +845,8 @@ dependencies = [
 name = "launchpad-token"
 version = "0.1.0"
 dependencies = [
- "peridot-interfaces",
  "soroban-sdk",
+ "stellar-tokens",
 ]
 
 [[package]]
@@ -1104,6 +1105,7 @@ dependencies = [
 name = "price-router-ext"
 version = "0.1.0"
 dependencies = [
+ "mock-aquarius-pool",
  "mock-reflector",
  "mock-token",
  "peridot-interfaces",

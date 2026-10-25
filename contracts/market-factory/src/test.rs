@@ -715,10 +715,25 @@ fn redeem_pause_is_admin_only() {
     assert!(f.mf.try_set_redeem_pause(&f.owner, &id, &m, &true).is_err());
 }
 
+#[soroban_sdk::contract]
+struct MockLaunchpad;
+
+#[soroban_sdk::contractimpl]
+impl MockLaunchpad {
+    pub fn set_curve(env: soroban_sdk::Env, curve: Address) {
+        env.storage().instance().set(&curve, &true);
+    }
+    pub fn is_curve(env: soroban_sdk::Env, curve: Address) -> bool {
+        env.storage().instance().get(&curve).unwrap_or(false)
+    }
+}
+
 #[test]
 fn aquarius_only_markets_are_for_the_launchpad_only() {
     let f = setup();
-    let launchpad = Address::generate(&f.env);
+    let lp_factory = f.env.register(MockLaunchpad, ());
+    let launchpad = Address::generate(&f.env); // stands in for a curve deployed by the launchpad factory
+    MockLaunchpadClient::new(&f.env, &lp_factory).set_curve(&launchpad);
     let aq = |f: &F, cf: u128| {
         let mut c = cfg(f, &f.xlm, "XLM");
         c.collateral_factor = cf;
@@ -732,8 +747,8 @@ fn aquarius_only_markets_are_for_the_launchpad_only() {
     let id = f.mf.create_group(&f.owner, &symbol_short!("Own"));
     assert_eq!(f.mf.try_add_market(&f.owner, &id, &aq(&f, 250_000)).err().unwrap().unwrap(), FactoryError::PriceModeNotAllowed);
     // the registered launchpad can, as group owner, within the 50% collateral cap
-    f.mf.set_launchpad(&f.admin, &launchpad);
-    assert!(f.mf.try_set_launchpad(&launchpad, &launchpad).is_err());
+    f.mf.set_launchpad(&f.admin, &lp_factory);
+    assert!(f.mf.try_set_launchpad(&launchpad, &lp_factory).is_err());
     let gid = f.mf.create_group(&launchpad, &symbol_short!("Grad"));
     assert_eq!(f.mf.try_add_market(&launchpad, &gid, &aq(&f, 600_000)).err().unwrap().unwrap(), FactoryError::CollateralFactorTooHigh);
     let m = f.mf.add_market(&launchpad, &gid, &aq(&f, 250_000));

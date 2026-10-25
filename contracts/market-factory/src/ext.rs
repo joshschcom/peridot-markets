@@ -93,3 +93,9 @@ pub trait TokenRead {
 pub trait FeeVaultRead {
     fn get_pool(env: Env) -> Address;
 }
+
+/// The launchpad factory: tells the market factory whether an address is a curve it deployed.
+#[contractclient(name = "LaunchpadViewClient")]
+pub trait LaunchpadView {
+    fn is_curve(env: Env, curve: Address) -> bool;
+}
