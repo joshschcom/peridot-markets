@@ -116,3 +116,7 @@ This proves deployment and network configuration, not fresh-wallet acceptance or
 ## Fresh Albedo account preflight
 
 Joshua supplied public address `GBTAM7KI53O5CMJW7QHS2TG7JX65H4Y2TGDXS42ZLJEK6YMGDBBZOOQD`. At mainnet ledger 65134187, the read-only checker returned `accountExists: false` and `acceptanceComplete: false`. Funding is required before protocol transactions. A 5 XLM funding amount was requested for reserves, small deposits and fees; no transfer was initiated by B.
+
+Funding confirmed for the fresh Albedo account at ledger 65134450: 5.0001 XLM. Account creation/funding history contains successful transactions [c6b4deef...](https://stellar.expert/explorer/public/tx/c6b4deef31e14b1e381fe2e46d6d37ea551f73ddeb5dff1106b6815bb731175a) and [49f05801...](https://stellar.expert/explorer/public/tx/49f05801e6b12adcf306d895877097b076fc5be2c738b0d5917102901480a94d). No protocol supply, market entry or position existed at this checkpoint.
+
+Unsigned simulations at ledger 65134459 succeeded for group 1 XLM `enter_market` and a 1 XLM `deposit`, with prepared fees 366,625 and 755,741 stroops respectively (0.1122366 XLM combined, subject to resimulation). Joshua was asked to approve those two app transactions in Albedo. Simulations are not confirmation evidence.
