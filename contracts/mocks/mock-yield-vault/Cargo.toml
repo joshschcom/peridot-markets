@@ -1,0 +1,16 @@
+[package]
+name = "mock-yield-vault"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "lib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+peridot-interfaces = { path = "../../peridot-interfaces" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

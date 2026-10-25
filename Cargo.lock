@@ -884,11 +884,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "mock-reflector"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "mock-token"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
  "stellar-tokens",
+]
+
+[[package]]
+name = "mock-yield-vault"
+version = "0.1.0"
+dependencies = [
+ "peridot-interfaces",
+ "soroban-sdk",
 ]
 
 [[package]]
@@ -959,6 +975,13 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "peridot-interfaces"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+]
 
 [[package]]
 name = "peridot-token"

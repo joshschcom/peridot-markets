@@ -14,6 +14,9 @@ members = [
   "core/mocks/mock-token",
   "core/mocks/mock-aquarius-pool",
   "core/mocks/mock-depth-fixture",
+  "contracts/peridot-interfaces",
+  "contracts/mocks/mock-reflector",
+  "contracts/mocks/mock-yield-vault",
 ]
 
 [workspace.dependencies]
