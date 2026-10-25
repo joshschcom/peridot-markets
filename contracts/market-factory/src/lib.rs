@@ -83,6 +83,23 @@ fn require_margin_factory(env: &Env, caller: &Address) -> Result<(), FactoryErro
     Ok(())
 }
 
+/// The oracle must be allowlisted AND the (token, oracle, asset key) mapping approved by Peridot, so an owner cannot
+/// price a token with another asset's feed entry. Re-checked whenever a price config is installed.
+fn check_price_allowed(env: &Env, token: &Address, price: &PriceConfig) -> Result<(), FactoryError> {
+    check_oracle_allowed(env, price)?;
+    if let PriceConfig::ReflectorOnly(c) = price {
+        let mapped: bool = env
+            .storage()
+            .instance()
+            .get(&DataKey::PriceFeedAllowed(token.clone(), c.oracle.clone(), c.asset.clone()))
+            .unwrap_or(false);
+        if !mapped {
+            return Err(FactoryError::PriceFeedNotAllowed);
+        }
+    }
+    Ok(())
+}
+
 fn check_oracle_allowed(env: &Env, price: &PriceConfig) -> Result<(), FactoryError> {
     let oracle = match price {
         PriceConfig::ReflectorOnly(c) => c.oracle.clone(),
@@ -182,6 +199,25 @@ impl MarketFactory {
 
     pub fn is_yield_vault_allowed(env: Env, vault: Address) -> bool {
         env.storage().instance().get(&DataKey::YieldVaultAllowed(vault)).unwrap_or(false)
+    }
+
+    /// Approves one (token, oracle, asset key) price mapping. Owners can only choose mappings approved here.
+    pub fn set_price_feed_allowed(
+        env: Env,
+        admin: Address,
+        token: Address,
+        oracle: Address,
+        asset: peridot_interfaces::Asset,
+        allowed: bool,
+    ) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        env.storage().instance().set(&DataKey::PriceFeedAllowed(token, oracle, asset), &allowed);
+        storage::bump_instance(&env);
+        Ok(())
+    }
+
+    pub fn is_price_feed_allowed(env: Env, token: Address, oracle: Address, asset: peridot_interfaces::Asset) -> bool {
+        env.storage().instance().get(&DataKey::PriceFeedAllowed(token, oracle, asset)).unwrap_or(false)
     }
 
     pub fn is_oracle_allowed(env: Env, oracle: Address) -> bool {
@@ -327,7 +363,7 @@ impl MarketFactory {
             return Err(FactoryError::MarketsLockedByRewards);
         }
         guardrails::check_market_config(&cfg)?;
-        check_oracle_allowed(&env, &cfg.price)?;
+        check_price_allowed(&env, &cfg.token, &cfg.price)?;
         if g.markets.len() + storage::pending_count(&env, group_id) >= guardrails::MAX_MARKETS_PER_GROUP {
             return Err(FactoryError::TooManyMarkets);
         }
@@ -395,6 +431,7 @@ impl MarketFactory {
             return Err(FactoryError::MarketAlreadyActive);
         }
         let cfg = rec.cfg.clone();
+        check_price_allowed(&env, &cfg.token, &cfg.price)?;
         let me = env.current_contract_address();
 
         // price first: the vault's set_peridottroller smoke-tests get_price_usd
@@ -617,10 +654,14 @@ impl MarketFactory {
         }
         let now = env.ledger().timestamp();
         let live_cf = ControllerClient::new(&env, &g.controller).get_market_cf(&market);
+        let staged = rec.pending_cf.first();
         if cf == live_cf {
-            rec.pending_cf = Vec::new(&env); // owner reverted a staged change
-        } else if rec.pending_cf.first().map(|p| p.cf) != Some(cf) {
-            // not yet staged with this value: stage on the controller
+            // The core keeps its pending proposal and deadline; it cannot be cancelled, only replaced by another value.
+            if staged.is_some() {
+                return Err(FactoryError::CfChangeStaged);
+            }
+        } else if staged.map(|p| p.cf) != Some(cf) {
+            // not yet staged with this value: stage on the controller (replacing any other staged value)
             ControllerClient::new(&env, &g.controller).set_market_cf(&market, &cf);
             let execute_after = now + guardrails::STAGED_DELAY_SECS;
             rec.pending_cf = vec![&env, PendingCf { cf, execute_after }];
@@ -663,8 +704,8 @@ impl MarketFactory {
     pub fn update_price(env: Env, owner: Address, group_id: u32, market: Address, cfg: PriceConfig) -> Result<(), FactoryError> {
         require_owner(&env, &owner, group_id)?;
         guardrails::check_price_mode(&cfg)?;
-        check_oracle_allowed(&env, &cfg)?;
         let mut rec = storage::get_market(&env, group_id, &market)?;
+        check_price_allowed(&env, &rec.cfg.token, &cfg)?;
         let execute_after = env.ledger().timestamp() + guardrails::STAGED_DELAY_SECS;
         rec.pending_price = vec![&env, PendingPrice { config: cfg.clone(), execute_after }];
         storage::set_market(&env, group_id, &market, &rec);
@@ -686,6 +727,16 @@ impl MarketFactory {
         ctrl.set_pause_borrow(&market, &borrow);
         events::ParamUpdated { group_id, market: Some(market.clone()), param: Symbol::new(&env, "pause_deposit"), old: 0, new: deposit as u128 }.publish(&env);
         events::ParamUpdated { group_id, market: Some(market), param: Symbol::new(&env, "pause_borrow"), old: 0, new: borrow as u128 }.publish(&env);
+        Ok(())
+    }
+
+    /// Core receipt-vault upgrades require redeem to be paused. Peridot admin only, used around `execute_core_upgrade`.
+    pub fn set_redeem_pause(env: Env, admin: Address, group_id: u32, market: Address, paused: bool) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        let g = storage::get_group(&env, group_id)?;
+        storage::get_market(&env, group_id, &market)?;
+        ControllerClient::new(&env, &g.controller).set_pause_redeem(&market, &paused);
+        events::ParamUpdated { group_id, market: Some(market), param: Symbol::new(&env, "pause_redeem"), old: 0, new: paused as u128 }.publish(&env);
         Ok(())
     }
 
@@ -723,6 +774,9 @@ impl MarketFactory {
             if let Some(p) = rec.pending_cf.first() {
                 if now >= p.execute_after {
                     ControllerClient::new(&env, &g.controller).set_market_cf(&m, &p.cf);
+                    if ControllerClient::new(&env, &g.controller).get_market_cf(&m) != p.cf {
+                        return Err(FactoryError::NotYetApplicable);
+                    }
                     events::ParamUpdated { group_id, market: Some(m.clone()), param: Symbol::new(&env, "cf"), old: rec.cfg.collateral_factor, new: p.cf }.publish(&env);
                     rec.cfg.collateral_factor = p.cf;
                     rec.pending_cf = Vec::new(&env);
@@ -733,6 +787,7 @@ impl MarketFactory {
             }
             if let Some(p) = rec.pending_price.first() {
                 if now >= p.execute_after {
+                    check_price_allowed(&env, &rec.cfg.token, &p.config)?;
                     PriceRouterClient::new(&env, &g.price_router).set_asset_config(&me, &rec.cfg.token, &p.config);
                     events::PriceApplied { group_id, market: m.clone(), config: p.config.clone() }.publish(&env);
                     rec.cfg.price = p.config;

@@ -17,6 +17,7 @@ pub enum DataKey {
     CreatorAllowed(Address),
     OracleAllowed(Address),
     YieldVaultAllowed(Address),
+    PriceFeedAllowed(Address, Address, peridot_interfaces::Asset),
     NextGroupId,
     Group(u32),
     GroupNonce(u32),

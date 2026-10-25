@@ -105,6 +105,10 @@ fn setup_with<'a>(router: &[u8]) -> F<'a> {
     let owner = Address::generate(&env);
     let usdc = token(&env, "USDC");
     let xlm = token(&env, "XLM");
+    let eurc = token(&env, "EURC");
+    for (tk, sym) in [(&usdc, "USDC"), (&usdc, "USDT"), (&xlm, "XLM"), (&eurc, "EURC")] {
+        mf.set_price_feed_allowed(&admin, tk, &reflector, &Asset::Other(Symbol::new(&env, sym)), &true);
+    }
     F { env, mf, admin, owner, reflector, usdc, xlm }
 }
 
@@ -293,6 +297,7 @@ fn guardrails_reject() {
     // a route of a later phase is still refused
     let mut z = ok.clone();
     z.token = token(&f.env, "EURC");
+    f.mf.set_price_feed_allowed(&f.admin, &z.token, &f.reflector, &Asset::Other(symbol_short!("USDC")), &true);
     z.yield_route = YieldRoute::Xoxno(peridot_interfaces::XoxnoRoute { hub_id: 1, spoke_id: 1 });
     assert_eq!(f.mf.try_add_market(&f.owner, &id, &z).err().unwrap().unwrap(), FactoryError::Unsupported);
     let mut c = ok.clone();
@@ -656,4 +661,55 @@ fn margin_factory_integrates_with_the_real_market_factory() {
     // the incentive is staged for 60s on the real group controller
     f.env.ledger().set_timestamp(1_000_000 + 61);
     xf.apply_margin(&f.owner, &id);
+}
+
+#[test]
+fn price_feed_mapping_is_bound_to_the_token() {
+    let f = setup();
+    let id = f.mf.create_group(&f.owner, &symbol_short!("Map"));
+    // XLM cannot be priced with the BTC entry of the approved feed
+    let mut c = cfg(&f, &f.xlm, "BTC");
+    assert_eq!(f.mf.try_add_market(&f.owner, &id, &c).err().unwrap().unwrap(), FactoryError::PriceFeedNotAllowed);
+    c = cfg(&f, &f.xlm, "XLM");
+    let m = add_active(&f, id, &c);
+    assert_eq!(
+        f.mf.try_update_price(&f.owner, &id, &m, &price_cfg(&f, "BTC")).err().unwrap().unwrap(),
+        FactoryError::PriceFeedNotAllowed
+    );
+    // revoking a mapping after staging blocks the application
+    f.mf.set_price_feed_allowed(&f.admin, &f.xlm, &f.reflector, &Asset::Other(symbol_short!("USDC")), &true);
+    f.mf.update_price(&f.owner, &id, &m, &price_cfg(&f, "USDC"));
+    f.mf.set_price_feed_allowed(&f.admin, &f.xlm, &f.reflector, &Asset::Other(symbol_short!("USDC")), &false);
+    f.env.ledger().set_timestamp(1_000_000 + 61);
+    assert_eq!(f.mf.try_apply_pending(&f.owner, &id, &Some(m)).err().unwrap().unwrap(), FactoryError::PriceFeedNotAllowed);
+    // revoking the oracle blocks activation of an already added market
+    let eur = f.mf.add_market(&f.owner, &id, &cfg(&f, &f.usdc, "USDC"));
+    f.mf.set_oracle_allowed(&f.admin, &f.reflector, &false);
+    assert_eq!(f.mf.try_activate_market(&f.owner, &id, &eur).err().unwrap().unwrap(), FactoryError::OracleNotAllowed);
+}
+
+#[test]
+fn cancelled_cf_proposal_cannot_be_reapplied_early() {
+    let f = setup();
+    let (id, m) = group_with_market(&f);
+    f.mf.update_risk(&f.owner, &id, &m, &600_000, &(2_000_000 * ONE as u128), &(100_000 * ONE as u128), &0);
+    // requesting the live value again cannot cancel the core proposal
+    assert_eq!(
+        f.mf.try_update_risk(&f.owner, &id, &m, &700_000, &(2_000_000 * ONE as u128), &(100_000 * ONE as u128), &0).err().unwrap().unwrap(),
+        FactoryError::CfChangeStaged
+    );
+    // only the factory deadline releases it
+    f.env.ledger().set_timestamp(1_000_000 + 61);
+    f.mf.apply_pending(&f.owner, &id, &Some(m.clone()));
+    assert_eq!(f.mf.get_market_config(&id, &m).collateral_factor, 600_000);
+}
+
+#[test]
+fn redeem_pause_is_admin_only() {
+    let f = setup();
+    let (id, m) = group_with_market(&f);
+    let g = f.mf.get_group(&id);
+    f.mf.set_redeem_pause(&f.admin, &id, &m, &true);
+    assert!(ctrl::Client::new(&f.env, &g.controller).is_redeem_paused(&m));
+    assert!(f.mf.try_set_redeem_pause(&f.owner, &id, &m, &true).is_err());
 }

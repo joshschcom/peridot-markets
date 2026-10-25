@@ -24,6 +24,8 @@ pub enum FactoryError {
     RatesOutOfRange = 25,
     PriceModeNotAllowed = 26,
     OracleNotAllowed = 27,
+    PriceFeedNotAllowed = 32,
+    CfChangeStaged = 33,
     RewardSpeedTooHigh = 28,
     TooManyMarkets = 29,
     InvalidRoute = 30,
