@@ -86,7 +86,61 @@ reward_token)`, `blend adapter __constructor(admin, market, underlying, cfg)`.
 
 ## Price router
 
-_Price router agent (05)._
+Crate `contracts/price-router-ext` (Wasm `price_router_ext.wasm`, about 14 KB optimized). One instance per group,
+deployed by the market-factory (`deploy_v2`), admin = market-factory, set as the group controller's oracle.
+
+**Why standalone and not a wrapper around `core/price-router`:** the core router bakes its initial admin at compile
+time (`INIT_ADMIN`), is configured with `initialize`/`set_source`/`set_upstream` around a single upstream feed, and has
+a different ABI (no `set_asset_config`/`check`). The factory needs a constructor, one config per token with an oracle
+address and asset key chosen by the group owner, and the `PriceRouter` trait. A direct Reflector reader is about 300
+lines, adds no new audited surface to `core/`, and can be live today. The core router stays the tool for yXLM-style peg
+and Aquarius-bounded sources.
+
+ABI (the `PriceRouter` trait in `peridot-interfaces`, plus `admin()`). `set_asset_config` and `upgrade` return
+`Result<(), RouterError>` instead of `()`: Ok encodes as void, so `PriceRouterClient` callers are unaffected, and
+failures carry a typed code.
+
+```rust
+fn __constructor(admin: Address, quote_decimals: u32 /* <= 38, 14 */, resolution: u32 /* > 0, seconds, 300 */);
+fn decimals() -> u32;                 // quote_decimals
+fn resolution() -> u32;               // constructor value
+fn lastprice(asset: Asset) -> Option<PriceData>;   // only Asset::Stellar(token); Other(_) -> None
+fn set_asset_config(admin, token, cfg: PriceConfig) -> Result<(), RouterError>;   // admin == factory, auth
+fn get_asset_config(token) -> Option<PriceConfig>;
+fn check(token) -> PriceCheck;        // never panics
+fn upgrade(admin, new_wasm_hash) -> Result<(), RouterError>;   // immediate
+// RouterError: 1 NotAdmin, 2 UnsupportedMode, 3 InvalidOracle, 4 SelfOracle, 5 AssetNotOnFeed, 6 InvalidParams
+```
+
+- **Pricing (`ReflectorOnly(ReflectorOnlyCfg { oracle, asset })`):** the controller sends `Asset::Stellar(token)` (the
+  factory never sets oracle asset symbols). The router reads `oracle.decimals()` and `oracle.lastprice(cfg.asset)` through
+  `try_` clients, rescales the price from the feed's decimals to `decimals()` with checked arithmetic (scaling down
+  rounds toward zero), and returns the feed's own timestamp. `asset` is `Other(symbol)` on the external CEX/DEX feed or
+  `Stellar(token)` on the Stellar-assets feed. Missing config, a failed or trapping oracle, `None`, a non-positive price,
+  an overflow or a result that rounds to zero all return `None`. The factory sets no fallback prices, so `None` means
+  "price unavailable": borrows and liquidations for that market are blocked (the circuit breaker).
+- **Staleness is the controller's call.** The router never filters by age. The controller rejects a price when
+  `timestamp > now` or `timestamp + k * resolution < now` (k = 2 by default, `resolution` read from the router), and it
+  may reuse its last good cached price inside that window, so a cleared or stale feed blocks borrows once the feed
+  timestamp is older than 2 * resolution (600 s). `check(token)` applies the same rule: `mode` is "reflector" (or "none"
+  without a config), `status` is "ok" | "stale" | "unavailable" ("deviation" is reserved for phase 3), `reflector_price`
+  is the rescaled price and `timestamp` the feed timestamp.
+- **Guardrails in `set_asset_config`:** admin only; the oracle must answer `decimals()` (<= 38) and `assets()`, must not
+  be the router itself, and the asset key must be listed in the feed's `assets()`. Phase 3 modes
+  (`ReflectorWithAquariusGuard`, `AquariusOnly`) are rejected with `UnsupportedMode` and resolve to unavailable; all mode
+  handling sits in `price_for`, `validate` and `mode_symbol`, one `match` each. Events: `asset_cfg {token, mode, config}`
+  and `upgraded {wasm_hash}`. Config entries and instance storage are TTL-bumped on writes and reads.
+- **Controller facts verified against `core/simple-peridottroller`:** `set_oracle` calls `decimals()` (<= 38) and
+  `resolution()` (non-zero); the first oracle on a fresh controller applies immediately, later changes stage for 60 s.
+  Pricing calls `decimals`, `lastprice` and `resolution` via `try_invoke_contract` and treats the price as USD at
+  `decimals()`.
+- **Reflector facts (read on 25 Oct 2026):** all four feeds report `decimals` 14 and `resolution` 300, timestamps are in
+  seconds. The mainnet Stellar-assets feed (52 assets) is quoted in Circle USDC (its `base()`), so USDC itself is not
+  listed there: price USDC with `Other("USDC")` on the external feed (16 symbols: BTC ETH USDT XRP SOL USDC ADA AVAX DOT
+  MATIC LINK DAI ATOM XLM UNI EURC; the testnet external feed lists the same). The mainnet Stellar feed covers native
+  XLM, AQUA, EURC and PYUSD but not BLND or yXLM. The testnet Stellar feed lists only 9 assets and not the XLM, USDC or
+  BLND testnet tokens from 11-ADDRESSES, so use the external feed with symbols on testnet. The wizard should call
+  `assets()` on both feeds to build its price picker.
 
 ## Blend route
 
