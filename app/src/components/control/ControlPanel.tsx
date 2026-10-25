@@ -1,0 +1,136 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useWallet } from '@/lib/peridot/wallet';
+import { network, transactionUrl } from '@/lib/peridot/network';
+import { formatAmount, parseAmount } from '@/lib/peridot/amount';
+import type { GroupMarginConfig, MarketConfig } from '@/lib/peridot/types';
+import { loadControl, updateRisk, updateRates, updateBuffer, updatePrice, updateRewardSpeeds, pauseMarket, applyPending, fundRewards, withdrawRewards, transferOwnership, updateMargin, setMarketMargin, setPoolAllowed, setPoolBinding, type ControlState, type ControlMarket, type Signer, type Progress, type PendingChange } from '@/lib/peridot/control-client';
+import './control.css';
+
+const pct=(v:bigint)=>formatAmount(v,4);
+const percent=(v:string)=>parseAmount(v,4);
+const errorText=(e:unknown)=>e instanceof Error?e.message:String(e);
+type Run=(label:string,fn:(signer:Signer,progress:(p:Progress)=>void)=>Promise<unknown>)=>Promise<boolean>;
+
+export default function ControlPanel({id}:{id:number}) {
+  const wallet=useWallet();
+  const [state,setState]=useState<ControlState|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(''),[progress,setProgress]=useState<Progress|null>(null);
+  const [autoApply,setAutoApply]=useState(true),[now,setNow]=useState(Math.floor(Date.now()/1000));
+  const attempted=useRef(new Set<string>());
+  const refresh=useCallback(async()=>{if(!Number.isInteger(id)||id<0)throw new Error('Invalid group ID.');const next=await loadControl(id);setState(next);},[id]);
+  useEffect(()=>{refresh().catch(e=>setError(errorText(e)));},[refresh]);
+  useEffect(()=>{const t=setInterval(()=>setNow(Math.floor(Date.now()/1000)),1000);return()=>clearInterval(t);},[]);
+  const owner=!!state&&wallet.address===state.group.owner;
+  const run:Run=useCallback(async(label,fn)=>{
+    if(busy||!wallet.address||wallet.networkMismatch)return false;
+    if(!state||wallet.address!==state.group.owner){setError('Only the current group owner can change these settings.');return false;}
+    setBusy(label);setError('');setProgress(null);
+    try {await fn({address:wallet.address,signTransaction:wallet.signTransaction},setProgress);await refresh();return true;}
+    catch(e){setError(errorText(e));return false;}finally{setBusy('');}
+  },[busy,wallet.address,wallet.networkMismatch,wallet.signTransaction,state,refresh]);
+  useEffect(()=>{
+    if(!autoApply||!owner||busy||wallet.networkMismatch||!state)return;
+    const ready=state.pending.find(p=>p.executeAfter<=now&&!attempted.current.has(p.id)&&(!p.market||state.pending.filter(other=>other.market===p.market).every(other=>other.executeAfter<=now)));
+    if(!ready)return;
+    attempted.current.add(ready.id);
+    void run('Apply staged change',(s,p)=>applyPending(id,ready,s,p));
+  },[autoApply,owner,busy,wallet.networkMismatch,state,now,id,run]);
+  if(!state)return <div className="panel" role="status">{error||'Loading owner settings...'}</div>;
+  const disabled=!!busy||!owner||wallet.networkMismatch;
+  return <main className="control-page">
+    <div className="page-heading"><div><p className="eyebrow">Owner settings</p><h1>{state.group.name} Control Panel</h1><p className="muted">Review current values, then sign each change in Freighter.</p></div><Link href={`/groups/${id}`} className="button secondary">View group</Link></div>
+    {!wallet.address?<div className="panel"><p>Connect the group owner wallet to edit settings.</p><button className="button" onClick={()=>wallet.connect()}>Connect wallet</button></div>:!owner?<div className="panel" role="status">This wallet is not the group owner. Settings are read-only. Owner: <code>{state.group.owner}</code></div>:null}
+    {wallet.networkMismatch&&<p className="status" role="alert">Switch Freighter to {network.name} before signing.</p>}
+    {(error||busy||progress)&&<div className="panel" role={error?'alert':'status'} aria-live="polite">{busy&&<strong>{busy}</strong>}<p>{error||progress?.message||progress?.status}</p>{progress?.hash&&<a href={transactionUrl(progress.hash)} target="_blank" rel="noreferrer">View transaction</a>}{progress?.status==='unknown'&&<p>Do not repeat this action until its outcome is confirmed.</p>}</div>}
+    <section className="panel"><div className="control-section-heading"><div><h2>Staged changes</h2><p className="muted">Collateral and price updates wait 60 seconds. Applying market changes submits all pending collateral and price changes for that market in one wallet signature.</p></div><button className="button ghost" onClick={()=>refresh().catch(e=>setError(errorText(e)))} disabled={!!busy}>Refresh</button></div>
+      <label className="control-check"><input type="checkbox" checked={autoApply} onChange={e=>setAutoApply(e.target.checked)} disabled={disabled}/>Prompt automatically when a staged change is ready</label>
+      {!state.pendingAvailable&&<p className="muted">Pending-change details are unavailable from the deployed factory. Refresh the settings and verify the proposal before applying.</p>}
+      {state.pendingAvailable&&state.pending.length===0&&<p>No staged changes.</p>}
+      {state.pending.filter((p,index,all)=>!p.market||all.findIndex(other=>other.market===p.market)===index).map(p=><PendingRow key={p.id} pending={p.market?{...p,executeAfter:Math.max(...state.pending.filter(other=>other.market===p.market).map(other=>other.executeAfter))}:p} now={now} disabled={disabled} apply={()=>run('Apply staged change',(s,progress)=>applyPending(id,p,s,progress))}/>)}
+      {!state.pendingAvailable&&<button className="button secondary" disabled={disabled} onClick={()=>run('Apply group proposals',(s,p)=>applyPending(id,undefined,s,p))}>Apply ready group proposals</button>}
+    </section>
+    <section><h2>Markets</h2><div className="control-markets">{state.markets.map(m=><MarketControls key={m.address} market={m} id={id} disabled={disabled} run={run} hasRewards={!!state.group.reward_distributor} rewardDecimals={state.rewards?.token.decimals||7}/>)}</div></section>
+    <AddMarketSection id={id} owner={state.group.owner} rewardsEnabled={!!state.group.reward_distributor} disabled={disabled} run={run}/>
+    <RewardsControls state={state} disabled={disabled} run={run}/>
+    <MarginControls state={state} disabled={disabled} run={run}/>
+    <Ownership state={state} disabled={disabled} run={run}/>
+    <section className="panel"><h2>Change history</h2><p className="muted">{network.useMocks?'Demo changes stored in this browser.':'Recent factory and margin-factory events, up to 100 events from the latest 1,000 ledgers.'}</p>{state.historyError&&<p className="status">{state.historyError}</p>}{!state.history.length&&!state.historyError&&<p>No changes found in the available history.</p>}<ol className="control-history">{state.history.map(h=><li key={h.id}><div><strong>{h.label}</strong><p className="muted">{new Date(h.at*1000).toLocaleString()}{h.market?` · ${h.market.slice(0,8)}…`:''}</p></div>{h.hash&&<a href={transactionUrl(h.hash)} target="_blank" rel="noreferrer">Transaction</a>}</li>)}</ol></section>
+  </main>;
+}
+function PendingRow({pending:p,now,disabled,apply}:{pending:PendingChange;now:number;disabled:boolean;apply:()=>void}) {
+  const left=Math.max(0,p.executeAfter-now),snapshot=p.marketProposals;
+  const price=snapshot?.price?.config,feed=price?.tag==='ReflectorOnly'?price.values[0]:undefined;
+  return <div className="control-pending"><div><strong>{p.market?'Market changes':'Margin configuration'}</strong><p>{left?`Applies in ${left}s`:'Ready to apply'}{p.market?` · ${p.market.slice(0,8)}…`:''}</p>
+    {snapshot?.cf&&<p>Collateral factor: {pct(snapshot.cf.cf)}%</p>}
+    {feed&&<><p>Price asset: {feed.asset.tag} {feed.asset.values[0]}</p><p>Price oracle: <code>{feed.oracle}</code></p></>}
+  </div><button className="button" disabled={disabled||left>0} onClick={apply}>{p.market?'Apply market changes':'Apply'}</button></div>;
+}
+function Field({label,value,set,current,type='text'}:{label:string;value:string;set:(v:string)=>void;current?:string;type?:string}){return <label className="field">{label}{current!==undefined&&<small className="muted">Current: {current}</small>}<input type={type} value={value} onChange={e=>set(e.target.value)} inputMode={type==='text'?'decimal':undefined}/></label>;}
+function MarketControls({market:m,id,disabled,run,hasRewards,rewardDecimals}:{market:ControlMarket;id:number;disabled:boolean;run:Run;hasRewards:boolean;rewardDecimals:number}) {
+  const c=m.config;
+  const [cf,setCf]=useState(pct(c.collateral_factor)),[supply,setSupply]=useState(formatAmount(c.supply_cap,m.token.decimals)),[borrow,setBorrow]=useState(formatAmount(c.borrow_cap,m.token.decimals)),[reserve,setReserve]=useState(pct(c.reserve_factor)),[buffer,setBuffer]=useState(String(c.idle_buffer_bps/100));
+  const [base,setBase]=useState(pct(c.rates.base)),[slope,setSlope]=useState(pct(c.rates.multiplier)),[jump,setJump]=useState(pct(c.rates.jump)),[kink,setKink]=useState(pct(c.rates.kink));
+  const pc=c.price.tag==='ReflectorOnly'?c.price.values[0]:undefined;
+  const [oracle,setOracle]=useState(pc?.oracle||''),[assetKind,setAssetKind]=useState<'Stellar'|'Other'>(pc?.asset.tag||'Stellar'),[assetKey,setAssetKey]=useState(pc?.asset.values[0]||c.token);
+  const [supplyReward,setSupplyReward]=useState(formatAmount(c.supply_reward_per_sec*86400n,rewardDecimals)),[borrowReward,setBorrowReward]=useState(formatAmount(c.borrow_reward_per_sec*86400n,rewardDecimals));
+  const [depositPause,setDepositPause]=useState(m.depositPaused),[borrowPause,setBorrowPause]=useState(m.borrowPaused),[marginEnabled,setMarginEnabled]=useState(c.margin_enabled);
+  const daily=(value:string)=>{const amount=parseAmount(value,rewardDecimals);if(amount%86400n!==0n)throw new Error('Daily emission must convert to a whole number of token base units per second. Choose a multiple of 86,400 base units.');return amount/86400n;};
+  return <article className="panel"><div className="control-section-heading"><h3>{m.token.symbol}</h3><code title={m.address}>{m.address.slice(0,8)}…{m.address.slice(-6)}</code></div>
+    <details open><summary>Risk and caps</summary><fieldset disabled={disabled}><div className="field-grid"><Field label="Collateral factor (%)" value={cf} set={setCf} current={`${pct(c.collateral_factor)}%`}/><Field label={`Supply cap (${m.token.symbol})`} value={supply} set={setSupply} current={formatAmount(c.supply_cap,m.token.decimals)}/><Field label={`Borrow cap (${m.token.symbol})`} value={borrow} set={setBorrow} current={formatAmount(c.borrow_cap,m.token.decimals)}/><Field label="Reserve factor (%)" value={reserve} set={setReserve} current={`${pct(c.reserve_factor)}%`}/></div><p className="muted">Collateral factor: 1% to 75%. Caps must be positive. Reserve factor: 0% to 50%. A changed collateral factor takes 60 seconds.</p><button className="button" onClick={()=>run('Save risk settings',(s,p)=>updateRisk(id,m.address,{...c,collateral_factor:percent(cf),supply_cap:parseAmount(supply,m.token.decimals),borrow_cap:parseAmount(borrow,m.token.decimals),reserve_factor:percent(reserve)},s,p))}>Save risk settings</button></fieldset></details>
+    <details><summary>Interest rate</summary><fieldset disabled={disabled}><div className="field-grid"><Field label="Base APR (%)" value={base} set={setBase} current={`${pct(c.rates.base)}%`}/><Field label="Slope (%)" value={slope} set={setSlope} current={`${pct(c.rates.multiplier)}%`}/><Field label="Jump slope (%)" value={jump} set={setJump} current={`${pct(c.rates.jump)}%`}/><Field label="Kink utilization (%)" value={kink} set={setKink} current={`${pct(c.rates.kink)}%`}/></div><div className="control-actions"><button className="button secondary" onClick={()=>{setBase('0');setSlope('0');setJump('0');setKink('0');}}>Set zero borrow rate</button><button className="button" onClick={()=>run('Save rate curve',(s,p)=>updateRates(id,m.address,{base:percent(base),multiplier:percent(slope),jump:percent(jump),kink:percent(kink)},s,p))}>Save rate curve</button></div></fieldset></details>
+    <details><summary>Kept liquid</summary><fieldset disabled={disabled}><Field label="Kept liquid (%)" value={buffer} set={setBuffer} current={`${c.idle_buffer_bps/100}%`}/><p className="muted">Keep 10% to 100% available in the market. The remainder can earn yield through {c.yield_route.tag==='None'?'the configured route':c.yield_route.tag}.</p><button className="button" onClick={()=>run('Save liquid buffer',(s,p)=>updateBuffer(id,m.address,Number(parseAmount(buffer,2)),s,p))}>Save liquid buffer</button></fieldset></details>
+    <details><summary>Price source</summary><fieldset disabled={disabled}><p className="muted">Current mode: {c.price.tag}. Reflector configuration changes are staged for 60 seconds.</p><Field label="Reflector contract address" value={oracle} set={setOracle}/><label className="field">Asset lookup<select value={assetKind} onChange={e=>setAssetKind(e.target.value as 'Stellar'|'Other')}><option value="Stellar">Stellar token address</option><option value="Other">External feed symbol</option></select></label><Field label={assetKind==='Stellar'?'Token contract address':'Feed symbol'} value={assetKey} set={setAssetKey}/><button className="button" onClick={()=>run('Stage price configuration',(s,p)=>updatePrice(id,m.address,{tag:'ReflectorOnly',values:[{oracle,asset:{tag:assetKind,values:[assetKey]}}]},s,p))}>Stage price change</button></fieldset></details>
+    {hasRewards&&<details><summary>Reward emissions</summary><fieldset disabled={disabled}><div className="field-grid"><Field label="Supply rewards per day" value={supplyReward} set={setSupplyReward} current={formatAmount(c.supply_reward_per_sec*86400n,rewardDecimals)}/><Field label="Borrow rewards per day" value={borrowReward} set={setBorrowReward} current={formatAmount(c.borrow_reward_per_sec*86400n,rewardDecimals)}/></div><button className="button" onClick={()=>run('Save reward emissions',(s,p)=>updateRewardSpeeds(id,m.address,daily(supplyReward),daily(borrowReward),s,p))}>Save reward emissions</button></fieldset></details>}
+    <details><summary>Pause and margin</summary><fieldset disabled={disabled}><label className="control-check"><input type="checkbox" checked={depositPause} onChange={e=>setDepositPause(e.target.checked)}/>Pause deposits (current: {m.depositPaused?'paused':'active'})</label><label className="control-check"><input type="checkbox" checked={borrowPause} onChange={e=>setBorrowPause(e.target.checked)}/>Pause borrowing (current: {m.borrowPaused?'paused':'active'})</label><button className="button secondary" onClick={()=>run('Save pause settings',(s,p)=>pauseMarket(id,m.address,depositPause,borrowPause,s,p))}>Save pause settings</button><label className="control-check"><input type="checkbox" checked={marginEnabled} onChange={e=>setMarginEnabled(e.target.checked)}/>Margin enabled (current: {c.margin_enabled?'yes':'no'})</label><button className="button secondary" onClick={()=>run('Update market margin',(s,p)=>setMarketMargin(id,m.address,marginEnabled,s,p))}>Save market margin</button></fieldset></details>
+  </article>;
+}
+
+import MarketConfigEditor from '@/components/markets/MarketConfigEditor';
+import { newMarketDraft, marketDraftToConfig, validateMarketDraft, draftFromConfig } from '@/lib/peridot/market-config';
+import { addControlMarket, activateControlMarket, attachMarketYield, setGroupRewards, readMarketAddition, recoverMarketAddition, finishMarketAddition, type MarketAddition } from '@/lib/peridot/control-client';
+function AddMarketSection({id,owner,rewardsEnabled,disabled,run}:{id:number;owner:string;rewardsEnabled:boolean;disabled:boolean;run:Run}) {
+  const [draft,setDraft]=useState(newMarketDraft),[addition,setAddition]=useState<MarketAddition|null>(null),[recoveryError,setRecoveryError]=useState(''),[knownMarket,setKnownMarket]=useState(''),[checked,setChecked]=useState(false);
+  const recover=useCallback(async(address?:string)=>{
+    setChecked(false);setRecoveryError('');
+    try{const value=await recoverMarketAddition(id,owner,address);setAddition(value);if(value)setDraft(draftFromConfig(value.cfg,value.token));setChecked(true);}
+    catch(error){setAddition(readMarketAddition(id,owner));setRecoveryError(errorText(error));throw error;}
+  },[id,owner]);
+  useEffect(()=>{setAddition(readMarketAddition(id,owner));void recover().catch(()=>{});},[id,owner,recover]);
+  const act=(label:string,fn:(s:Signer,p:(progress:Progress)=>void)=>Promise<unknown>)=>run(label,async(s,p)=>{try{await fn(s,p);}finally{await recover();}});
+  return <section className="panel"><h2>Add a market</h2><p className="muted">Deploy the market, activate it, then attach its yield route. Each step requires a separate wallet signature. Creation starts with zero reward emissions.</p>
+    {rewardsEnabled&&<p className="status">Markets cannot be added after group rewards are enabled. Create and activate every market before setting the reward token.</p>}
+    {recoveryError&&<p className="status" role="alert">{recoveryError}</p>}
+    <details open={!!addition}><summary>{addition?'Resume market addition':'Configure another market'}</summary>
+      <MarketConfigEditor value={draft} onChange={setDraft} disabled={disabled||!!addition||rewardsEnabled||!checked}/>
+      {!addition?<button className="button" disabled={disabled||rewardsEnabled||!checked} onClick={()=>act('Deploy market',async(s,p)=>{const errors=validateMarketDraft(draft);if(errors.length)throw new Error(errors.join(' '));await addControlMarket(id,marketDraftToConfig(draft),{address:draft.token,symbol:draft.symbol,decimals:draft.decimals},s,p);})}>Deploy market</button>:<div className="status">
+        {addition.market?<p>Deployed market: <code>{addition.market}</code></p>:<p>Market deployment needs confirmation before another transaction.</p>}
+        {addition.transaction?.hash&&<a href={transactionUrl(addition.transaction.hash)} target="_blank" rel="noreferrer">View deployment transaction</a>}
+        <p>Activation: {addition.active?'complete':'pending'}. Yield: {addition.cfg.yield_route.tag==='None'?'not configured':addition.attached?'attached':'pending'}.</p>
+        {!addition.active&&addition.market&&<button className="button" disabled={disabled||rewardsEnabled||!checked} onClick={()=>act('Activate market',(s,p)=>activateControlMarket(id,addition.market!,s,p))}>Activate market</button>}
+        {addition.active&&!addition.attached&&<button className="button" disabled={disabled||!checked} onClick={()=>act('Attach yield route',(s,p)=>attachMarketYield(id,addition.market!,s,p))}>Attach {addition.cfg.yield_route.tag} route</button>}
+        {addition.active&&addition.attached&&<button className="button secondary" disabled={disabled||!checked} onClick={()=>run('Finish market addition',async()=>{await finishMarketAddition(id,owner);setAddition(null);setDraft(newMarketDraft());})}>Finish market addition</button>}
+      </div>}
+    </details>
+    <div className="control-actions"><button className="button secondary" disabled={disabled} onClick={()=>run('Refresh market addition',()=>recover())}>Refresh addition status</button></div>
+    <details><summary>Recover a deployed market by address</summary><p className="muted">Use the market address from the confirmed deployment transaction if this browser has no saved addition. The factory record determines the remaining steps.</p><Field label="Deployed market address" value={knownMarket} set={setKnownMarket}/><button className="button secondary" disabled={disabled||!knownMarket} onClick={()=>run('Recover market addition',()=>recover(knownMarket.trim()))}>Recover market</button></details>
+  </section>;
+}
+function RewardsControls({state,disabled,run}:{state:ControlState;disabled:boolean;run:Run}) {
+  const [amount,setAmount]=useState(''),[withdraw,setWithdraw]=useState(''),[to,setTo]=useState(state.group.owner),[token,setToken]=useState(''),[ack,setAck]=useState(false);
+  const rewards=state.rewards;
+  if(!state.group.reward_distributor)return <section className="panel"><h2>Group rewards</h2><p>No reward token configured.</p><fieldset disabled={disabled}><Field label="Reward token contract" value={token} set={setToken}/><label className="control-check"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>I understand this reward token cannot be changed later and no more markets can be added to this group.</label><button className="button" disabled={!ack} onClick={()=>run('Set reward token',(s,p)=>setGroupRewards(state.group.id,token,s,p))}>Set reward token</button></fieldset></section>;
+  return <section className="panel"><h2>Group rewards</h2><p>Reward token cannot be changed after it is set. This group can no longer add markets.</p>{rewards&&<p className="control-stat">{formatAmount(rewards.available,rewards.token.decimals)} {rewards.token.symbol} available</p>}<fieldset disabled={disabled||!rewards}><div className="field-grid"><div><Field label="Amount to fund" value={amount} set={setAmount}/><button className="button" onClick={()=>run('Fund reward distributor',(s,p)=>fundRewards(state.group.id,state.group.reward_distributor!,parseAmount(amount,rewards!.token.decimals),s,p))}>Fund rewards</button></div><div><Field label="Withdraw unallocated amount" value={withdraw} set={setWithdraw}/><Field label="Recipient address" value={to} set={setTo}/><p className="muted">Only the group owner can withdraw unallocated rewards.</p><button className="button secondary" onClick={()=>run('Withdraw unallocated rewards',(s,p)=>withdrawRewards(state.group.id,to,parseAmount(withdraw,rewards!.token.decimals),s,p))}>Withdraw unallocated</button></div></div></fieldset></section>;
+}
+function MarginControls({state,disabled,run}:{state:ControlState;disabled:boolean;run:Run}) {
+  const defaults=state.margin?.cfg;
+  const [max,setMax]=useState(String(defaults?.max_leverage??3n)),[slippage,setSlippage]=useState(pct(defaults?.max_slippage??50_000n)),[incentive,setIncentive]=useState(pct(defaults?.liquidation_incentive??1_080_000n)),[fee,setFee]=useState(pct(defaults?.liquidation_fee??0n));
+  const [pool,setPool]=useState(''),[poolId,setPoolId]=useState(''),[allow,setAllow]=useState(true);
+  if(!state.group.margin_controller)return <section className="panel"><h2>Leverage</h2><p>Margin is not enabled for this group.</p><p className="muted">Configure margin at launch after markets and pool routes are ready.</p></section>;
+  return <section className="panel"><h2>Leverage</h2><fieldset disabled={disabled}><div className="field-grid"><Field label="Maximum leverage (x)" value={max} set={setMax} current={defaults?`${defaults.max_leverage}x`:'Unavailable'}/><Field label="Maximum slippage (%)" value={slippage} set={setSlippage} current={defaults?`${pct(defaults.max_slippage)}%`:'Unavailable'}/><Field label="Liquidation incentive (%)" value={incentive} set={setIncentive} current={state.margin?.applied_liquidation_incentive!==undefined?`${pct(state.margin.applied_liquidation_incentive)}% applied`:'Unavailable'}/><Field label="Protocol liquidation share (%)" value={fee} set={setFee} current={state.margin?.applied_liquidation_fee!==undefined?`${pct(state.margin.applied_liquidation_fee)}%`:'Unavailable'}/></div><p className="muted">Maximum 5x leverage and 10% slippage. Liquidation incentive must be 102% to 110% and takes 60 seconds to apply. Protocol liquidation share is capped at 50%.</p><button className="button" disabled={!state.margin&&!network.useMocks} onClick={()=>run('Save group leverage',(s,p)=>updateMargin(state.group.id,{variant:defaults?.variant||{tag:'Audited',values:undefined},max_leverage:BigInt(max),max_slippage:percent(slippage),liquidation_incentive:percent(incentive),liquidation_fee:percent(fee)} as GroupMarginConfig,s,p))}>Save group leverage</button><details><summary>Allowed swap pools</summary><Field label="Pool contract address" value={pool} set={setPool}/><Field label="Pool ID (64 hex characters)" value={poolId} set={setPoolId}/><label className="control-check"><input type="checkbox" checked={allow} onChange={e=>setAllow(e.target.checked)}/>Allow this pool and binding</label><p className="muted">First save the pool permission, then save its binding. Each action is a separate transaction.</p>{state.margin?.pools&&<p className="muted">Allowed pools: {state.margin.pools.length?state.margin.pools.map(p=>`${p.slice(0,8)}…`).join(', '):'None'}</p>}<div className="control-actions"><button className="button secondary" onClick={()=>run('Update allowed pool',(s,p)=>setPoolAllowed(state.group.id,pool,allow,s,p))}>Save pool permission</button><button className="button secondary" onClick={()=>run('Update pool binding',(s,p)=>setPoolBinding(state.group.id,pool,poolId,allow,s,p))}>Save pool binding</button></div></details></fieldset></section>;
+}
+function Ownership({state,disabled,run}:{state:ControlState;disabled:boolean;run:Run}) {
+  const [next,setNext]=useState(''),[ack,setAck]=useState(false);
+  return <section className="panel"><h2>Transfer ownership</h2><p className="muted">Current owner: <code>{state.group.owner}</code></p><fieldset disabled={disabled}><Field label="New owner address" value={next} set={setNext}/><label className="control-check"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>I understand this wallet will lose permission to manage the group.</label><button className="button secondary" disabled={!ack} onClick={()=>run('Transfer group ownership',(s,p)=>transferOwnership(state.group.id,next,s,p))}>Transfer ownership</button></fieldset></section>;
+}

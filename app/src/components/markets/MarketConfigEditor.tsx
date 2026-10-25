@@ -1,0 +1,48 @@
+'use client';
+import { useEffect, useId, useRef, useState } from 'react';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { findReflectorFeed, getTokenMetadata, isYieldVaultAllowed } from '@/lib/peridot/factory';
+import { borrowApr, RATE_PRESETS, ratesFromDraft, type MarketDraft } from '@/lib/peridot/market-config';
+import { getDeployments, network } from '@/lib/peridot/network';
+import { MOCK_EURC, MOCK_USDC, MOCK_XLM } from '@/lib/peridot/mock';
+export interface MarketConfigEditorProps {value:MarketDraft;onChange:(value:MarketDraft)=>void;rewardsEnabled?:boolean;rewardDecimals?:number;disabled?:boolean}
+export default function MarketConfigEditor({value,onChange,rewardsEnabled=false,disabled=false}:MarketConfigEditorProps){
+ const id=useId();const latest=useRef(value);latest.current=value;const [checking,setChecking]=useState(false);const [error,setError]=useState('');
+ const deployment=(()=>{try{return getDeployments();}catch{return null;}})();
+ const external=deployment?.external||{};
+ const defindex=external.defindex_vaults;
+ const blend=external.blend_fee_vault;
+ const configuredVaults:string[]=value.route==='Defindex'
+  ? (defindex&&typeof defindex==='object'?[defindex[value.token],defindex[value.symbol]].filter((v):v is string=>typeof v==='string'&&!!v):[])
+  : value.route==='Blend'?(typeof blend==='string'&&blend?[blend]:blend&&typeof blend==='object'?[blend[value.token],blend[value.symbol]].filter((v):v is string=>typeof v==='string'&&!!v):[]):[];
+ const candidateKey=[...new Set([...configuredVaults,value.routeAddress].filter(Boolean))].sort().join(',');
+ const [approval,setApproval]=useState<{key:string;allowed:string[];failed:boolean}>({key:'',allowed:[],failed:false});
+ useEffect(()=>{let cancelled=false;const candidates=candidateKey?candidateKey.split(','):[];
+  Promise.all(candidates.map(async address=>({address,allowed:await isYieldVaultAllowed(address)}))).then(results=>{if(!cancelled)setApproval({key:candidateKey,allowed:results.filter(r=>r.allowed).map(r=>r.address),failed:false});}).catch(()=>{if(!cancelled)setApproval({key:candidateKey,allowed:[],failed:true});});
+  return()=>{cancelled=true;};
+ },[candidateKey]);
+ const vaultChoices=[...new Set(configuredVaults)].filter(address=>approval.key===candidateKey&&approval.allowed.includes(address));
+ const defindexAvailable=network.useMocks||!!external.defindex_factory||!!(defindex&&typeof defindex==='object'&&Object.values(defindex).some(Boolean));
+ const blendAvailable=network.useMocks||!!deployment?.wasm?.blend_adapter;
+ const selectRoute=(route:MarketDraft['route'])=>onChange({...value,route,routeAddress:''});
+ const set=(key:keyof MarketDraft,v:unknown)=>onChange({...value,[key]:v});
+ const field=(key:keyof MarketDraft,label:string)=> <label className="field" key={key} htmlFor={`${id}-${key}`}>{label}<input id={`${id}-${key}`} inputMode="decimal" value={String(value[key]??'')} onChange={e=>set(key,e.target.value)} disabled={disabled}/></label>;
+ async function verify(){const token=value.token;setChecking(true);setError('');try{const metadata=await getTokenMetadata(token);const price=await findReflectorFeed(token,metadata.symbol);if(latest.current.token===token)onChange({...latest.current,...metadata,price});}catch(e){setError(e instanceof Error?e.message:'Unable to verify token.');}finally{setChecking(false);}}
+ let curve:Array<{utilization:number;apr:number}>=[];try{const r=ratesFromDraft(value);curve=Array.from({length:21},(_,i)=>({utilization:i*5,apr:borrowApr(r,i*5)}));}catch{/* Invalid input is handled on review. */}
+ return <div className="market-config-editor" style={{display:'grid',gap:24}}>
+  <div><label className="field" htmlFor={`${id}-token`}>Token contract address<input id={`${id}-token`} value={value.token} placeholder="C..." disabled={disabled} onChange={e=>onChange({...value,token:e.target.value.trim(),symbol:'',price:undefined})}/></label>
+   {network.useMocks&&<div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:8}}>{[['USDC',MOCK_USDC],['XLM',MOCK_XLM],['EURC',MOCK_EURC]].map(([symbol,token])=><button type="button" className="button secondary" disabled={disabled} key={token} onClick={()=>onChange({...value,token,symbol:'',price:undefined})}>Use {symbol}</button>)}</div>}
+   <button type="button" className="button secondary" style={{marginTop:8}} disabled={disabled||checking||!value.token} onClick={verify}>{checking?'Checking token...':'Verify token and price feed'}</button>
+   {value.symbol&&value.price&&<p className="status">{value.symbol} · {value.decimals} decimals · Reflector covered{network.useMocks?' (demo)':''}</p>}{error&&<p role="alert">{error}</p>}
+  </div>
+  <section><h3>Interest rate</h3><p className="muted">Choose a rate curve. A zero borrow rate is allowed.</p><div style={{display:'flex',flexWrap:'wrap',gap:8,margin:'12px 0'}}>{Object.entries(RATE_PRESETS).map(([name,params])=><button className="button secondary" type="button" key={name} disabled={disabled} onClick={()=>onChange({...value,...params})}>{name}</button>)}</div>
+   <div className="field-grid">{field('base','Base APR (%)')}{field('multiplier','Slope below kink (%)')}{field('jump','Slope above kink (%)')}{field('kink','Kink utilization (%)')}</div>
+   <div style={{height:210,minWidth:0,marginTop:20}} role="img" aria-label="Borrow APR versus utilization"><ResponsiveContainer width="100%" height="100%"><LineChart data={curve} margin={{left:0,right:20,top:10,bottom:10}}><CartesianGrid stroke="#2C3B33" strokeDasharray="3 3"/><XAxis dataKey="utilization" tick={{fill:'#b9c9bf',fontSize:11}} tickFormatter={v=>`${v}%`}/><YAxis width={50} tick={{fill:'#b9c9bf',fontSize:11}} tickFormatter={v=>`${v}%`}/><Tooltip contentStyle={{background:'#0E1310',border:'1px solid #2C3B33'}} formatter={v=>[`${Number(v).toFixed(2)}%`,'Borrow APR']} labelFormatter={v=>`${v}% utilization`}/><Line dataKey="apr" type="linear" stroke="#3DD68C" strokeWidth={2} dot={false}/></LineChart></ResponsiveContainer></div>
+   <div style={{display:'flex',flexWrap:'wrap',gap:16}}>{[0,50,80,100].map(u=><span className="muted" key={u}>{u}% utilized: <strong>{curve.find(p=>p.utilization===u)?.apr.toFixed(2)??'N/A'}% APR</strong></span>)}</div>
+  </section>
+  <section><h3>Risk limits</h3><div className="field-grid">{field('collateralFactor','Collateral factor (1% to 75%)')}{field('supplyCap',`Supply cap (${value.symbol||'tokens'})`)}{field('borrowCap',`Borrow cap (${value.symbol||'tokens'})`)}{field('reserveFactor','Reserve factor (max 50%)')}</div></section>
+  <section><h3>Liquidity</h3><div className="field-grid">{field('idleBuffer','Kept liquid (10% to 100%)')}<label className="field" htmlFor={`${id}-route`}>Where idle liquidity goes<select id={`${id}-route`} value={value.route} disabled={disabled} onChange={e=>selectRoute(e.target.value as MarketDraft['route'])}><option value="None">Keep in Peridot</option><option value="Defindex" disabled={!defindexAvailable}>DeFindex vault{defindexAvailable?'':' (not deployed)'}</option><option value="Blend" disabled={!blendAvailable}>Blend fee vault{blendAvailable?'':' (not deployed)'}</option></select></label></div><p className="muted">The liquid buffer is available for borrowing and withdrawals. Remaining funds can be routed into the selected vault.</p>{value.route!=='None'&&<div style={{display:'grid',gap:12}}>{vaultChoices.length>0&&<label className="field" htmlFor={`${id}-vault-choice`}>Allowlisted {value.route==='Defindex'?'DeFindex':'Blend fee'} vault<select id={`${id}-vault-choice`} disabled={disabled} value={vaultChoices.includes(value.routeAddress)?value.routeAddress:''} onChange={e=>set('routeAddress',e.target.value)}><option value="">Choose an allowlisted vault or enter a custom address</option>{vaultChoices.map(address=><option key={address} value={address}>{value.symbol||'Token'} · {address.slice(0,8)}…{address.slice(-6)}</option>)}</select><span className="muted">Addresses come from this network’s deployment manifest and are approved by the factory. Asset compatibility is checked during simulation.</span></label>}<label className="field" htmlFor={`${id}-vault`}>{value.route==='Defindex'?'DeFindex':'Blend fee'} vault address for {value.symbol||'this token'}<input id={`${id}-vault`} placeholder="C..." value={value.routeAddress} disabled={disabled} onChange={e=>set('routeAddress',e.target.value.trim())}/><span className="muted">A custom vault must be approved by the factory and pass simulation for this underlying token. Entering an address does not verify compatibility.</span></label>{value.routeAddress&&<p className="status">{approval.key!==candidateKey?'Checking factory vault approval...':approval.failed?'Factory vault approval could not be checked.':approval.allowed.includes(value.routeAddress)?'Vault is approved by the factory. Underlying compatibility still requires simulation.':'This vault is not approved by the factory. Select an approved vault before launch.'}</p>}</div>}<p className="muted">Aquarius, Zenex and XOXNO routes are coming in later phases of this build.</p></section>
+  <section><h3>Leverage and rewards</h3><label style={{display:'flex',gap:10,alignItems:'center'}}><input type="checkbox" checked={value.marginEnabled} disabled={disabled} onChange={e=>set('marginEnabled',e.target.checked)}/>Allow leverage for this market</label>{rewardsEnabled&&<div className="field-grid" style={{marginTop:12}}>{field('supplyRewardsPerDay','Supply rewards (tokens per day)')}{field('borrowRewardsPerDay','Borrow rewards (tokens per day)')}</div>}<p className="muted">Reflector is the price source. No fallback price is set.</p></section>
+ </div>;
+}
+export { MarketConfigEditor };
