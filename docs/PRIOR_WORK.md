@@ -5,10 +5,10 @@ The HackMeridian build window begins 25 October 2026 at 09:00 Lisbon. Imported c
 | Source | Pinned commit | Use in this repository | Import evidence |
 |---|---|---|---|
 | PeridotFinance/Peridot-Soroban, leveraged-fix | `47858c1a13c2588970395faa2212e7b68bd33060` | Audited lending core and existing margin, router and vault code | `3833c42` imports core; `206cf00` changes timelock constants |
-| Same source, peridot-dashboard | Same pinned commit | Required untouched dashboard base | Pending scaffold-ready signal and import commit |
-| PeridotFinance/PeridotV2Full | `86ae3795f3ca011bef156f2d9ed8fe900410dc11` | Current frontend reference supplied by Joshua; selected UI and Stellar flow reuse planned | No code imported yet |
-| PeridotFinance/Peridot-Soroban, main | `fe8d562051195dbc0af667367514b479de36fc8d` | Ordinary lending liquidator and idle-cash reference | No code imported yet |
-| PeridotFinance/Peridot-Soroban, leveraged-fix, peridot-contracts/bots/margin-liquidator | `47858c1a13c2588970395faa2212e7b68bd33060` | Matching staged V3 margin liquidator | No code imported yet |
+| Same source, peridot-dashboard | Same pinned commit | Required untouched dashboard base | `6c671e0` untouched dashboard import |
+| PeridotFinance/PeridotV2Full | `86ae3795f3ca011bef156f2d9ed8fe900410dc11` | Current frontend reference supplied by Joshua; selected UI and Stellar flow reuse | Selected group flow adaptations in app/src/lib/peridot/margin.ts and group-client.ts; implementation `390cf93` |
+| PeridotFinance/Peridot-Soroban, main | `fe8d562051195dbc0af667367514b479de36fc8d` | Ordinary lending liquidator and idle-cash reference | Imported as `3e182cb` into `keeper/liquidator/lending-reference/`; provenance in `keeper/liquidator/PRIOR_WORK.md` |
+| PeridotFinance/Peridot-Soroban, leveraged-fix, peridot-contracts/bots/margin-liquidator | `47858c1a13c2588970395faa2212e7b68bd33060` | Matching staged V3 margin liquidator | Imported and adapted as `3e182cb` in `keeper/liquidator/margin/`; provenance in `keeper/liquidator/PRIOR_WORK.md` |
 
 ## Core changes
 

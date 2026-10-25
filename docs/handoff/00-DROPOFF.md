@@ -16,6 +16,7 @@ This is the master file. Every agent reads **sections 0 to 7**, **`11-ADDRESSES.
 | 09-REWARDS.md | Reward distributor | 1 |
 | 10-VAULT-ZENEX.md | Zenex perps vault adapter | 3 |
 | 11-ADDRESSES.md | Registry: addresses and verified interfaces | reference |
+| 12-LAUNCHPAD.md | Token launchpad: bonding curve (phase 3), ICO (phase 4), graduation into an Aquarius pool and a market group | 3 / 4 |
 | KICKOFF-PROMPTS.md, PITCH-AND-VIDEO.md | Joshua | |
 
 ## 0. Where you are and where you build
@@ -99,8 +100,8 @@ Work **step by step**. Each phase ends with a working **mainnet** deployment, th
 |---|---|---|
 | **1 MVP (mainnet, submit-ready)** target Sun 20:00 | Launch a group, add markets with per-market jump rate (0% allowed), CF, caps, liquid buffer; Reflector pricing; yield routes None, DeFindex, Blend; own reward token with per-market speeds; margin via margin factory using the audited margin-controller; owner Control Panel; add markets later; frontend live on mainnet; liquidator running for the group | Lead/factory, 05, 09, 02, 04, 06, 07 |
 | **2 Aquarius** target Sun 23:59 | Aquarius LP vault with loss reserve, keeper (self-hosted) harvesting AQUA, mainnet harvest tx | 01, 08 |
-| **3 Price + custom margin + Zenex** target Mon 04:00 | Reflector + Aquarius guard, Aquarius-only (restricted); `margin-controller-custom` with per-asset max leverage and open/close fees, selectable per group in margin factory; Zenex perps vault route for USDC markets (async adapter) | 05, 06, 10 |
-| **4 More routes + hosted keeper** until freeze Mon 08:00 | XOXNO adapter; Peridot-hosted keeper on DigitalOcean with on-chain funding; switch yield route; CL range management | 03, 08, 01 |
+| **3 Price + custom margin + Zenex + launchpad curve** target Mon 04:00 | Reflector + Aquarius guard, Aquarius-only (restricted); `margin-controller-custom` with per-asset max leverage and open/close fees, selectable per group in margin factory; Zenex perps vault route for USDC markets (async adapter); launchpad bonding curve with graduation into an Aquarius pool and its own market group (start only after phase 1 is tagged on mainnet) | 05, 06, 10, 12 |
+| **4 More routes + hosted keeper** until freeze Mon 08:00 | XOXNO adapter; Peridot-hosted keeper on DigitalOcean with on-chain funding; switch yield route; CL range management; launchpad ICO (moves to the roadmap if time runs short) | 03, 08, 01, 12 |
 
 Rules for phases:
 - Do not start phase N+1 work on shared files until phase N is deployed to mainnet and tagged. Agents for later phases may build their own crate against mocks in parallel.

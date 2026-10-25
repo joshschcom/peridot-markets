@@ -1,6 +1,6 @@
 # Architecture
 
-Peridot Markets is being built around isolated lending groups. The factory remains contract admin; a group's owner requests changes through factory guardrails. This page describes the intended architecture. Deployment and transaction evidence remains pending until recorded in [DEMO.md](DEMO.md).
+Peridot Markets is being built around isolated lending groups. The factory remains contract admin; a group's owner requests changes through factory guardrails. The application and workers implement these boundaries; live verification is still pending. Deployment and transaction evidence remains pending until recorded in [DEMO.md](DEMO.md).
 
 ```mermaid
 flowchart LR
@@ -23,7 +23,7 @@ flowchart LR
 
 ## Transaction boundary
 
-The browser builds a network-specific contract call, simulates it, presents the operation for wallet signing, submits the signed transaction and waits for ledger success. A submission hash alone is not completion. An unavailable confirmation remains an unknown outcome and must be reconciled before retrying.
+The browser builds a network-specific contract call, simulates it, presents the operation for wallet signing, submits the signed transaction and waits for ledger success. A submission hash alone is not completion. An unavailable confirmation remains an unknown outcome and must be reconciled before retrying. A missing transaction is considered expired only when the RPC ledger clock has passed its time bound and retained history covers the entire submission window. RPC passphrase checks apply to reads and writes. Browser Web Locks serialize signing and reconciliation across tabs; only the matching pending hash is cleared. Pool registry BytesN keys are decoded from raw XDR.
 
 Amounts use token decimals and integer arithmetic. Receipt-share withdrawals and underlying-token deposits are distinct units. Wallet network and account are checked for each signing operation. Mainnet is the intended default; testnet and explicit mocks are separate configurations.
 
@@ -41,12 +41,16 @@ Reflector discovery checks the Stellar-assets and external feeds with their prop
 
 ## Staged operations
 
-Core collateral-factor updates have a 60-second delay. The UI needs on-chain proposed values and ETA for a reliable countdown. Changing configuration inside an existing router must be staged by the factory; setting the same oracle address does not create a core delay.
+Core collateral-factor updates have a 60-second delay. The UI reads on-chain proposed values and ETA for the countdown. Changing configuration inside an existing router must be staged by the factory; setting the same oracle address does not create a core delay.
+
+Market creation uses three confirmed owner transactions: `add_market`, `activate_market`, and `attach_yield`. This stays below the network ledger-entry limit. Only activated markets appear in a group. The pinned core currently prevents adding markets after rewards are enabled, so launch creates every market first and sets rewards last. Both collateral and borrowed markets must be entered on the controller.
+
+After a confirmed collateral-factor change, Control Panel submits `margin_factory.sync_pairs(group_id)` as a separate transaction to refresh leverage limits. It preserves the collateral receipt and exposes manual synchronization recovery if the second transaction is interrupted.
 
 Margin V3 spans several transactions. Pending stages and transaction hashes must survive refresh and distinguish an unresolved transaction from a completed stage. Separate swap adapters and verified pool bindings keep groups isolated.
 
 ## Operations
 
-Ordinary lending liquidation and margin liquidation use distinct paths. Phase 1 also needs permissionless boosted-value refreshes for DeFindex and Blend before the cache becomes stale. Idle-cash rebalancing is admin-only in the pinned core and needs an authorized factory path.
+Ordinary lending liquidation and margin liquidation use distinct paths. Workers accrue interest before health scans, reject nested source-account authorization, validate topology before live submissions, retain durable transaction intents and cap fees. Ordinary liquidation checks net collateral value after the protocol fee against explicit profit and cost buffers. These buffers cannot guarantee realized proceeds or receipt liquidity. Phase 1 also needs permissionless boosted-value refreshes for DeFindex and Blend before the cache becomes stale. Idle-cash rebalancing is admin-only in the pinned core and needs an authorized factory path.
 
 Workers use a dedicated fee-paying identity. No browser environment variable may contain signing secrets. Live worker execution, deployment with keys and spending funds require Joshua's approval.

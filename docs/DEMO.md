@@ -40,3 +40,28 @@ Record each transaction with its network, contract, action, amount, confirmation
 ## Later phases
 
 Phase 2 requires mainnet Aquarius deposit and harvest evidence plus a funded-reserve withdrawal test. Phases 3 and 4 are recorded only after their preceding phases are complete and tagged.
+
+## Development checks, 25 October
+
+Frontend implementation: `390cf93`. Worker implementation: `3e182cb`.
+
+These checks use explicit mocks or read-only calls. They are not mainnet or fresh Freighter evidence.
+
+- Production frontend build passes with mainnet default and mocks disabled.
+- Frontend: 39 unit tests pass, including binary pool IDs, debt accrual bounds, transaction expiry proof, staged proposal replacement, owner checks and market-addition recovery.
+- Chromium: three end-to-end tests pass. Launch, lending, rewards, margin, staged Control changes, interrupted deploy/activate recovery, and five routes at 375px width are covered.
+- Keeper: 71 tests pass including an isolated real PostgreSQL database, durable submission intents, competing workers, restart and fee limits. Runtime dependency audit reports zero vulnerabilities.
+- Testnet factory `CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M`: read-only `group_count` returned 0 and `get_wasm` returned registered hashes at ledger 5382714. No transaction was submitted. Lead A reports that group creation is blocked by testnet rent; see the coordination board.
+- Live and fresh-wallet gates remain pending. The current core also prevents adding markets once rewards have been enabled, so the demo must disclose that restriction.
+
+## Labelled mock screenshots
+
+[Landing](assets/home-demo.png) · [Mobile landing](assets/home-mobile-demo.png) · [Launch](assets/launch-demo.png) · [Group](assets/group-demo.png) · [Control Panel](assets/control-demo.png)
+
+All screenshots display the demo banner. Replace or supplement them with live screenshots after the deployment gate is satisfied.
+
+## Vercel preview
+
+[Open the labelled demo](https://peridot-markets-preview-mbm5vqtlz-peridot3.vercel.app). Private-account project: `peridot3/peridot-markets-preview`. Deployment `dpl_ExTVkuDpjhPwMt2jZajxWYJQJXcn` is READY in the preview environment, with Vercel authentication enabled. The deployed frontend source is `390cf93`. Mock mode disables wallet signing and movements of real funds.
+
+Authenticated HTTP verification returned the application HTML and demo banner. This preview is not the mainnet release. The first CLI attempt using deprecated `--target preview` was classified as production and rejected by the app's mock-production guard; retrying with `--environment preview` succeeded. No production demo was published.
