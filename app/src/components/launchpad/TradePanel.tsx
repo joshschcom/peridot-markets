@@ -115,6 +115,5 @@ export function TradePanel({ launch, state, params, xlm, token, busy, run, signe
       <button className="button block" disabled={!canSubmit}>{busy ? 'Working...' : side === 'buy' ? `Buy ${launch.symbol}` : `Sell ${launch.symbol}`}</button>
     </form>
     {isCreator && <p className="subtle" style={{ fontSize: 12, margin: 0 }}>Creator cap: your buys are limited to {fmtAmount(state.creator_cap, 7, 0)} {launch.symbol} in total ({Number(params.creator_cap_bps) / 100}% of the curve supply). Bought so far: {fmtAmount(state.creator_bought, 7, 0)} {launch.symbol}. Sells do not reset the cap.</p>}
-    {token?.needsTrustline && <p className="subtle" style={{ fontSize: 12, margin: 0 }}>Your account cannot hold {launch.symbol} until the token contract balance exists; a first buy creates it.</p>}
   </section>;
 }

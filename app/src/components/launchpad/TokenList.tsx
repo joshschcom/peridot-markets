@@ -7,7 +7,7 @@ import { Badge, EmptyState, Meter, Skeleton, Stat, Tabs } from '@/components/ui/
 import { fmtAmount, fmtCompact, fmtDate } from '@/components/ui/format';
 import { getCurveConfig, getCurveState, listLaunches } from '@/lib/launchpad/client';
 import { launchpadCanSign } from '@/lib/launchpad/config';
-import { FINE_SCALE, finePrice, fmtPrice, reserves } from '@/lib/launchpad/math';
+import { FINE_SCALE, finePrice, fmtPrice, reservesFromState } from '@/lib/launchpad/math';
 import { Phase, type CurveConfig, type CurveInfo, type LaunchInfo } from '@/lib/launchpad/types';
 import { LpAddress } from './LpAddress';
 import { LaunchpadBadges, MainnetNotice, PhaseBadge, RISK_COPY, TokenIcon } from './LaunchpadFrame';
@@ -40,7 +40,7 @@ export function useTokenSummaries() {
 
 export function TokenCard({ summary, mine }: { summary: TokenSummary; mine: boolean }) {
   const { launch, state, config, error } = summary;
-  const price = state ? finePrice(reserves({ virtual_quote: state.virtual_quote, virtual_token: state.virtual_token } as CurveConfig['params'], state.real_quote, state.sold)) : null;
+  const price = state ? finePrice(reservesFromState(state)) : null;
   const marketCap = price !== null && state ? price * state.sold / FINE_SCALE : null;
   const fdv = price !== null && config ? price * (config.params.curve_supply + config.params.lp_supply) / FINE_SCALE : null;
   const pct = state ? state.progress_bps / 100 : 0;

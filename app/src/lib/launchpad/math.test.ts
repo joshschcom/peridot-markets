@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ceilDiv, creatorCap, curveChartPoints, feeOf, finePrice, finePriceAtSold, fmtPrice, fullyDilutedValue, grossForNet, marginalPrice, marketCap, minOut, parsePositiveAmount, parseSlippage, priceAtSold, quoteBuy, quoteRaisedAt, quoteSell, reserves, soldAtTarget, validateMetadataUri, validateName, validateSymbol } from './math';
+import { ceilDiv, creatorCap, curveChartPoints, feeOf, finePrice, finePriceAtSold, fmtPrice, fullyDilutedValue, grossForNet, marginalPrice, marketCap, minOut, parsePositiveAmount, parseSlippage, priceAtSold, quoteBuy, quoteRaisedAt, quoteSell, reserves, reservesFromState, soldAtTarget, validateMetadataUri, validateName, validateSymbol } from './math';
 import type { CurveParams } from './types';
 
 // Live testnet presets read from the launchpad factory on 2026-10-25 (get_preset(XLM, *)).
@@ -112,6 +112,7 @@ test('fine prices agree with the contract scale and format with significant digi
   assert.equal(marginalPrice(r), 1n, 'the contract scale truncates the Fast launch price to one stroop');
   assert.equal(finePrice(r) / 10n ** 7n, marginalPrice(r), 'the fine scale truncates back to the contract value');
   assert.equal(finePrice(r), finePriceAtSold(fast, 0n));
+  assert.deepEqual(reservesFromState({ virtual_quote: fast.virtual_quote, virtual_token: fast.virtual_token, real_quote: 1_980_000_000n, sold: 5_673_449_576_406_545n }), reserves(fast, 1_980_000_000n, 5_673_449_576_406_545n));
   assert.equal(fmtPrice(finePrice(r)), '0.0000001644');
   assert.equal(fmtPrice(finePrice(reserves(pdemo, 0n, 0n))), '0.000008223');
   assert.equal(fmtPrice(finePrice(r), 6), '0.000000164464');

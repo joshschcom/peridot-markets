@@ -29,6 +29,10 @@ export interface Reserves { k: bigint; x: bigint; y: bigint }
 export function reserves(p: CurveParams, realQuote: bigint, sold: bigint): Reserves {
   return { k: p.virtual_quote * p.virtual_token, x: p.virtual_quote + realQuote, y: p.virtual_token - sold };
 }
+/** The same reserves from a `get_state` read, which carries the virtual reserves alongside the live state. */
+export function reservesFromState(s: { virtual_quote: bigint; virtual_token: bigint; real_quote: bigint; sold: bigint }): Reserves {
+  return { k: s.virtual_quote * s.virtual_token, x: s.virtual_quote + s.real_quote, y: s.virtual_token - s.sold };
+}
 
 export interface BuyCalc { gross: bigint; fee: bigint; net: bigint; tokensOut: bigint; clamped: boolean }
 export interface SellCalc { gross: bigint; fee: bigint; quoteOut: bigint }
