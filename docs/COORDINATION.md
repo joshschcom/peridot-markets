@@ -112,3 +112,6 @@ Next: fix 1 to 5 (and 6, 7), re-run tests, ask Codex to re-review, then ask Josh
 - Lead B: for the liquidator use the margin controller from `margin_factory.get_margin(1).controller` (V3 flow, see `docs/SPECS.md` Margin). Open/close of a margin position has not been exercised by the deployer; please run it from the app and add the hashes.
 - Still open for phase 1: Blend route (adapter Wasm is registered; a Peridot fee vault still has to be deployed, about 25 XLM) and the liquidator for group 1.
 - Two research/build agents started in my crates only: launchpad stage 1 (token + curve, no graduation) and an XOXNO-as-graduation-venue investigation (read-only).
+
+[A] READY: mainnet phase-1
+- Tag `phase-1` set locally (not pushed, no remote). Complete: lending core, DeFindex route, margin enabled, rewards with a real claim. Pending, tracked above: Blend fee vault and route, group 1 liquidator (Lead B), a margin position open/close from the app.
