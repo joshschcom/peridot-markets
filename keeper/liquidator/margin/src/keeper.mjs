@@ -182,10 +182,11 @@ export class MarginLiquidationKeeper {
       );
       return;
     }
+    const status = enumTag(position.status);
+    // Pending opens do not have PerpsPositionData until activation.
+    if (status === "PendingOpen") { await this.recoverExpiredPendingOpen(positionId); return; }
     const perps = await this.client.read("get_perps_position", args);
     if (perps === null || perps === undefined) return;
-
-    const status = enumTag(position.status);
     if (status === "Open") {
       const health = BigInt(await this.client.read("get_health_factor", args));
       if (health > HF_SCALE) return;
@@ -193,12 +194,12 @@ export class MarginLiquidationKeeper {
         positionId: positionId.toString(),
         healthFactor: health.toString(),
       });
-      await this.client.submit("begin_liquidation_v3", [
+      // Atomic V3 uses the controller's oracle and per-pair liquidation limits.
+      // Existing split liquidations are still recovered in the Liquidated branch.
+      await this.client.submit("liquidate_position_v3", [
         scAddress(this.config.publicKey),
         scU64(positionId),
       ]);
-      if (this.config.dryRun) return;
-      await this.resumeLiquidation(positionId);
       return;
     }
     if (status === "Liquidated") {
@@ -212,7 +213,6 @@ export class MarginLiquidationKeeper {
       }
       return;
     }
-    if (status === "PendingOpen") await this.recoverExpiredPendingOpen(positionId);
   }
 
   async resumeLiquidation(positionId) {
@@ -260,11 +260,18 @@ export class MarginLiquidationKeeper {
     const idArg = scU64(positionId);
     const pending = await this.client.read("get_pending_perps_open", [idArg]);
     const execution = await this.client.read("get_pending_perps_open_execution", [idArg]);
-    if (!pending || !execution) return;
-    if (BigInt(pending.expires_at) >= BigInt(Math.floor(Date.now() / 1_000))) return;
-    await this.client.submit("liquidate_position_v3", [
-      scAddress(this.config.publicKey),
-      idArg,
-    ]);
+    if (!pending || BigInt(pending.expires_at) >= BigInt(Math.floor(Date.now() / 1_000))) return;
+    if (!execution) {
+      await this.client.submit("expire_pending_open_v3", [idArg]);
+      return;
+    }
+    // Choose from simulations before any submission; never fall back after an
+    // unknown or failed signed transaction.
+    const outcome = await this.client.previewPendingOpenResolution(idArg);
+    if (outcome === 'healthy') {
+      await this.client.submit("resolve_pending_open_v3", [idArg]);
+    } else if (outcome === 'underwater') {
+      await this.client.submit("liquidate_position_v3", [scAddress(this.config.publicKey), idArg]);
+    } else throw new Error('Pending open resolution simulation failed');
   }
 }

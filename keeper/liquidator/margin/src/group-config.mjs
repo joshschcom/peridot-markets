@@ -40,7 +40,10 @@ export function groupSettings(env = process.env) {
 }
 export function validateManifest(manifest, settings) {
   if (manifest.network !== settings.network) throw new Error('Deployment manifest network mismatch');
+  const admin = manifest.admin;
+  if (admin !== undefined && (typeof admin !== 'string' || !(StrKey.isValidEd25519PublicKey(admin) || StrKey.isValidContract(admin)))) throw new Error('manifest.admin must be a valid public address');
   return {
+    admin,
     factory: contract(manifest.factory, 'manifest.factory'),
     marginFactory: contract(manifest.margin_factory, 'manifest.margin_factory'),
     marginHash: hash(manifest.wasm?.margin || manifest.wasm?.margin_audited, 'manifest.wasm.margin'),
@@ -48,6 +51,12 @@ export function validateManifest(manifest, settings) {
     lendingHash: hash(manifest.wasm?.controller, 'manifest.wasm.controller'),
     priceRouterHash: hash(manifest.wasm?.price_router, 'manifest.wasm.price_router'),
   };
+}
+/** The deployment account may supply a public address for simulation, never the live keeper key. */
+export function assertDedicatedKeeper(config, group) {
+  if (config.dryRun) return;
+  requireSafe(typeof group.admin === 'string' && (StrKey.isValidEd25519PublicKey(group.admin) || StrKey.isValidContract(group.admin)), 'Live signing requires a valid deployment manifest admin');
+  requireSafe(config.publicKey !== group.admin, 'Use a dedicated keeper key, not the deployment manifest admin');
 }
 export async function readView(server, passphrase, contractId, method, args = []) {
   const tx = new TransactionBuilder(new Account('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', '0'), {
@@ -97,7 +106,7 @@ export async function resolveGroup(settings, env = process.env, dependencies = {
 export async function assertGroupUnchanged(settings, expected, dependencies = {}) {
   const current = await resolveGroup(settings, {}, dependencies);
   const fingerprint = group => JSON.stringify({
-    factory:group.factory,marginFactory:group.marginFactory,controller:group.controllerId,
+    factory:group.factory,marginFactory:group.marginFactory,admin:group.admin,controller:group.controllerId,
     lending:group.lendingController,router:group.priceRouter,swapAdapter:group.swapAdapter,
     marginHash:group.marginHash,lendingHash:group.lendingHash,receiptHash:group.receiptHash,priceRouterHash:group.priceRouterHash,
     markets:[...group.markets].sort(),boosted:Object.entries(group.boostedVaults).sort(([a],[b])=>a.localeCompare(b)),

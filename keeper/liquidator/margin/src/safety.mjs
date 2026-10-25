@@ -45,9 +45,9 @@ export function assertKeeperCall(config, method, args) {
     if (method === "swap_liquidation_v3") {
       requireSafe(args[2].switch().name === "scvU128" && scValToNative(args[2]) > 0n, "invalid swap floor");
     }
-  } else if (method === "expire_close_position_v3") {
+  } else if (["expire_close_position_v3", "resolve_pending_open_v3", "expire_pending_open_v3"].includes(method)) {
     requireSafe(args.length === 1 && args[0].switch().name === "scvU64" && scValToNative(args[0]) > 0n,
-      "invalid close recovery arguments");
+      "invalid permissionless recovery arguments");
   } else if (method === "distribute_margin_fees") {
     requireSafe(args.length === 1 && config.feeDistributionVaults.includes(scValToNative(args[0])),
       "fee vault not approved");

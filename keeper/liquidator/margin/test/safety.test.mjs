@@ -197,10 +197,10 @@ test("wrong confirmation envelope does not clear the journal", async () => {
   assert.ok(f.pending());
 });
 
-test("dry-run submission never needs a journal or signs", async () => {
+for (const method of ["begin_liquidation_v3", "liquidate_position_v3"]) test(`${method} dry-run submission never needs a journal or signs`, async () => {
   const f = fixture({ config: { dryRun: true, keypair: null } });
   f.c.journal = null;
-  assert.equal((await f.c.submit("begin_liquidation_v3", args())).dryRun, true);
+  assert.equal((await f.c.submit(method, args())).dryRun, true);
   assert.deepEqual(f.calls, ["simulate"]);
 });
 
@@ -259,4 +259,26 @@ test('live lending profitability failure never creates intent or signs',async()=
  const f=fixture({config:role});
  await assert.rejects(f.c.submit('liquidate',[scAddress(Keypair.random().publicKey()),scAddress(repay),scAddress(collateral),scU128(20),scAddress(config.publicKey)]),/Net liquidation value/);
  assert.ok(!f.calls.includes('intent')&&!f.calls.includes('send'));
+});
+
+for(const method of ['resolve_pending_open_v3','expire_pending_open_v3'])test(`${method} accepts only one positive u64 and dry-run never signs`,async()=>{
+ assert.doesNotThrow(()=>assertKeeperCall(config,method,[scU64(1)]));
+ for(const a of [[],[scU64(0)],[scAddress(config.publicKey),scU64(1)],[scU128(1)]])assert.throws(()=>assertKeeperCall(config,method,a),/recovery arguments/);
+ const f=fixture({config:{dryRun:true,keypair:null}});f.c.journal=null;
+ assert.equal((await f.c.submit(method,[scU64(1)])).dryRun,true);
+ assert.deepEqual(f.calls,['simulate']);
+});
+test('fee estimates use the live padding formula without journal, signatures or send',async()=>{
+ const f=fixture({config:{dryRun:true,keypair:null}});f.c.journal=null;
+ assert.equal(await f.c.estimateFee('liquidate_position_v3',args()),35100n);
+ assert.deepEqual(f.calls,['simulate']);
+});
+test('resolution preflight distinguishes core health rejection from unrelated failures without submitting',async()=>{
+ const healthy=fixture({config:{dryRun:true,keypair:null}});
+ assert.equal(await healthy.c.previewPendingOpenResolution(scU64(1)),'healthy');
+ const underwater=fixture({simulation:{error:'HostError: Error(WasmVm, InvalidAction) data:["insufficient margin"]',_parsed:true,latestLedger:100,events:[]}});
+ assert.equal(await underwater.c.previewPendingOpenResolution(scU64(1)),'underwater');
+ const unavailable=fixture({simulation:{error:'RPC failed',_parsed:true,latestLedger:100,events:[]}});
+ await assert.rejects(unavailable.c.previewPendingOpenResolution(scU64(1)),/unavailable/);
+ for(const f of [healthy,underwater,unavailable])assert.deepEqual(f.calls,['simulate']);
 });

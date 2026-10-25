@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Keypair, Networks } from '@stellar/stellar-sdk';
-import { groupSettings, validateManifest, validateGroup, resolveGroup, assertGroupUnchanged } from '../src/group-config.mjs';
+import { groupSettings, validateManifest, validateGroup, resolveGroup, assertGroupUnchanged, assertDedicatedKeeper } from '../src/group-config.mjs';
 import { publicStatus, createStatusState, createStatusServer } from '../src/status.mjs';
 import { refreshBoostedMarkets, refreshInterestMarkets, interestReady } from '../src/refresh.mjs';
 import { assertKeeperCall } from '../src/safety.mjs';
@@ -105,4 +105,18 @@ test('interest refresh permits only pinned group receipt update_interest and rec
  await refreshInterestMarkets({clients,status,dryRun:true,now:now+1,intervalMs:120000});assert.equal(calls.length,2);
  status[C].failures=1;assert.equal(interestReady([C,M],status,true),false);
  assert.equal(interestReady([C,M],{},false),false);
+});
+
+
+test('live keeper rejects the manifest admin before signing while keyless dry-run stays available',()=>{
+ const admin='GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH';
+ const dedicated=Keypair.random().publicKey();
+ const pins=validateManifest({...manifest,admin},settings);
+ assert.equal(pins.admin,admin);
+ assert.throws(()=>assertDedicatedKeeper({dryRun:false,publicKey:admin},pins),/dedicated keeper key/);
+ assert.doesNotThrow(()=>assertDedicatedKeeper({dryRun:false,publicKey:dedicated},pins));
+ assert.throws(()=>assertDedicatedKeeper({dryRun:false,publicKey:dedicated},{}),/valid deployment manifest admin/);
+ assert.doesNotThrow(()=>assertDedicatedKeeper({dryRun:true,publicKey:admin,keypair:null},pins));
+ assert.doesNotThrow(()=>assertDedicatedKeeper({dryRun:true,publicKey:admin,keypair:null},{}));
+ assert.throws(()=>validateManifest({...manifest,admin:'not-an-address'},settings),/manifest.admin/);
 });

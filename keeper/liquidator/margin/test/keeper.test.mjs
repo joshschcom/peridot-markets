@@ -200,13 +200,13 @@ test("initialize does not persist a partial position index", async () => {
   assert.equal(saves, 0);
 });
 
-test("keeper executes the complete split liquidation state machine", async () => {
+test("keeper resumes an existing split liquidation state machine", async () => {
   const liquidator = Keypair.random().publicKey();
   let pendingReads = 0;
   const submissions = [];
   const client = {
     async read(method) {
-      if (method === "get_position") return { status: ["Open"] };
+      if (method === "get_position") return { status: ["Liquidated"] };
       if (method === "get_perps_position") return { side: ["Long"] };
       if (method === "get_health_factor") return 900_000n;
       if (method === "get_pending_liquidation") {
@@ -245,7 +245,7 @@ test("keeper executes the complete split liquidation state machine", async () =>
 
   assert.deepEqual(
     submissions.map(({ method }) => method),
-    ["begin_liquidation_v3", "swap_liquidation_v3", "finish_liquidation_v3"],
+    ["swap_liquidation_v3", "finish_liquidation_v3"],
   );
 });
 
@@ -257,4 +257,41 @@ test('margin checkpoint cannot skip a lagging event service or a repeated full-p
  const events=Array.from({length:100},()=>({ledger:101,topic:[symbol('position_created'),symbol('owner'),u64(2)]}));
  client.getEvents=async()=>({latestLedger:105,events,cursor:'same-page'});
  await assert.rejects(keeper.syncEvents(),/did not advance/);assert.equal(state.lastEventLedger,100);assert.deepEqual(state.activePositionIds,['1']);assert.equal(saves,0);
+});
+
+
+for (const health of [999_999n, 1_000_000n, 1_000_001n]) test(`Open position health ${health} selects atomic liquidation only at or below 1e6`, async () => {
+ const publicKey=Keypair.random().publicKey(), calls=[];
+ const client={read:async method=>{
+  if(method==='get_position')return {status:['Open']};
+  if(method==='get_perps_position')return {side:['Long']};
+  if(method==='get_health_factor')return health;
+  throw new Error(`Unexpected read ${method}`);
+ },submit:async(method,args)=>calls.push({method,args:args.map(scValToNative)})};
+ const keeper=new MarginLiquidationKeeper({publicKey,dryRun:true},client,{activePositionIds:['7']},async()=>{}, {info(){},warn(){},error(){}});
+ await keeper.processPosition(7n);
+ assert.deepEqual(calls,health<=1_000_000n?[{method:'liquidate_position_v3',args:[publicKey,7n]}]:[]);
+});
+
+for(const [execution,outcome,expected] of [[null,null,'expire_pending_open_v3'],[{},'healthy','resolve_pending_open_v3'],[{},'underwater','liquidate_position_v3']])test(`expired pending open selects ${expected} before PerpsPositionData exists`,async()=>{
+ const publicKey=Keypair.random().publicKey(),calls=[];
+ const client={read:async method=>{
+  if(method==='get_position')return {status:['PendingOpen']};
+  if(method==='get_pending_perps_open')return {expires_at:1n};
+  if(method==='get_pending_perps_open_execution')return execution;
+  throw new Error(`Unexpected read ${method}`);
+ },previewPendingOpenResolution:async()=>outcome,submit:async(method,args)=>calls.push({method,args:args.map(scValToNative)})};
+ const keeper=new MarginLiquidationKeeper({publicKey,dryRun:true},client,{activePositionIds:['7']},async()=>{}, {info(){},warn(){},error(){}});
+ await keeper.processPosition(7n);
+ assert.deepEqual(calls,[{method:expected,args:expected==='liquidate_position_v3'?[publicKey,7n]:[7n]}]);
+});
+
+test('pending-open recovery never falls back after unresolved resolution submission or before expiry',async()=>{
+ const publicKey=Keypair.random().publicKey(),calls=[];let expires=BigInt(Math.floor(Date.now()/1000)+300);
+ const client={read:async method=>method==='get_pending_perps_open'?{expires_at:expires}:{},
+ previewPendingOpenResolution:async()=> 'healthy',submit:async method=>{calls.push(method);throw new Error('unconfirmed transaction');}};
+ const keeper=new MarginLiquidationKeeper({publicKey},client,{},async()=>{});
+ await keeper.recoverExpiredPendingOpen(7n);assert.deepEqual(calls,[]);
+ expires=1n;await assert.rejects(keeper.recoverExpiredPendingOpen(7n),/unconfirmed/);
+ assert.deepEqual(calls,['resolve_pending_open_v3']);
 });

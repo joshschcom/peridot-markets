@@ -1,16 +1,19 @@
 # Peridot Margin Liquidation Keeper
 
 This service indexes MarginController position lifecycle events and executes the
-budget-safe Perps V3 liquidation flow:
+Perps V3 liquidation flow. Open positions with `get_health_factor <= 1_000_000`
+enter through `liquidate_position_v3(liquidator, position_id)`. This atomic call
+uses the contract's per-pair liquidation slippage and oracle limits. Simulation
+and fee limits can reject it before signing if its resource cost is too high.
 
-```text
-begin_liquidation_v3
-swap_liquidation_v3
-finish_liquidation_v3
-```
+Already-started liquidations retain the resumable `swap_liquidation_v3` and
+`finish_liquidation_v3` recovery path.
 
 It also resumes abandoned staged liquidations after the takeover timeout,
-recovers expired swapped pending opens, and restores expired pre-swap closes.
+resolves expired healthy swapped pending opens, expires unswapped pending opens,
+and restores expired pre-swap closes. An unsigned resolution simulation that
+specifically reports the core health rejection can select atomic liquidation for
+an underwater swapped open. Unknown submitted outcomes never trigger fallback.
 
 ## Contract Requirements
 
@@ -38,12 +41,14 @@ set -a; source .env; set +a
 npm start
 ```
 
-Start with `DRY_RUN=true`. Dry-run mode simulates `begin_liquidation_v3` but does
-not advance to swap/finish because no state is committed.
+Start with `DRY_RUN=true`. Dry-run mode simulates `liquidate_position_v3` for an
+eligible open position. Recovery of an existing staged liquidation simulates only
+its next stage because no state is committed.
 Set `RUN_ONCE=true` for a bootstrap/simulation smoke test that exits after one
 polling cycle.
 
-`LIQUIDATION_SLIPPAGE_BPS` is applied to the live Aquarius pool estimate. The
+`LIQUIDATION_SLIPPAGE_BPS` applies to staged recovery only; the atomic entry uses
+the onchain pair settings. In staged recovery it applies to the live Aquarius pool estimate. The
 keeper refuses to swap when the pool estimate is below the contract's oracle
 minimum and always passes the greater of the oracle floor and slippage-adjusted
 pool quote.
@@ -83,8 +88,8 @@ sudo journalctl -u peridot-margin-liquidator -f
 ### Live Signing Gate
 
 Both Mainnet and Testnet live signing require a dedicated funded key,
-`EXPECTED_CONTROLLER_WASM_HASH` and `DATABASE_URL`. The deployed Mainnet worker
-is still keyless/dry-run; this code is not evidence of live liquidation readiness.
+`EXPECTED_CONTROLLER_WASM_HASH` and `DATABASE_URL`. The group 1 worker has passed a one-cycle keyless mainnet dry run; no live
+liquidation service or funded keeper identity is claimed.
 
 - Use a dedicated PostgreSQL database/user and the direct database endpoint,
   not a transaction-pooling proxy. One persistent connection holds a PostgreSQL
@@ -190,3 +195,34 @@ Alert on `margin fee distribution failed` and growing pending inventory.
   low keeper XLM, and repeated transaction timeouts.
 - RPC event history is bounded. The persistent cursor plus bootstrap counter
   makes recovery independent of retaining the full event history.
+
+## Scheduled fee budget and alerts
+
+Every startup simulates each scheduled interest and boosted-refresh job without
+signing. The `scheduled fee budget estimate` log and `/status.feeBudget` report
+padded fee reservations for 24 hours, plus 25% planning headroom and one maximum-fee
+operation. This is a startup estimate, not a fee guarantee. Live startup rejects
+insufficient daily or per-transaction limits before any worker transaction. Dry runs
+remain available and warn when limits are insufficient. Limits are never raised automatically.
+
+For group 1 at 17:42 UTC on 25 October, three jobs at 120-second intervals required
+an estimated 62,938,253 stroops per day for refresh reservations, or 79,672,817 with
+planning headroom. The configured 10,000,000-stroop daily limit was insufficient.
+The absolute floor is 21,846,300 stroops even with zero resource cost, including the
+initial run. Any increase requires the operator's approved spending budget. Funding
+the account does not change the configured daily cap. Additional liquidations,
+recoveries, restarts or other workers sharing this signer consume more budget.
+
+Before enabling signing, run the dry run and review `feeBudget.sufficient`,
+`requiredWithHeadroomStroops` and `maxJobFeeStroops`. Configure an external monitor
+to alert on an insufficient startup estimate, a stopped process, a missing heartbeat
+or `/health` returning 503. Monitor the journal's rolling `SUM(max_fee)` for the
+signer's scope and alert before it reaches 80% of `MAX_FEE_24H_STROOPS`. Failed and
+unknown transactions still count. At exhaustion the worker stops signing and exits;
+do not clear journal rows, switch signer identities or restart to bypass the cap.
+Review the estimate, remaining budget and accrued transaction evidence before resuming.
+
+`sync_pairs` remains a permissionless Control Panel recovery action, not an automatic
+keeper job. After `apply_pending`, operators must complete that separate transaction
+or use the app's Sync leverage limits action from another wallet/browser. No automatic
+synchronization coverage is claimed.

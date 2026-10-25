@@ -1,5 +1,6 @@
 import { loadConfig } from './config.mjs';
-import { groupSettings, resolveGroup, assertGroupUnchanged, readView } from './group-config.mjs';
+import { estimateRefreshBudget, assertSustainableBudget } from './budget.mjs';
+import { groupSettings, resolveGroup, assertGroupUnchanged, assertDedicatedKeeper, readView } from './group-config.mjs';
 import { MarginLiquidationKeeper } from './keeper.mjs';
 import { loadState, saveState } from './state.mjs';
 import { StellarClient } from './stellar.mjs';
@@ -19,6 +20,7 @@ Object.assign(process.env, {
   MARGIN_CONTROLLER_ID: group.controllerId, EXPECTED_CONTROLLER_WASM_HASH: group.marginHash,
 });
 const config = loadConfig();
+assertDedicatedKeeper(config, group);
 config.verifyGroup = () => assertGroupUnchanged(settings, group);
 config.stateFile = process.env.STATE_FILE || `./data/${settings.network}-group-${settings.groupId}.json`;
 config.allowedControllers = [group.controllerId, group.lendingController, ...group.markets];
@@ -72,6 +74,9 @@ try {
   await verifyController(lendingClient.server, lendingClient.config);
   await verifyController(client.server, { ...config, controllerId:group.priceRouter, expectedControllerHash:group.priceRouterHash });
   for (const market of group.markets) await verifyController(client.server, { ...config, controllerId: market, expectedControllerHash: group.receiptHash });
+  status.feeBudget = await estimateRefreshBudget({refreshClients,interestClients,settings,config});
+  logger[status.feeBudget.sufficient?'info':'warn']('scheduled fee budget estimate', status.feeBudget);
+  assertSustainableBudget(status.feeBudget,config.dryRun);
   await new Promise((resolve,reject) => { health.once('error', reject); health.listen(settings.port, settings.host, resolve); });
   logger.info('group liquidator started', { controllerId: config.controllerId, dryRun: config.dryRun, boostedMarkets: group.boostedMarkets });
   while (!stopping) {

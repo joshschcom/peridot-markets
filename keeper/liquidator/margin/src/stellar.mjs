@@ -17,6 +17,12 @@ export const scAddress = (value) => nativeToScVal(value, { type: "address" });
 export const scU64 = (value) => nativeToScVal(BigInt(value), { type: "u64" });
 export const scU128 = (value) => nativeToScVal(BigInt(value), { type: "u128" });
 
+export function paddedResourceFee(value) {
+  const fee = BigInt(value);
+  requireSafe(fee >= 0n, 'invalid simulated resource fee');
+  return (fee * 125n + 99n) / 100n + 10000n;
+}
+
 export class StellarClient {
   constructor(config, logger = console, journal = null) {
     this.server = new rpc.Server(config.rpcUrl, {
@@ -91,6 +97,25 @@ export class StellarClient {
     return scValToNative(simulation.result.retval);
   }
 
+  async previewPendingOpenResolution(positionId) {
+    assertKeeperCall(this.config, 'resolve_pending_open_v3', [positionId]);
+    const tx = await this.buildTransaction('resolve_pending_open_v3', [positionId]);
+    const result = await this.server.simulateTransaction(tx);
+    if (rpc.Api.isSimulationSuccess(result)) return 'healthy';
+    // This is the core's activation-health rejection, not a transport failure.
+    if (rpc.Api.isSimulationError(result) && /["']insufficient margin["']/.test(result.error)) return 'underwater';
+    throw new Error('Pending open resolution simulation unavailable');
+  }
+
+  async estimateFee(method, args = []) {
+    assertKeeperCall(this.config, method, args);
+    const tx = await this.buildTransaction(method, args);
+    const simulation = await this.server.simulateTransaction(tx);
+    requireSafe(rpc.Api.isSimulationSuccess(simulation) && !simulation.restorePreamble, 'Scheduled job fee estimation failed');
+    simulation.transactionData.setResourceFee(paddedResourceFee(simulation.minResourceFee));
+    return BigInt(rpc.assembleTransaction(tx, simulation).build().fee);
+  }
+
   async submit(method, args = []) {
     assertKeeperCall(this.config, method, args);
     if (this.config.dryRun) {
@@ -126,7 +151,7 @@ export class StellarClient {
       // padded maximum still counts against both caps and the fee-balance floor.
       const resourceFee = BigInt(simulation.minResourceFee);
       requireSafe(resourceFee >= 0n, "invalid simulated resource fee");
-      simulation.transactionData.setResourceFee((resourceFee * 125n + 99n) / 100n + 10000n);
+      simulation.transactionData.setResourceFee(paddedResourceFee(resourceFee));
       const prepared = rpc.assembleTransaction(transaction, simulation).build();
       const fee = assertPrepared(this.config, transaction, prepared);
       if (this.config.role === "lending-liquidation") {

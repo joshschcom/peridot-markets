@@ -1,0 +1,32 @@
+{
+  "network": "mainnet",
+  "group_id": 1,
+  "mode": "simulation-only",
+  "started_at": "2026-10-25T17:00:10.878Z",
+  "margin_controller": "CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY",
+  "creation_ledger": 65131405,
+  "simulation_ledger": 65132365,
+  "startup_wasm_pins_verified": true,
+  "boosted_refresh_simulated": 1,
+  "interest_updates_simulated": 2,
+  "position_counter": "0",
+  "active_positions": 0,
+  "lending_indexed_through": 65132366,
+  "indexed_accounts": 1,
+  "liquidations_simulated": 0,
+  "signed_or_sent_transactions": 0,
+  "exit_code": 1,
+  "limitation": "Ordinary lending repayment caps and capital were not configured; no live coverage is claimed.",
+  "review_followup": {
+    "started_at": "2026-10-25T17:42:30.422Z",
+    "simulation_ledger": 65132873,
+    "lending_indexed_through": 65132874,
+    "position_counter": "0",
+    "signed_or_sent_transactions": 0,
+    "estimated_refresh_stroops_24h": "62938253",
+    "required_with_headroom_stroops_24h": "79672817",
+    "configured_stroops_24h": "10000000",
+    "sufficient": false,
+    "exit_code": 1
+  }
+}
