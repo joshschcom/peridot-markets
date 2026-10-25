@@ -159,7 +159,7 @@ export async function findRoute(ctx:MarginContext,margin:string,base:string):Pro
   if(typeof router!=='string'||!router)throw new Error('Aquarius router is not configured for this network.');
   const pools=decodeMarginPoolRegistry(await readContractRaw(router,'get_pools',[xdr.ScVal.scvVec(sorted.map(addr))]));
   for(const {poolId,pool} of pools){
-    const allowed=await readContract<boolean>(ctx.info.swap_adapter,'is_pool_binding_allowed',[xdr.ScVal.scvBytes(Buffer.from(poolId)),addr(pool)]);
+    const allowed=await readContract<boolean>(ctx.info.swap_adapter,'is_pool_binding_allowed',[xdr.ScVal.scvBytes(poolId),addr(pool)]);
     if(!allowed||!await readContract<boolean>(ctx.info.swap_adapter,'is_pool_allowed',[addr(pool)]))continue;
     const tokens=await readContract<string[]>(pool,'get_tokens');
     if(tokens.length!==2||tokens.some((token,i)=>token!==sorted[i]))continue;
@@ -204,7 +204,7 @@ export async function openPosition(ctx:MarginContext,quote:OpenQuote,signer:Sign
   if((await positions(ctx,signer.address)).some(p=>p.status==='PendingOpen'))throw new Error('Resume or cancel the existing pending open before creating another position.');
   // A stale review is re-quoted before any signature.
   const current=await quoteOpen(ctx,signer.address,quote.margin,quote.base,quote.shares,quote.leverage,quote.side,quote.slippageBps);
-  if(current.route.pool!==quote.route.pool||Buffer.compare(Buffer.from(current.route.poolId),Buffer.from(quote.route.poolId))!==0)throw new Error('The approved pool route changed. Review again.');
+  if(current.route.pool!==quote.route.pool||current.route.poolId.length!==quote.route.poolId.length||current.route.poolId.some((byte,i)=>byte!==quote.route.poolId[i]))throw new Error('The approved pool route changed. Review again.');
   if(current.expectedOut<quote.minOut)throw new Error('Quote moved below your reviewed minimum. Review again.');
   if(current.totalShares>quote.totalShares)throw new Error('Fees changed. Review again.');
   let transferred=false;
@@ -217,9 +217,9 @@ export async function openPosition(ctx:MarginContext,quote:OpenQuote,signer:Sign
   try {
     // Transfer may take several ledgers. Re-read execution settings and quote now.
     if(transferred)fresh=await quoteOpen(ctx,signer.address,quote.margin,quote.base,quote.shares,quote.leverage,quote.side,quote.slippageBps);
-    if(fresh.route.pool!==quote.route.pool||Buffer.compare(Buffer.from(fresh.route.poolId),Buffer.from(quote.route.poolId))!==0||fresh.totalShares>quote.totalShares)throw new Error('Route or fees changed. Review again.');
+    if(fresh.route.pool!==quote.route.pool||fresh.route.poolId.length!==quote.route.poolId.length||fresh.route.poolId.some((byte,i)=>byte!==quote.route.poolId[i])||fresh.totalShares>quote.totalShares)throw new Error('Route or fees changed. Review again.');
     const floor=openExecutionFloor(quote.minOut,fresh);
-    result=await write(ctx,'begin_open_position_v3',[addr(signer.address),addr(quote.margin.token.address),addr(quote.base.token.address),uint(quote.shares),uint(quote.leverage),unitEnum(quote.side),xdr.ScVal.scvVec(quote.route.tokens.map(addr)),xdr.ScVal.scvBytes(Buffer.from(quote.route.poolId)),addr(quote.route.pool),uint(floor)],signer,onProgress);
+    result=await write(ctx,'begin_open_position_v3',[addr(signer.address),addr(quote.margin.token.address),addr(quote.base.token.address),uint(quote.shares),uint(quote.leverage),unitEnum(quote.side),xdr.ScVal.scvVec(quote.route.tokens.map(addr)),xdr.ScVal.scvBytes(quote.route.poolId),addr(quote.route.pool),uint(floor)],signer,onProgress);
   }catch(error){
     if(transferred&&error instanceof Error)error.message+=' The confirmed transfer remains recoverable: refresh positions first; if no pending open exists, use Return margin to supply below.';
     throw error;

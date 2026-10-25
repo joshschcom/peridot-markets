@@ -223,7 +223,7 @@ export async function runNextLaunchStep(session:LaunchSession,signer:Signer,onPr
         const pool=session.draft.marginPools[step.poolIndex!];
         if(!pool)throw new Error('Saved pool configuration is missing.');
         method=step.kind==='pool'?'set_pool_allowed':'set_pool_binding';
-        args=step.kind==='pool'?[...ownerArgs(),scAddress(pool.pool),scBool(true)]:[...ownerArgs(),xdr.ScVal.scvBytes(Buffer.from(pool.poolId,'hex')),scAddress(pool.pool),scBool(true)];
+        args=step.kind==='pool'?[...ownerArgs(),scAddress(pool.pool),scBool(true)]:[...ownerArgs(),xdr.ScVal.scvBytes(Uint8Array.from(pool.poolId.match(/.{2}/g)!,byte=>parseInt(byte,16))),scAddress(pool.pool),scBool(true)];
       }else if(step.kind==='marginmarket'){
         method='set_market_margin';args=[...ownerArgs(),scAddress(marketAddress(session,step.marketIndex)),scBool(true)];
       }else {

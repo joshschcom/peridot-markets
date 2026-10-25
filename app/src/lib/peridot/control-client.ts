@@ -328,7 +328,7 @@ export async function setPoolBinding(id:number,pool:string,poolId:string,allowed
 }
 
 import { encodeMarketConfig } from './factory';
-function mockAddress() {const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);return StrKey.encodeContract(Buffer.from(bytes));}
+function mockAddress() {const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);return StrKey.encodeContract(bytes);}
 export interface ControlMarketRecord {cfg:MarketConfig;active:boolean;boosted_vault?:string;adapter?:string;}
 export async function getControlMarketRecord(id:number,market:string):Promise<ControlMarketRecord> {
   if(network.useMocks){const state=readMockState();return {cfg:config(state,id,market),active:state.groups.find(g=>g.id===id)?.markets.includes(market)??false,...state.pending[`market-record:${id}:${market}`] as object};}
