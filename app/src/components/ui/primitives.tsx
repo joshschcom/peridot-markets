@@ -1,6 +1,6 @@
 'use client';
 import { useId, type ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Info, OctagonAlert, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, Info, OctagonAlert, type LucideIcon } from 'lucide-react';
 
 export type Tone = 'neutral' | 'accent' | 'info' | 'warn' | 'danger' | 'success' | 'solid';
 
@@ -71,7 +71,7 @@ export function Stepper({ steps, current, onSelect, disabled, ariaLabel }: { ste
   return <ol className="stepper" aria-label={ariaLabel}>
     {steps.map((name, i) => <li key={name}>
       <button type="button" disabled={disabled} aria-current={i === current ? 'step' : undefined} className={i === current ? 'selected' : i < current ? 'visited' : ''} onClick={() => onSelect(i)}>
-        <span aria-hidden>{i < current ? '✓' : i + 1}</span>{name}
+        <span aria-hidden>{i < current ? <Check size={12} /> : i + 1}</span>{name}
       </button>
     </li>)}
   </ol>;

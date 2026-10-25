@@ -646,7 +646,11 @@ tr:last-child > td { border-bottom: 0; }
   .mobile-nav { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--border); padding: 6px var(--gutter); overflow-x: auto; background: var(--bg); }
   .mobile-nav .badge { margin-left: auto; flex: 0 0 auto; }
   .manage-layout > aside { order: -1; }
+  .manage-panel { position: static; }
   .lev-select > button { flex: 1 1 auto; }
+  .markets-table .cell-sub { white-space: normal; }
+  .markets-table td:first-child { grid-column: 1 / -1; }
+  .markets-table .cell-meters { min-width: 0; }
   .mobile-nav a { padding: 7px 12px; border-radius: var(--r-md); font-size: 13px; color: var(--text-2); white-space: nowrap; }
   .mobile-nav a.active { color: var(--text); background: var(--surface-2); }
   .page { padding-top: 24px; gap: 16px; }

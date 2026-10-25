@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Gift, RefreshCw, Scale, Settings2, Sprout, Wallet, X } from 'lucide-react';
+import { ArrowRight, Check, Gift, RefreshCw, Scale, Settings2, Sprout, Wallet, X } from 'lucide-react';
 import { getGroup, getMarketConfig } from '@/lib/peridot/factory';
 import { useWallet } from '@/lib/peridot/wallet';
 import { network } from '@/lib/peridot/network';
@@ -120,7 +120,7 @@ export default function GroupDashboard({id}:{id:string}) {
           <div className="divider"/>
           <Tabs block ariaLabel="Market action" value={action} onChange={a=>{setAction(a);setUseAll(false);}} items={(['Supply','Withdraw','Borrow','Repay'] as const).map(a=>({value:a,label:a}))}/>
           <ol className="step-list" aria-label="Steps">
-            <li className={selected.entered?'done':needsMarketEntry?'current':''}><span className="step-dot" aria-hidden>{selected.entered?'✓':'1'}</span><div><strong>Enable market</strong><span>{selected.entered?'Enabled as collateral in this group. ':'Enable this market before borrowing its asset, earning group rewards or using its supply as collateral. '}Collateral factor: {Number(selected.config.collateral_factor)/10000}%.</span>{!selected.entered&&<button className="button secondary sm mt-2" disabled={disabled} onClick={()=>void run(()=>lend(group,selected,'Enable collateral','',signer(),report))}>Enable market</button>}</div></li>
+            <li className={selected.entered?'done':needsMarketEntry?'current':''}><span className="step-dot" aria-hidden>{selected.entered?<Check size={12}/>:'1'}</span><div><strong>Enable market</strong><span>{selected.entered?'Enabled as collateral in this group. ':'Enable this market before borrowing its asset, earning group rewards or using its supply as collateral. '}Collateral factor: {Number(selected.config.collateral_factor)/10000}%.</span>{!selected.entered&&<button className="button secondary sm mt-2" disabled={disabled} onClick={()=>void run(()=>lend(group,selected,'Enable collateral','',signer(),report))}>Enable market</button>}</div></li>
             <li className={selected.entered||!needsMarketEntry?'current':''}><span className="step-dot" aria-hidden>2</span><div><strong>{action} {selected.token.symbol}</strong><span>{action==='Withdraw'?'Receipt shares are converted using the current exchange rate. The amount received may change as interest accrues.':action==='Borrow'?'Your enabled collateral supports borrowing only within this group. Interest accrues on the debt.':action==='Repay'?'Repayment transfers this asset from your connected wallet.':'Your deposit earns the market rate. Idle liquidity follows the owner’s chosen route.'}</span></div></li>
           </ol>
           {needsMarketEntry&&<Notice tone="warn" role="status">{action==='Borrow'?`Enable the ${selected.token.symbol} market before borrowing this asset. Enable your collateral markets too.`:`Enable the ${selected.token.symbol} market before supplying so this deposit can earn group rewards.`} Use Enable market above, confirm that separate transaction, then return to {action.toLowerCase()}.</Notice>}
