@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
     </header>
-    <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}</nav>
+    <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}<span className="badge accent"><span className="live-dot" aria-hidden />{networkLabel}</span></nav>
     {(wallet.error || wallet.networkMismatch) && <div className="wallet-alert" role="alert">{wallet.error || `Switch your wallet to ${network.name} before signing.`}</div>}
     <main className="site-main">{children}</main>
     <footer className="site-footer">

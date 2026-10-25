@@ -37,17 +37,19 @@ export function PayoffChart({ margin, leverage, side, symbol, maintenance, estim
   const sign = side === 'Long' ? 1 : -1;
   const liq = liquidationMove(side, leverage, maintenance);
   const wipe = sign / leverage * -1; // move at which PnL equals -margin
+  // Range is a multiple of 20% so the axis lands on round ticks.
+  const range = Math.ceil(Math.max(0.6, Math.abs(wipe) * 1.25) / 0.2) * 0.2;
+  const ticks = useMemo(() => { const t: number[] = []; for (let v = -Math.round(range * 100); v <= Math.round(range * 100) + 0.01; v += 20) t.push(v); return t; }, [range]);
   const data = useMemo(() => {
     const points: Array<{ x: number; pnl: number; equity: number }> = [];
-    const range = Math.max(0.6, Math.abs(wipe) * 1.25);
-    for (let i = -30; i <= 30; i++) {
-      const x = range * i / 30;
+    for (let i = -40; i <= 40; i++) {
+      const x = range * i / 40;
       const raw = sign * leverage * V * x;
       const pnl = Math.max(-V, raw);
-      points.push({ x: x * 100, pnl, equity: V + pnl });
+      points.push({ x: Math.round(x * 10000) / 100, pnl, equity: V + pnl });
     }
     return points;
-  }, [V, leverage, sign, wipe]);
+  }, [V, leverage, sign, range]);
   const max = Math.max(...data.map(d => d.pnl)), min = Math.min(...data.map(d => d.pnl));
   const offset = max === min ? 0 : max / (max - min);
   const liqPnl = liq === null ? null : Math.max(-V, sign * leverage * V * liq);
@@ -73,7 +75,7 @@ export function PayoffChart({ margin, leverage, side, symbol, maintenance, estim
             </linearGradient>
           </defs>
           <CartesianGrid stroke={gridStroke} vertical={false} />
-          <XAxis dataKey="x" type="number" domain={['dataMin', 'dataMax']} tick={axisTick} tickFormatter={v => `${v > 0 ? '+' : ''}${Math.round(v)}%`} axisLine={{ stroke: axisStroke }} tickLine={false} tickMargin={6} tickCount={7} />
+          <XAxis dataKey="x" type="number" domain={[-range * 100, range * 100]} ticks={ticks} tick={axisTick} tickFormatter={v => `${v > 0 ? '+' : ''}${Math.round(v)}%`} axisLine={{ stroke: axisStroke }} tickLine={false} tickMargin={6} />
           <YAxis width={56} tick={axisTick} tickFormatter={v => fmtNumber(Number(v), 1)} axisLine={false} tickLine={false} />
           <Tooltip cursor={{ stroke: 'var(--border-strong)' }} content={({ active, payload }) => active && payload?.length ? <ChartTooltipBox title={`Price ${payload[0].payload.x >= 0 ? '+' : ''}${fmtPct(payload[0].payload.x, 1)}`} rows={[{ label: 'PnL', value: `${payload[0].payload.pnl >= 0 ? '+' : ''}${fmtNumber(payload[0].payload.pnl)} ${symbol}`, color: payload[0].payload.pnl >= 0 ? 'var(--series-1)' : 'var(--series-neg)' }, { label: 'Margin left', value: `${fmtNumber(payload[0].payload.equity)} ${symbol}` }]} /> : null} />
           <ReferenceLine y={0} stroke="var(--text-3)" label={{ value: 'Break-even', position: 'insideBottomLeft', fill: 'var(--chart-text)', fontSize: 11 }} />
