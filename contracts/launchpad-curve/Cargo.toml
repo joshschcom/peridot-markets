@@ -10,7 +10,8 @@ doctest = false
 
 [dependencies]
 soroban-sdk = { workspace = true }
-peridot-interfaces = { path = "../peridot-interfaces" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+mock-token = { path = "../../core/mocks/mock-token" }
+launchpad-token = { path = "../launchpad-token" }

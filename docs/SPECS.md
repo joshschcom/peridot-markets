@@ -423,7 +423,44 @@ fn effective_max_leverage(group_id, market) -> u128;              // min(group m
 
 ## Launchpad
 
-_Launchpad agent (12), stage 1: token and bonding curve._
+Stage 1 (token, bonding curve, factory). Graduation (Aquarius pool, locked LP, market group) and the ICO are
+not built; `graduate()` is a stub. Crates: `launchpad-token`, `launchpad-curve`, `launchpad-factory`.
+
+- **Token** (`launchpad-token`): OpenZeppelin fungible `Base`, 7 decimals, the whole supply minted once in
+  `__constructor(recipient, name, symbol, supply, metadata_uri)` to the curve. No mint, no admin, no freeze, no
+  upgrade: it is the only immutable launchpad contract. Holder-only `burn`/`burn_from` exist because SEP-41
+  requires them. `metadata_uri()` and `metadata()` expose the optional image URI.
+- **Curve formula** (`launchpad-curve`, one per launch): `(virtual_quote + real_quote) * (virtual_token - sold) >= k`,
+  `k = virtual_quote * virtual_token`. With `x = vq + real_quote`, `y = vt - sold`: a buy of net quote `n` delivers
+  `y - ceil(k / (x + n))` tokens, a sell of `t` tokens pays `x - ceil(k / (y + t))` quote. Rounding always favours
+  the curve, so `sold <= vt * real_quote / (vq + real_quote)` at all times and `x * y - k < max(x, y)`. All math is
+  checked `u128`; every reserve, supply and target is bounded by 1e19 base units so no product overflows.
+  Constructor: `(token, quote_token, creator, factory, treasury, params: CurveParams)` (Soroban allows 10 arguments
+  at most, so the numeric parameters travel in `CurveParams`: `virtual_quote`, `virtual_token`, `curve_supply`,
+  `lp_supply`, `graduation_target`, `trade_fee_bps` (max 500, default 100), `creator_fee_share_bps` (max 5000),
+  `creator_cap_bps` (max 2000, default 500)). It reverts unless `token.balance(curve) >= curve_supply + lp_supply`.
+- **Fees and slippage**: fee = `ceil(gross * bps / 10000)` on the quote leg of every trade, accrued in two counters
+  (treasury, creator share) and paid by the permissionless `claim_fees()`; there is no other outflow of quote except
+  sellers. Held quote always equals `real_quote + unclaimed fees`. `min_tokens_out` and `min_quote_out` must be
+  positive. Dust trades (zero output) revert.
+- **Target and phases**: `Trading -> Graduatable -> Graduated`. A buy that would cross `graduation_target` is
+  CLAMPED (partial fill): only the quote needed to land exactly on the target is charged, the rest stays with the
+  buyer. Buys stop in `Graduatable`; sells keep working so holders are never locked in while a graduation is
+  pending, and a sell that takes `real_quote` under the target moves the phase back to `Trading` (known grief
+  vector: a holder can delay graduation by selling a little, at the cost of the fee and price impact; stage 2 may
+  make `Graduatable` sticky). The constructor guarantees the target is reachable within `curve_supply`.
+- **Anti-rug**: creator buys capped cumulatively (default 5% of `curve_supply`, sells do not reset it; the cap is
+  per address, not a Sybil defence); parameters immutable; no withdrawal path before graduation. Trust assumption
+  to state in the app: every curve is upgradeable by the factory admin (`upgrade_launch`), as the house rule
+  requires, so "no withdrawal" holds as long as that admin does not ship a malicious Wasm.
+- **Factory** (`launchpad-factory`): `launch_curve(creator, name, symbol, LaunchParams{quote_token, preset,
+  metadata_uri, creator_buy, min_tokens_out}) -> (token, curve)`. The creator picks only a preset (Fast 25k,
+  Standard 85k, Slow 250k XLM target; 1.073B virtual tokens, 800M curve, 200M LP, 1% fee), the rest is fixed by the
+  admin-set preset per quote token (`set_default_presets`, `set_preset`, validated with the curve's own guardrails).
+  Chicken and egg: the curve address is pre-computed from the counter salt (`deployed_address()`), the token is
+  deployed first minting to it, then the curve with the real token address. Name 1..32 and symbol 2..12 ASCII
+  characters, at most 100 launches per creator, optional launch fee to the treasury, optional atomic first buy.
+  Views: `list_launches(start, limit<=50)`, `launches_of(creator)`, `get_launch(token)`, `get_preset`, `config`.
 
 ## XOXNO as a graduation venue
 
