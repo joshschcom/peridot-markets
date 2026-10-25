@@ -94,7 +94,183 @@ _Blend adapter agent (02)._
 
 ## DeFindex route
 
-_DeFindex agent (04)._
+No new contract. A DeFindex vault is a SEP-41 share token plus `deposit`/`withdraw`, and the core receipt-vault
+boosted hook calls it directly. Verified read-only on 25 Oct 2026 with `stellar contract info interface` and
+`--send=no` simulations (no transactions). Vault Wasm hash per factory: mainnet `ae3409a4...`, testnet `f345228d...`.
+
+### Verified vaults
+
+All underlying assets match `11-ADDRESSES.md` (USDC `CCW67TSZ...`, XLM `CAS3J7GY...`, EURC `CDTKPWPL...` on mainnet).
+Every vault is single-asset, 7 decimals, with the same function set. `11-ADDRESSES.md` and Peridot `addresses.md`
+agree on every address (no disagreement). Each listed strategy contract exists and reports the matching `asset()`.
+
+| Network | Vault | Address | Asset | Strategies | State on 25 Oct |
+|---|---|---|---|---|---|
+| mainnet | Peridot XLM | `CCB2AR5X3KP4WQKE7HNSUSDS7SHFMC2WPVSZ2ZXJ6DHXOKHFFKOZE6GK` | XLM | 1 (`CDPWNUW7...` XLM Blend Fixed, active) | fully invested, 41.8k XLM, share price 1.0002 |
+| mainnet | Peridot USDC | `CAB4JOLSCNELJVDQKZLVGHKWJCLXFDBZZMITJAFL4GBGTHIKWO47PYFH` | USDC | 1 (`CDB2WMKQ...` USDC Blend Fixed, active) | fully invested, 7.5k USDC, share price 1.0354 |
+| mainnet | Peridot EURC | `CBP2R5KYAWJCOCVDTSNTEVL3O6JBTWOOH7SZOX7DX5DLGVZCAMLBDZM3` | EURC | 1 (`CC5CE6MW...` EURC Blend Fixed, active) | fully invested, 2.8k EURC, share price 1.0193 |
+| mainnet | Soroswap USDC | `CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK` | USDC | 2, **both paused** | **do not attach**: 100% idle (40.1k USDC), share price 0.934 |
+| mainnet | Soroswap EURC | `CCKTLDG6I2MMJCKFWXXBXMA42LJ3XN2IOW6M7TK6EWNPJTS736ETFF2N` | EURC | 2 (Yieldblox paused, Fixed active) | invested 1.9k EURC, share price 1.0278, third-party manager |
+| testnet | DeFindex USDC | `CBMVK2JK6NTOT2O4HNQAIQFJY232BHKGLIMXDVQVHIIZKDACXDFZDWHN` | Blend testnet mock USDC `CAQCFVLO...` (not Circle's `CBIELTK6...`) | 1 (`CALLOM5I...`) | 100% idle, manager is DeFindex |
+| testnet | DeFindex XLM | `CCLV4H7WTLJQ7ATLHBBQV2WW3OINF3FOY5XZ7VPHZO7NH3D2ZS4GFSF6` | XLM `CDLZFC3S...` | 1 (`CDVLOSPJ...`) | 100% idle, share price 1667 (donation inflated), manager is DeFindex |
+
+Factories (same interface on both networks): mainnet `CDKFHFJIET3A73A2YN4KV7NSV32S6YGQMUFH3DNJXLBWL4SKEGVRNFKI`
+(124 vaults, `defindex_fee` 5000 bps), testnet `CDSCWE4GLNBYYTES2OCYDFQA2LLY4RBIAX6ZI32VSUXD7GO6HRPO4A32` (273 vaults,
+`defindex_fee` 2000 bps). Strategies (verified): mainnet USDC `CDB2WMKQQNVZMEBY7Q7GZ5C7E7IAFSNMZ7GGVD6WKTCEWK7XOIAVZSAP`,
+XLM `CDPWNUW7UMCSVO36VAJSQHQECISPJLCVPDASKHRC5SEROAAZDUQ5DG2Z`, EURC `CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI`;
+testnet USDC (mock) `CALLOM5I7XLQPPOPQMYAHUWW4N7O3JKT42KQ4ASEEVBXDJQNJOALFSUY`, XLM `CDVLOSPJPQOTB6ZCWO5VSGTOLGMKTXSFWYTUP572GTPNOWX4F76X3HPM`.
+Peridot's three core receipt-vaults hold over 99.9% of the shares of their Peridot DeFindex vault (the rest is dust from
+other small holders plus the 1000 locked `MINIMUM_LIQUIDITY` shares), so those vaults are effectively single-depositor today.
+
+### Interface: what receipt-vault calls vs the deployed vault
+
+| Call | Deployed signature | Receipt-vault usage | Difference |
+|---|---|---|---|
+| `deposit` | `(amounts_desired: Vec<i128>, amounts_min: Vec<i128>, from: Address, invest: bool) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>` | `invoke_contract` with `([amt], [amt], self, true)`; return decoded as opaque `Val` | None. The tuple return is never decoded, so it is tolerated; the effect is verified by comparing the market's own token cash before and after. `amounts_min == amounts_desired`, so any shortfall reverts. Only the underlying `transfer(self, vault, amt)` is pre-authorized. |
+| `withdraw` | `(withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError>` | `try_call_contract` with `(shares, [needed_cash, 0, ...], self)`; return ignored, cash received measured by balance diff | None. `min_amounts_out.len()` must equal the asset count (else `WrongAmountsLength`); receipt-vault stores that count at bind time. |
+| `get_asset_amounts_per_shares` | `(vault_shares: i128) -> Result<Vec<i128>, ContractError>` | `(0)` at bind (asset count), `(share_balance)` for NAV, `(total_supply)` for redemption sizing; element 0 is the underlying | None. `(0)` returns `[0]`. |
+| `balance` | `(id: Address) -> i128` (SEP-41) | `balance(receipt_vault)` = shares held | None. |
+| `total_supply` | `() -> i128` (SEP-41) | read in `redeem_from_boosted` | None. The boosted vault MUST also be a share token with `total_supply`. |
+| `get_assets` | `() -> Result<Vec<AssetStrategySet{address, strategies: Vec<Strategy{address,name,paused}>}>, ContractError>` | not called | Needed by the factory check below. |
+| `fetch_total_managed_funds` | `() -> Result<Vec<CurrentAssetInvestmentAllocation{asset, idle_amount, invested_amount, strategy_allocations: Vec<{amount,paused,strategy_address}>, total_amount}>, ContractError>` | not called | Frontend only. |
+
+`11-ADDRESSES.md` section "Vault interface" is correct (verified against deployed spec and against
+`paltalabs/defindex` `apps/contracts/vault`). Notes on receipt-vault and the controller:
+
+- Receipt-vault does not check that the vault's asset equals the market underlying or that it is single-asset
+  (`MAX_BOOSTED_ASSETS` is 16). The factory must.
+- `set_boosted_vault` calls `get_asset_amounts_per_shares(0)` (panics if the contract is not DeFindex-shaped) and the
+  controller's `bind_boosted_vault` (one vault per market within one controller; a vault owned by another market of
+  that controller reverts with "boosted vault already assigned"). A different controller does not collide.
+- Deposits below `MIN_BOOSTED_DEPLOY_AMOUNT` (10_000 stroops) are skipped.
+- `refresh_boosted_underlying` is permissionless and must run at least every 5 minutes, otherwise account-health checks
+  revert with "boosted health cache stale". `rebalance_idle_cash` is admin only (factory needs a keeper pass-through).
+- A DeFindex failure on withdraw is fail-soft (event, then "withdraw liquidity shortfall"); on deposit it reverts the
+  `rebalance_idle_cash` call.
+
+### Behaviour that matters for a lending market
+
+- **Withdraw** burns shares and pays the pro-rata share of `total_amount` in the underlying immediately, in the same
+  transaction: idle funds first, then it unwinds strategies proportionally. No lockup, no cooldown, no withdraw fee.
+  Fees are a performance fee on yield, locked out of `total_amount` on every deposit, withdraw and quote (`get_fees`
+  returns `(vault_fee_bps, defindex_share_bps)`: Peridot vaults `[100, 5000]`, Soroswap `[2000, 2000]`, testnet `[100, 2000]`).
+  The only limit is the strategy's own liquidity: a Blend strategy returns only what its pool can pay out, so a
+  high-utilization pool can revert the unwind (strategy errors 142/412). Funds in a paused strategy are not
+  available to users until the manager unpauses it or runs `rescue` (moves the funds to vault idle and pauses it).
+- **`invest` flag.** Receipt-vault always passes `true`. DeFindex then splits the deposit "in the same proportion as the
+  funds already invested" (`generate_investment_allocations`, source-confirmed). If `invested_amount == 0` (new vault or
+  fully idle) nothing is invested and the deposit stays idle, earning 0, until the Manager or Rebalance Manager runs
+  `rebalance([Invest(strategy, amount)])`. Paused strategies are skipped. Seen on chain: both testnet vaults and the
+  mainnet Soroswap USDC vault are 100% idle. Idle funds still count in `total_amount`, so NAV and withdrawals work; only
+  yield is missing.
+- **First deposit.** 1000 shares are locked to the vault (`MINIMUM_LIQUIDITY`). Share price is `total_amount / total_supply`
+  and moves with donations (testnet XLM vault: 1667). Seed a new vault before a market attaches to it.
+- **Roles.** Manager (rebalance, pause, `set_manager`, `upgrade` if `upgradable`), Emergency Manager (pause, rescue),
+  Rebalance Manager (Invest, Unwind, swaps), Fee Receiver. A third-party manager of a public vault can pause
+  strategies or upgrade it. Peridot vaults: manager and fee receiver are `GDYDTMY46RNAUIIUVG6RPD2D3I3ES4J2SSXGCKIQP2OET4Q5PV75LSPL`.
+
+### Attach validation (factory `attach_yield` with `YieldRoute::Defindex(DefindexRoute { vault })`)
+
+Lead A must code all of these before `set_boosted_vault`, each with its own error:
+
+1. `get_assets()` succeeds, has exactly 1 entry, and `get_assets()[0].address == market underlying`
+   (`market_token(group_id, market)`).
+2. That entry has at least 1 strategy and at least 1 with `paused == false`. Reject all-paused vaults (mainnet
+   Soroswap USDC today).
+3. `get_asset_amounts_per_shares(0)` returns a vector of length 1 (receipt-vault stores this as the asset count;
+   `get_boosted_asset_count()` must read 1 after binding).
+4. The vault has `total_supply() > 0` (seeded). Do not check share `decimals()` against the underlying: receipt-vault
+   never uses it (only `balance`, `total_supply`, `get_asset_amounts_per_shares`), and DeFindex shares are 7 decimals.
+5. `get_boosted_vault_owner(vault)` on the group controller is `None` (not bound to another market).
+6. Trust gate, per group config: either the vault was created by the Peridot flow below, or `get_manager()` is in a
+   factory-held allowlist, or the group owner explicitly flags "third-party vault" (UI shows manager and `upgradable`).
+7. After `set_boosted_vault` call `refresh_boosted_underlying()` once and require `get_boosted_vault() == vault`.
+   Before detaching (`set_boosted_vault` to the disabled address) redeem the market's shares to cash, otherwise they
+   are orphaned.
+8. Testnet: the `11-ADDRESSES.md` testnet USDC vault uses Blend's mock USDC `CAQCFVLO...`, not Circle testnet USDC
+   `CBIELTK6...`, so rule 1 correctly rejects it for a Circle-USDC market. Use a market on that mock token, or own vault.
+
+### Factory: creating a per-group vault
+
+`create_defindex_vault` has no `require_auth` at the factory entrypoint (it deploys and initializes the vault Wasm; the
+internal `create_vault_internal` was not audited here):
+
+```
+create_defindex_vault(
+  roles: Map<u32, Address>,      // 0 EmergencyManager, 1 FeeReceiver, 2 Manager, 3 RebalanceManager (all four required)
+  vault_fee: u32,                // bps, 0..=9000 (above 9000 reverts MaximumFeeExceeded 106)
+  assets: Vec<AssetStrategySet>, // [{ address: UNDERLYING, strategies: [{ address: STRATEGY, name: String, paused: false }] }]
+  soroswap_router: Address,      // required argument, used only for swaps between assets (irrelevant with one asset)
+  name_symbol: Map<String, String>, // keys "name" and "symbol"
+  upgradable: bool               // false recommended
+) -> Address
+```
+
+`create_defindex_vault_deposit(caller, roles, vault_fee, assets, soroswap_router, name_symbol, upgradable, amounts)`
+(caller auths, `amounts.len() == assets.len()`) creates the vault and makes the seed deposit in one transaction: use it
+so the first share price is set by Peridot. The seed shares go to the caller. Strategy `name` is a free string; reuse the
+existing ones (for example `usdc_blend_autocompound_fixed`). More mainnet strategies from the DeFindex docs: USDC
+Etherfuse `CCBTSHPUVNKCT5V675AAVYNANHXBU26PTZK2QLS7ZLFNYRJZT5HW3VL6`, USDC K2 `CAOK66QTVE2QXWJPDXDX75ULFKUQDN43AXKYWOBZAERCPZOJL2UEBVJW`.
+
+Lead A needs: a Soroswap router address per network (not in `11-ADDRESSES.md`; take it from the Soroswap deployment
+list or from the existing vaults' constructor args), the role addresses, and seed funds. Roles: Manager and Emergency
+Manager = Peridot ops key or multisig, Rebalance Manager = keeper key, Fee Receiver = Peridot treasury. If the
+market-factory contract itself creates the vault, it cannot act as Manager or seed it, so create vaults from an ops key
+in `scripts/deploy.sh` and pass the address to `attach_yield`. **After creation the Rebalance Manager must run
+`rebalance(caller, [Invest(strategy, seed_amount)])` once**, otherwise every `invest=true` deposit from the market stays
+idle and the market earns nothing. Keeper task: after each `rebalance_idle_cash`, if `idle_amount / total_amount` of the
+vault is above a threshold, run `Invest`.
+
+### Recommendation for phase 1
+
+- Core Peridot markets keep their own three vaults (bound, fully invested, single depositor).
+- New group markets: create **one vault per market** with the flow above (seed, one strategy, Invest once). Shares are
+  accounted per holder, so a shared vault does not mix balances, but it does share (a) the strategy and Blend pool
+  liquidity (one group's large exit can drain idle and push another group into "withdraw liquidity shortfall"), (b) the
+  manager's pause and upgrade powers, (c) share-price noise from donations. A per-market vault isolates all three and lets
+  each group show its own APY. Cost: one create, one seed, one Invest transaction.
+- Short-time fallback: attach a Peridot XLM, USDC or EURC vault to a group market, only under a separate group controller
+  (so `bind_boosted_vault` does not collide), with a shared-risk note in the UI. Never attach the Soroswap USDC vault.
+  The Soroswap EURC vault works but is third-party managed (rule 6).
+- Keeper runs `refresh_boosted_underlying` at most every 5 minutes for every DeFindex market.
+
+### Frontend reads (no `kind` or `get_state` on DeFindex vaults)
+
+All simulations, no auth. `V` = boosted vault, `M` = the market's receipt-vault.
+
+| Need | Call | Result |
+|---|---|---|
+| Is a DeFindex route set | `M.get_boosted_vault()` | `Option<Address>` |
+| Underlying and strategies | `V.get_assets()` | `[{address, strategies:[{address,name,paused}]}]` |
+| Share price | `V.get_asset_amounts_per_shares(10_000_000)[0] / 1e7` (7-decimal vaults; use `10^decimals`) | underlying per share |
+| Market's position | shares `V.balance(M)`, value `V.get_asset_amounts_per_shares(shares)[0]` | underlying held in the vault by this market |
+| Vault TVL, idle vs invested | `V.fetch_total_managed_funds()[0]` (`idle_amount`, `invested_amount`, `total_amount`, per-strategy `amount`, `paused`) | idle share above 0 means yield not fully deployed |
+| Fees and roles | `V.get_fees()` returns `[vault_fee_bps, defindex_share_bps]`; `V.get_manager()`, `V.get_fee_receiver()` | trust display |
+| Market value used for health | `M.get_total_underlying()` | cash plus cached boosted value |
+
+APY hint, in order of preference:
+1. DeFindex API: `GET https://api.defindex.io/vault/{V}/apy?network=mainnet|testnet` returns `{ "apy": 19.4 }`, a
+   percentage, 7-day annualized, net of vault fee, with compounding. The quickstart says requests carry
+   `Authorization: Bearer sk_...` (key from the DeFindex Console) while the endpoint spec lists no security scheme: test
+   unauthenticated first. Call it server side only (Next route handler), cache for minutes, never ship a key to the
+   browser. Related: `/vault/{V}` (info, TVL), `/vault/{V}/balance`; docs at `docs.defindex.io/api-reference/vaults/*`. No JS
+   SDK package is documented, only HTTP.
+2. Fallback in app or keeper: store `(timestamp, share_price)` and annualize `(pps_now / pps_then)^(365d / dt) - 1`.
+3. A new or fully idle vault shows APY 0: show "not yet invested" using `idle_amount / total_amount` instead.
+
+### Risks
+
+- A fresh vault earns nothing until `Invest` runs (above). Biggest functional trap for the demo.
+- Strategy liquidity: Blend utilization can block large withdrawals. Keep `set_idle_cash_buffer_bps` above 0 for DeFindex
+  markets (core uses 10%); withdrawals beyond cash plus unwindable funds fail with "withdraw liquidity shortfall".
+- Paused or rescued strategies: funds go idle in the vault but stay in NAV. If a strategy is impaired,
+  `get_asset_amounts_per_shares` falls and the market is marked down (a one-step drop above 10% is distrusted for
+  redemption sizing, `BOOSTED_REDEMPTION_QUOTE_FLOOR_BPS`). Soroswap USDC share price 0.934 shows this can happen.
+- Third-party managers can pause, upgrade (if `upgradable`) and change fees; fee changes reduce NAV.
+- Donation manipulation of share price on small or new vaults: seed before attach.
+- Testnet vaults are managed by DeFindex and 100% idle, so a testnet yield demo shows 0%. For real movement create an
+  own testnet vault with the mock USDC strategy and run `Invest`.
+- Public RPC returned HTTP 429 during verification: give the keeper and app a dedicated RPC.
 
 ## Margin
 
