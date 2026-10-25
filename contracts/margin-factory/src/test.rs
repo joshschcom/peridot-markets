@@ -605,12 +605,12 @@ fn guardrails_reject_bad_config() {
         err(w.x().try_enable_margin(&w.owner, &GROUP, &bad)),
         MarginError::VariantUnavailable
     );
-    // Boundary values are accepted: 5x, 1.15, 10% slippage.
+    // Boundary values are accepted: 5x, 1.10, 10% slippage.
     let ok = GroupMarginConfig {
         variant: MarginVariant::Audited,
         max_leverage: 5,
         max_slippage: 100_000,
-        liquidation_incentive: 1_150_000,
+        liquidation_incentive: 1_100_000,
         liquidation_fee: 500_000,
     };
     w.x().enable_margin(&w.owner, &GROUP, &ok);

@@ -585,3 +585,65 @@ fn real_price_router_reads_reflector_through_the_controller() {
     refl.set_price(&xlm_key, &(PRICE_1_USD / 10), &(1_000_000u64 + 10_000));
     vault::Client::new(&f.env, &m).borrow(&bob, &((10 * ONE) as u128));
 }
+
+const MARGIN_CONTROLLER: &[u8] = include_bytes!("../../../build/test/margin_controller.wasm");
+const SWAP_ADAPTER: &[u8] = include_bytes!("../../../build/test/swap_adapter.wasm");
+
+/// The real market-factory and the real margin-factory, wired together as in production.
+#[test]
+fn margin_factory_integrates_with_the_real_market_factory() {
+    use margin_factory::{MarginFactory, MarginFactoryClient};
+    use peridot_interfaces::{GroupMarginConfig, MarginVariant, MarginWasmHashes, TEST_MARGIN_FACTORY_ADDRESS};
+
+    let f = setup();
+    let xf_addr = Address::from_str(&f.env, TEST_MARGIN_FACTORY_ADDRESS);
+    f.env.register_at(&xf_addr, MarginFactory, (f.admin.clone(), f.mf.address.clone()));
+    let xf = MarginFactoryClient::new(&f.env, &xf_addr);
+    xf.set_wasm(
+        &f.admin,
+        &MarginWasmHashes {
+            audited: f.env.deployer().upload_contract_wasm(MARGIN_CONTROLLER),
+            custom: None,
+            swap_adapter: f.env.deployer().upload_contract_wasm(SWAP_ADAPTER),
+        },
+    );
+    xf.set_router(&f.admin, &Address::generate(&f.env));
+    f.mf.set_margin_factory(&f.admin, &xf_addr);
+
+    let (id, m_usdc) = group_with_market(&f);
+    let m_xlm = add_active(&f, id, &cfg(&f, &f.xlm, "XLM"));
+    set_price(&f, id, &f.xlm, PRICE_1_USD);
+
+    let mc = xf.enable_margin(
+        &f.owner,
+        &id,
+        &GroupMarginConfig {
+            variant: MarginVariant::Audited,
+            max_leverage: 3,
+            max_slippage: 50_000,
+            liquidation_incentive: 1_080_000,
+            liquidation_fee: 0,
+        },
+    );
+    // wire_margin ran through the real market-factory
+    assert_eq!(f.mf.get_group(&id).margin_controller, Some(mc.clone()));
+
+    let pool = f.env.register(mock_aquarius_pool::MockAquariusPool, ());
+    mock_aquarius_pool::MockAquariusPoolClient::new(&f.env, &pool).initialize(&f.usdc, &f.xlm, &10, &0u32);
+    xf.set_pool_allowed(&f.owner, &id, &pool, &true);
+    xf.set_pool_binding(&f.owner, &id, &soroban_sdk::BytesN::from_array(&f.env, &[9u8; 32]), &pool, &true);
+    // link_margin_market ran through the real market-factory and reached the receipt-vault
+    xf.set_market_margin(&f.owner, &id, &m_usdc, &true);
+    xf.set_market_margin(&f.owner, &id, &m_xlm, &true);
+    let info = xf.get_margin(&id).unwrap();
+    assert_eq!(info.controller, mc);
+    assert_eq!(info.enabled_markets.len(), 2);
+    assert_eq!(xf.effective_max_leverage(&id, &m_usdc), 3);
+
+    // owner-only
+    let mallory = Address::generate(&f.env);
+    assert!(xf.try_set_market_margin(&mallory, &id, &m_usdc, &false).is_err());
+    // the incentive is staged for 60s on the real group controller
+    f.env.ledger().set_timestamp(1_000_000 + 61);
+    xf.apply_margin(&f.owner, &id);
+}

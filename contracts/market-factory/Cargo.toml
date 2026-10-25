@@ -18,3 +18,5 @@ mock-token = { path = "../../core/mocks/mock-token" }
 mock-reflector = { path = "../mocks/mock-reflector" }
 mock-yield-vault = { path = "../mocks/mock-yield-vault" }
 mock-price-router = { path = "../mocks/mock-price-router" }
+margin-factory = { path = "../margin-factory" }
+mock-aquarius-pool = { path = "../../core/mocks/mock-aquarius-pool" }

@@ -888,6 +888,8 @@ dependencies = [
 name = "market-factory"
 version = "0.1.0"
 dependencies = [
+ "margin-factory",
+ "mock-aquarius-pool",
  "mock-price-router",
  "mock-reflector",
  "mock-token",

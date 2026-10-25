@@ -5,9 +5,10 @@
 pub const MIN_GROUP_LEVERAGE: u128 = 1;
 pub const MAX_GROUP_LEVERAGE: u128 = 5;
 
-/// Group controller liquidation incentive (1.02 to 1.15). Staged for 60s on the controller.
+/// Group controller liquidation incentive (1.02 to 1.10). Staged for 60s on the controller. The V3 margin
+/// controller pays liquidators the pair incentive, capped at 10%, so 1.10 is the highest value that is honoured end to end.
 pub const MIN_LIQUIDATION_INCENTIVE: u128 = 1_020_000;
-pub const MAX_LIQUIDATION_INCENTIVE: u128 = 1_150_000;
+pub const MAX_LIQUIDATION_INCENTIVE: u128 = 1_100_000;
 
 /// Max swap slippage for margin opens (10%). The audited controller caps at 50%.
 pub const MAX_SLIPPAGE: u128 = 100_000;
