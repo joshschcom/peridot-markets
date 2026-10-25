@@ -47,8 +47,10 @@ export async function connectKit(walletId:WalletId,passphrase:string):Promise<st
   if(!StrKey.isValidEd25519PublicKey(address))throw new Error('Wallet did not return a valid Stellar account.');
   connectedAddress=address;return address;
 }
+/** Cancel a signature prompt without disconnecting the selected account. */
+export function cancelKitRequest():void{generation++;request.cancel();}
 export async function disconnectKit():Promise<void>{
-  generation++;connectedAddress=null;request.cancel();
+  cancelKitRequest();connectedAddress=null;
   if(kit)await kit.disconnect();
 }
 export async function getKitNetwork():Promise<{network:string;networkPassphrase:string}>{
