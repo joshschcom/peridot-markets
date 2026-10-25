@@ -47,7 +47,6 @@ async function main(){
   await expect(provider).toBeEnabled();
   await popup.close();
   // Reproduce a browser that refuses the popup. Verify bounded recovery with virtual time.
-  await page.clock.install();
   await page.evaluate(()=>{window.open=()=>null;});
   await connect.click();
   // A refused popup now fails at once with the setting to change, not after a long timeout.
