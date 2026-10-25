@@ -2,9 +2,9 @@
 
 Launch isolated lending markets on Stellar, configure each market, and route idle liquidity into supported yield venues.
 
-**HackMeridian 2026: Scale + Stellar Composed.** The build is in progress. No new mainnet deployment or completed live-wallet test is claimed yet.
+**HackMeridian 2026: Scale + Stellar Composed.** Phase 1 contracts are live on mainnet. The frontend acceptance run, margin open/close and live liquidator coverage are still pending. Beta: unaudited new contracts, capped markets.
 
-Demo preview: [Open Peridot Markets](https://peridot-markets-preview-q1q53sbiz-peridot3.vercel.app) (Vercel login required, simulated balances). Mainnet app: pending. Video: pending. Deck: pending.
+Mainnet beta: [Open Peridot Markets](https://peridot-markets-preview-eg1grm094-peridot3.vercel.app) (Vercel login required; Albedo default, Freighter available). [Separate simulated demo](https://peridot-markets-preview-q1q53sbiz-peridot3.vercel.app). Video: pending. Deck: pending.
 
 [Architecture](docs/ARCHITECTURE.md) · [Specifications](docs/SPECS.md) · [Milestones vs intake](docs/MILESTONES.md) · [Demo evidence](docs/DEMO.md) · [Prior work](docs/PRIOR_WORK.md)
 
@@ -12,12 +12,29 @@ Demo preview: [Open Peridot Markets](https://peridot-markets-preview-q1q53sbiz-p
 
 | Phase | Scope | Status | Mainnet evidence |
 |---|---|---|---|
-| 1 | Factory, launch wizard, lending, rewards, margin, owner controls, liquidator | In progress | Pending |
+| 1 | Factory, launch wizard, lending, rewards, margin, owner controls, liquidator | Contracts live; app acceptance and operations pending | [Mainnet contracts and transactions](docs/DEMO-MAINNET.md) |
 | 2 | Aquarius LP vault, capped loss reserve, self-hosted keeper | Not started | Pending |
 | 3 | Price guards, custom margin, Zenex, bonding-curve launchpad and graduation | Not started | Pending |
 | 4 | XOXNO, hosted keeper, yield switching, range management, ICO launchpad | Not started | Pending |
 
-A phase is complete only after mainnet deployment, connected frontend, fresh Freighter-account verification, read-only second opinion, evidence and a phase tag. Mock interactions are development tests, not mainnet evidence.
+A phase is complete only after mainnet deployment, connected frontend, fresh Albedo-account verification, read-only second opinion, evidence and a phase tag. Mock interactions are development tests, not mainnet evidence.
+
+## Mainnet deployment
+
+The source of truth is [deployments/mainnet.json](deployments/mainnet.json). Lead A's [transaction record](docs/DEMO-MAINNET.md) includes group creation, DeFindex and Blend supply/withdrawal, margin enablement and a funded reward claim.
+
+| Contract or group | Mainnet ID | Status |
+|---|---|---|
+| Market factory | `CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S` | Live |
+| Margin factory | `CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH` | Live |
+| Group 1 Meridian controller | `CCIVCL6B5TNYC5PTJDFXD24AEJ5VQU5XUTZXFFGMIVRWQSSZFZPIPUES` | USDC and XLM; XLM uses DeFindex; no rewards, preserving add-market demo |
+| Group 1 margin controller | `CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY` | Enabled; app open/close evidence pending |
+| Group 2 Rewards controller | `CADHYBWKFNDE3LKNWCRD7F6FNHTNQAR4W3AT2G3TROO7V6RZ2VMUKZSZ` | Funded XLM rewards; claim verified by deployer |
+| Group 2 reward distributor | `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF` | Live |
+| Group 3 BlendDemo controller | `CBGLMNCDWF7GTSGWU5DT5ZGAVM6JABAMJH3G3SMNGKDQQ2NTIG3RU2O2` | XLM route; supply and withdrawal verified by deployer |
+| Blend fee vault | `CCHILGAYU4DQXLWSTOA5BQYZD7QJMWUU5PQLS4Z25FLI2WP6IVV3X337` | Allowlisted XLM and USDC reserves |
+
+The local `phase-1` contract tag is recorded on the coordination board. It does not establish fresh Albedo frontend acceptance or a running liquidator. Those gates remain explicit in [DEMO.md](docs/DEMO.md).
 
 ## Problem and solution
 
@@ -62,7 +79,11 @@ npm test
 npm run build
 ```
 
-Vercel project root: `app/`. A generated canonical interface snapshot is bundled and checked in CI. Build command: `npm run build`. Production URL and deployment commit will be recorded here after deployment. A fresh Freighter account must complete the evidence checklist before a phase is tagged.
+Vercel project root: `app/`. A generated canonical interface snapshot is bundled and checked in CI. Build command: `npm run build`. Connected mainnet preview: frontend commit `20099c2`, Vercel deployment `dpl_Hur1ciLxFErhC5QbnquhBUxACZng`. This uses the private preview project; the organization production deployment remains pending. A fresh Albedo account must complete the evidence checklist before a phase is tagged.
+
+## Fresh-wallet preflight
+
+From `app/`, run `NEXT_PUBLIC_MAINNET_RPC_URL=https://mainnet.sorobanrpc.com node --import tsx scripts/fresh-wallet-check.ts --account G...` with the fresh Albedo public address. The script reads account existence, balances, missing trustlines, market entry, liquidity and rewards across the three demo groups. It never signs or submits. Its checklist must still be completed in Albedo; a successful read-only report is not transaction evidence. See the [acceptance runbook](docs/DEMO.md#fresh-albedo-acceptance-runbook).
 
 ## Integrations
 
@@ -74,14 +95,14 @@ Vercel project root: `app/`. A generated canonical interface snapshot is bundled
 | Aquarius | Swaps for margin; LP yield and AQUA harvest later | 1 swaps, 2 LP vault |
 | Zenex | USDC perps-vault route with asynchronous withdrawals | 3 |
 | XOXNO | Additional lending yield route | 4 |
-| Freighter | User-reviewed Stellar transaction signing | 1 |
+| Stellar Wallets Kit: Albedo and Freighter | Albedo default; user-reviewed Stellar transaction signing | 1 |
 | Soroban `deploy_v2` | Factory deployment of isolated group contracts | 1 |
 
 Routes are shown as available only when deployed and configured. These protocols are venues Peridot composes with, not competitors ranked by the UI.
 
 ## Contracts and transaction evidence
 
-Contract IDs come from generated deployment manifests. [DEMO.md](docs/DEMO.md) records confirmed transaction hashes, network, action and amounts. Existing Peridot deployments are prior work and are not substitutes for this build's evidence.
+Contract IDs come from generated deployment manifests. [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) records the deployer transaction evidence; [DEMO.md](docs/DEMO.md) tracks application acceptance separately. Existing Peridot deployments are prior work and are not substitutes for this build's evidence.
 
 ## Safety, guardrails and upgrades
 
@@ -114,3 +135,5 @@ After the event: audit new contracts, restore production timelocks, move adminis
 ## Team
 
 Built by the Peridot team for HackMeridian 2026. Code freeze: 26 October at 08:00 Lisbon. Submission closes at 12:00 Lisbon.
+
+Launchpad: testnet demo planned; mainnet after audit and legal review (MiCA).
