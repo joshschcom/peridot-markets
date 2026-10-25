@@ -59,7 +59,30 @@ reward_token)`, `blend adapter __constructor(admin, market, underlying, cfg)`.
 
 ## Rewards
 
-_Rewards agent (09)._
+`contracts/reward-distributor`. One per group, deployed by the market-factory (admin = MF) with
+`__constructor(admin, controller, reward_token)`, then registered once with `controller.set_peridot_token(distributor)`
+(permanent for the group; the UI must say so). Wasm about 9.6 KB, 16 native tests against the real core Wasm.
+
+- **What the core controller really calls (differs from the early handoff note).** `claim` does not call `mint`. For
+  the configured reward token it reads `balance(controller)`, sets `payable = min(balance, accrued)`, and invokes
+  `transfer(controller, user, payable)` with the controller authorizing as the current contract. A zero balance or a
+  failed transfer is a soft failure (claim-failed event, accrued kept); on success it subtracts exactly `payable`, so
+  partial payouts are correct and the rest stays claimable. `set_peridot_token` only stores the address, nothing is
+  called on the token at set time. The distributor therefore exposes SEP-41-shaped `balance(id)` (the funded pool for
+  the controller, 0 for everyone else) and `transfer(from, to, amount)` (`from` must be the controller; pays the real
+  token or fails with no partial payout). `mint(to, amount)` is kept as a controller-auth alias for the trait client.
+- **Funding and custody.** `fund(from, amount)` is open to anyone with auth (Funded event). `balance_available()` is
+  the real token balance held by the contract, `total_paid()` / `total_funded()` / `total_withdrawn()` are running
+  totals. Amounts <= 0 are rejected everywhere.
+- **Admin (factory) only:** `withdraw_unallocated(admin, to, amount)` (Withdrawn event) and `upgrade(admin, hash)`
+  (immediate). Withdrawing can leave accrued rewards unclaimable until the pool is refunded; the controller keeps
+  the accrued balance meanwhile. Admin is checked against the stored admin and `require_auth` is called on it.
+- **Views:** `reward_token`, `controller`, `admin`, `balance_available`, `total_paid`, and `decimals` / `symbol` /
+  `name` forwarded to the real token. Speeds are reward-token base units per second per market, set on the
+  controller (`set_supply_speed` / `set_borrow_speed`, max 1e12), not on the distributor; runway is
+  `balance_available / sum(speeds)`.
+- **Errors** (`RewardError`): AlreadyInitialized 1, NotInitialized 2, Unauthorized 3, InvalidAmount 4,
+  InsufficientBalance 5, MathOverflow 6, InvalidAddress 7. Events: `funded`, `paid`, `withdrawn`, `upgraded`.
 
 ## Price router
 
