@@ -21,4 +21,35 @@ Group 1: controller `CCIVCL6B5TNYC5PTJDFXD24AEJ5VQU5XUTZXFFGMIVRWQSSZFZPIPUES`, 
 USDC market `CCZHYRBCNKB5F3RPMD4VV747NIV6QFJ4EBZLPWDSQWHNNKYDO62OVIRM` (75% CF, no yield route, 10,000 USDC supply cap),
 XLM market `CCK7R22G3HOZDJXU6DVDEXK4HZ6AS3DHHFCAFOMY22XQEA3DJHRRSNXI` (70% CF, 0% borrow, DeFindex route, 100,000 XLM supply cap).
 
-Not yet on mainnet: margin (needs margin-factory plus margin-controller upload, about 180 XLM of rent), Blend route, rewards.
+
+## Margin (group 1)
+
+Margin-factory `CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH`, group 1 margin controller `CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY` (audited variant, 3x group maximum, 5% slippage, incentive 1.08).
+Aquarius XLM/USDC pool `CBBMQBNHB2FYVZYV7VNHOJHUMTFJLR4PUMRVQYNW6RHIKZO2NQMIBUCV` is trusted by Peridot, allowlisted and bound for the group.
+
+| Step | Transaction |
+|---|---|
+| Upload margin-factory Wasm | [073bfa5b...](https://stellar.expert/explorer/public/tx/073bfa5b7289d035d23059287a5ed6e8627b451181bf91c55a272cd0b57173d5) |
+| Deploy margin-factory | [f3fed435...](https://stellar.expert/explorer/public/tx/f3fed435bfebf5e91641fa9435ffadd17f9623a0cf6bfca68cff8c9ee31daf03) |
+| `enable_margin` group 1 | [c9f0cf44...](https://stellar.expert/explorer/public/tx/c9f0cf44d7d1f13a26bbfc8d0beeab639ab4f5c1e235a575c9312593a5125ea2) |
+| `set_pool_allowed` | [5f713e56...](https://stellar.expert/explorer/public/tx/5f713e567624ad6b83d2ba0a6621a0d0606bd4e308c14f4b7bdfc8fd2df80e78) |
+| `set_pool_binding` | [a994a43a...](https://stellar.expert/explorer/public/tx/a994a43ae8d0a0a485fcd3508fe57ad9d700512566d4baa282639030bee58497) |
+| `set_market_margin` USDC | [c90a0678...](https://stellar.expert/explorer/public/tx/c90a06789e4b8feef33a7ffe297a28d928daa04bedc4caa2d2ab0c0406207aeb) |
+| `set_market_margin` XLM | [b13e8d84...](https://stellar.expert/explorer/public/tx/b13e8d8483c117f61dd18e6bfaac03cf7f4e3d870c36d2320d02b396d4ed6e27) |
+
+Opening and closing a position is done from the app (V3 flow: begin, swap, activate). No position has been opened by the deployer yet.
+
+## Rewards (group 2 "Rewards")
+
+Rewards lock a group's market list, so they live in a separate group and group 1 stays open for adding markets. Group 2 controller `CADHYBWKFNDE3LKNWCRD7F6FNHTNQAR4W3AT2G3TROO7V6RZ2VMUKZSZ`, XLM market `CARDJEVXDP5RY3GAKRYSW4T5CKYY7Y4PQTS4CJSVQEBKP4JMHTDFPXNV`,
+reward distributor `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF`. Reward token: XLM, funded with 20 XLM, supply speed 200 stroops per second (about 17 XLM per day), refundable with `withdraw_unallocated`.
+
+| Step | Transaction |
+|---|---|
+| `activate_market` XLM (group 2) | [1ae1f19c...](https://stellar.expert/explorer/public/tx/1ae1f19ce8b613d07f90114b08bb68c85543977f6eb5cd60db13bb7400fe7eaf) |
+| Fund distributor, 20 XLM | [95d2fd44...](https://stellar.expert/explorer/public/tx/95d2fd444f7639fde3ca938cf1cce86b57dd413031bd19a2629bad8162e7778d) |
+| `set_reward_speeds` | [bba8d854...](https://stellar.expert/explorer/public/tx/bba8d854877c192b3bc8beb0b0360a94c8499e2de65be158f1503cdc13b29ed2) |
+| `enter_market` | [afa1e4ce...](https://stellar.expert/explorer/public/tx/afa1e4cee2b9719b248dd49a63d8b478e94c71701def2ffde68e0ea43542f833) |
+| Supply 5 XLM | [29eef561...](https://stellar.expert/explorer/public/tx/29eef56125c0b967ab099795274e1fee6ce6d30c421332010b01068db911e4fc) |
+| `claim` (17,000 stroops paid after 85 s) | [b492b6e9...](https://stellar.expert/explorer/public/tx/b492b6e91ee347d46e2b92ad7b73c4eea127b98776e154f2ea76c18cb960f77b) |
+| Withdraw all | [70799c6f...](https://stellar.expert/explorer/public/tx/70799c6f9f6756d8afb5521fcb2cbf58720260b4fb4310fa611ada7f97843002) |
