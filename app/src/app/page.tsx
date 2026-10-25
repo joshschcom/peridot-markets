@@ -1,15 +1,52 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Layers3, SlidersHorizontal, Sprout } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Coins, Layers3, Scale, SlidersHorizontal, Sprout, ShieldCheck } from 'lucide-react';
 import { network } from '@/lib/peridot/network';
+import { GroupCards } from '@/components/markets/GroupOverview';
+
 export default function HomePage() {
   return <div className="home-page">
     <section className="hero">
-      <div className="hero-copy"><p className="eyebrow"><span className="live-dot"/> OPEN MARKETS. ON STELLAR.</p><h1>Your token.<br/><span>Your money market.</span></h1><p className="hero-description">Give your community a place to supply, borrow and grow. Launch an isolated market, choose where idle liquidity earns, and set the rules.</p><div className="hero-actions"><Link className="button large" href="/launch">Launch your market <ArrowUpRight size={18}/></Link><Link className="text-link" href="/groups">Explore markets <ArrowRight size={17}/></Link></div><p className="hero-caption">Configurable rates. Your reward token. Optional leverage.</p></div>
-      <div className="hero-preview" aria-label="Illustrative market configuration"><div className="preview-top"><span className="preview-mark"><Layers3 size={21}/></span><div><small>YOUR COMMUNITY, YOUR CONFIGURATION</small><h2>One group. More possibilities.</h2></div><span className="pill">Example</span></div><div className="preview-market"><div className="token-icon usdc">$</div><div><strong>USDC</strong><small>Stablecoin market</small></div><span className="route-tag">Blend</span><ArrowUpRight size={16}/></div><div className="preview-metrics"><div><span>Kept liquid</span><strong>20<small>%</small></strong></div><div><span>Idle liquidity</span><strong>80<small>%</small></strong></div><div><span>Reward token</span><strong>Yours</strong></div></div><div className="buffer-track"><span/></div><div className="preview-market second"><div className="token-icon xlm">✦</div><div><strong>XLM</strong><small>Native asset market</small></div><span className="route-tag">DeFindex</span><ArrowUpRight size={16}/></div><div className="zero-rate"><span>Set a zero borrow rate</span><strong>0.00<small>%</small></strong></div><div className="preview-bottom"><span className="live-dot"/> Isolated risk. Transparent parameters.</div></div>
+      <p className="eyebrow"><span className="live-dot" aria-hidden /> Open money markets on Stellar</p>
+      <h1>Any Stellar token gets its own <span>money market</span>.</h1>
+      <p className="lead">Any Stellar token gets its own money market in a few transactions: lending, borrowing, leverage and rewards, with idle liquidity routed into the best yield on Stellar.</p>
+      <div className="hero-actions">
+        <Link className="button large" href="/launch">Launch a market <ArrowUpRight size={18} aria-hidden /></Link>
+        <Link className="button large ghost" href="/groups">Explore groups <ArrowRight size={17} aria-hidden /></Link>
+      </div>
+      <div className="hero-facts">
+        <span><ShieldCheck size={15} aria-hidden /> Audited Peridot core, 60 second timelocks</span>
+        <span><Coins size={15} aria-hidden /> Reflector prices</span>
+        <span><Sprout size={15} aria-hidden /> DeFindex and Blend yield routes</span>
+        <span><Scale size={15} aria-hidden /> Aquarius pools for leverage</span>
+      </div>
     </section>
-    <section className="ecosystem-strip" aria-label="Yield ecosystem"><span>COMPOSED WITH STELLAR</span><div>Reflector <i/> DeFindex <i/> Blend <i/> Aquarius</div><small>Route availability depends on the deployed phase.</small></section>
-    <section className="feature-section"><div className="section-heading"><p className="eyebrow">A MARKET THAT FITS YOUR PROJECT</p><h2>Start with your token.<br/>Make the market yours.</h2></div><div className="feature-grid"><article><Layers3/><span className="feature-number">01</span><h3>Launch an isolated group</h3><p>Choose assets, collateral limits and caps. Keep each community’s lending risk in its own group.</p></article><article><Sprout/><span className="feature-number">02</span><h3>Put idle liquidity to work</h3><p>Set a liquid buffer and route the rest into supported Stellar yield venues.</p></article><article><SlidersHorizontal/><span className="feature-number">03</span><h3>Keep control as you grow</h3><p>Add markets, adjust rates and fund rewards from one owner Control Panel.</p></article></div></section>
-    <section className="bottom-cta"><div><p className="eyebrow">BUILD YOUR NEXT CHAPTER</p><h2>Your community is ready.<br/>Give it a market.</h2></div><Link className="button large" href="/launch">Configure a group <ArrowRight size={18}/></Link></section>
-    {network.useMocks && <p className="muted demo-note">You are viewing a local demo. Example configurations and balances are not mainnet evidence.</p>}
+
+    <section className="section" aria-labelledby="live-groups">
+      <div className="section-head">
+        <div><h2 id="live-groups">{network.useMocks ? 'Demo groups' : 'Live groups'}</h2><p>Isolated lending groups created through the factory. Each one has its own markets, prices, caps and owner.</p></div>
+        <Link className="text-link" href="/groups">All groups <ArrowRight size={14} aria-hidden /></Link>
+      </div>
+      <GroupCards limit={3} />
+      <p className="subtle" style={{ fontSize: 12 }}>Beta. New contracts are unaudited. Caps apply.{network.useMocks ? ' Demo balances are simulated and are not mainnet evidence.' : ''}</p>
+    </section>
+
+    <section className="section" aria-labelledby="how">
+      <div className="section-head"><div><h2 id="how">One group, three transactions per market</h2><p>Create the group, add each market, activate it and attach its yield route. Rewards come last.</p></div></div>
+      <div className="feature-grid">
+        <article className="card feature"><span className="feature-icon"><Layers3 size={18} aria-hidden /></span><h3>Launch an isolated group</h3><p>Choose assets, collateral factors (max 75%) and caps. Each community keeps its lending risk in its own group with its own owner.</p></article>
+        <article className="card feature"><span className="feature-icon"><Sprout size={18} aria-hidden /></span><h3>Put idle liquidity to work</h3><p>Keep 10% to 100% liquid for withdrawals and borrowing. The rest is routed into an allowlisted DeFindex vault or Blend fee vault.</p></article>
+        <article className="card feature"><span className="feature-icon"><SlidersHorizontal size={18} aria-hidden /></span><h3>Keep control as you grow</h3><p>Adjust rates, caps, buffers, prices, pauses and leverage from the owner Control Panel. Sensitive changes wait 60 seconds.</p></article>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap', padding: 28 }}>
+        <div>
+          <p className="eyebrow">Composed with Stellar</p>
+          <div className="partner-strip"><strong>Reflector</strong><i /><strong>DeFindex</strong><i /><strong>Blend</strong><i /><strong>Aquarius</strong><i /><span>Zenex and XOXNO on the roadmap</span></div>
+        </div>
+        <Link className="button" href="/about">How it works <ArrowRight size={16} aria-hidden /></Link>
+      </div>
+    </section>
   </div>;
 }
