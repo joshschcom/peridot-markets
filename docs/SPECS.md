@@ -328,4 +328,31 @@ APY hint, in order of preference:
 
 ## Margin
 
-_Margin agent (06)._
+`contracts/margin-factory` (XF) adds leveraged trading to a group with the **audited `margin-controller`** (phase 1; `Custom` returns `VariantUnavailable` until phase 3). XF is admin of each group's `margin-controller` and `swap-adapter` and deploys both per group with `deploy_v2` (salt = group id, kind). Everything touching the group controller or a receipt-vault goes through MF (`wire_margin`, `link_margin_market`, `update_margin_params`, signatures in "Factory"). Owner calls take `(owner, group_id, ...)`, `owner.require_auth()`, then check `owner == MF.get_group(group_id).owner`.
+
+**The core margin controller is the staged V3 flow, not V2.** Users open with `begin_open_position_v3`, `swap_open_position_v3`, `activate_open_position_v3`; close with `prepare_close_position_v3`, `swap_close_position_v3` (long) or `swap_close_short_position_v3` (short), `finish_close_position_v3`; liquidators use `liquidate_position_v3` (one call) or `begin/swap/finish_liquidation_v3`. Leverage, maintenance margin and the liquidation incentive of V3 are enforced **per (margin asset, base asset, side) pair** and default to 10x when a pair has no config, so XF writes a pair config (max leverage = group max, maintenance 5%) for every ordered pair of enabled markets, both sides. At most 4 margin markets per group (the controller keeps 32 pair configs).
+
+ABI (`MarginError` is a `#[contracterror]`; every call reverts with it):
+
+```rust
+fn __constructor(admin: Address, market_factory: Address);
+fn set_wasm(admin, wasm: MarginWasmHashes); fn set_router(admin, aquarius_router: Address);   // WasmNotSet / RouterNotSet until set
+fn upgrade(admin, new_wasm_hash);                                  // immediate
+fn propose_group_margin_upgrade(admin, group_id, hash); fn upgrade_group_margin(admin, group_id, hash);   // controller two-step (60s)
+fn propose_group_sa_upgrade(admin, group_id, hash);     fn upgrade_group_sa(admin, group_id, hash);       // swap adapter two-step (60s)
+fn set_pool_registry_enforced(admin, bool); fn set_pool_trusted(admin, pool, bool);   // optional: owners may only allow trusted pools
+fn enable_margin(owner, group_id, cfg: GroupMarginConfig) -> Address;   // deploys + wires swap adapter and controller
+fn update_margin(owner, group_id, cfg); fn apply_margin(owner, group_id);   // apply_margin applies a staged incentive after 60s
+fn set_market_margin(owner, group_id, market, enabled: bool);
+fn set_pool_allowed(owner, group_id, pool, allowed: bool);        // pool must trade two underlyings of the group
+fn set_pool_binding(owner, group_id, pool_id: BytesN<32>, pool, allowed: bool);   // V3 routes only through (pool_id, pool)
+fn get_margin(group_id) -> Option<MarginInfo>;
+fn get_margin_status(group_id) -> Option<MarginStatus>;           // configured vs live incentive/fee, apply-after time, pair incentive, pools
+fn effective_max_leverage(group_id, market) -> u128;              // min(group max, floor(1/(1-CF))), 0 if the market is not enabled
+```
+
+- **Guardrails** (`guardrails.rs`): group max leverage 1..=5; liquidation incentive 1_020_000..=1_150_000; slippage 1..=100_000; liquidation fee at most 500_000; market needs an allowlisted pool that trades its underlying, a 7-decimal underlying and a non-`AquariusOnly` price mode; disabling a market sets its pairs to 1x (blocks new opens, existing positions still close and liquidate).
+- **Staging.** The group controller applies `liquidation_incentive` after 60s (first call stages, repeat applies) and the fee at once. `get_margin_status` returns the target in `cfg`, the live value in `applied_liquidation_incentive`, `incentive_applied` and `incentive_apply_after`; the UI shows "applies in 60s" and calls `apply_margin`. V3 pays liquidators the **pair** incentive (group incentive minus 1.0, capped at 10%), which XF sets on the margin controller immediately.
+- **Admin.** Swap adapter needs both `set_pool_allowed` and `set_pool_binding` (Aquarius pool index) per pool; the margin controller is itself allowlisted on its adapter before it initializes. Audited controller and adapter upgrades are the built-in propose then execute path (60s).
+- **Events**: `margin_enabled`, `margin_updated`, `market_margin_set`, `pool_allowed`, `pool_binding_set`, `upgraded`, `upgrade_proposed`, `wasm_set`, `pool_trust_set`.
+
