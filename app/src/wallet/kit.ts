@@ -1,6 +1,7 @@
 import { Keypair, Networks, StrKey, Transaction, TransactionBuilder } from '@stellar/stellar-sdk';
 import type { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit/sdk';
 import type { Networks as KitNetworks } from '@creit.tech/stellar-wallets-kit/types';
+import { WalletRequest } from './request';
 export type WalletId='albedo'|'freighter';
 let kit:typeof StellarWalletsKit|undefined;
 let loading:Promise<void>|undefined;
@@ -8,6 +9,9 @@ let configuredPassphrase:string|undefined;
 let selected:WalletId='albedo';
 let connectedAddress:string|null=null;
 let generation=0;
+const request=new WalletRequest();
+/** The connect button must wait for initialization without consuming its click gesture. */
+export function isKitReady(passphrase:string):boolean{return !!kit&&configuredPassphrase===passphrase;}
 function validateNetwork(passphrase:string){
   if(passphrase!==Networks.PUBLIC&&passphrase!==Networks.TESTNET)throw new Error('This app supports Stellar mainnet and testnet only.');
 }
@@ -32,18 +36,19 @@ export async function initializeKit(passphrase:string):Promise<void>{
 }
 export async function connectKit(walletId:WalletId,passphrase:string):Promise<string>{
   if(walletId!=='albedo'&&walletId!=='freighter')throw new Error('Unsupported wallet.');
+  validateNetwork(passphrase);
+  if(!isKitReady(passphrase))throw new Error('Wallet is still loading. Wait a moment, then connect again.');
   const attempt=++generation;
-  await initializeKit(passphrase);
-  if(attempt!==generation)throw new Error('Wallet connection was cancelled. Connect again.');
   connectedAddress=null;selected=walletId;
   kit!.setWallet(walletId);
-  const {address}=await kit!.fetchAddress();
+  // No await before dispatch: Safari needs window.open in this button click.
+  const {address}=await request.run(()=>kit!.fetchAddress());
   if(attempt!==generation)throw new Error('Wallet selection changed. Connect again.');
   if(!StrKey.isValidEd25519PublicKey(address))throw new Error('Wallet did not return a valid Stellar account.');
   connectedAddress=address;return address;
 }
 export async function disconnectKit():Promise<void>{
-  generation++;connectedAddress=null;
+  generation++;connectedAddress=null;request.cancel();
   if(kit)await kit.disconnect();
 }
 export async function getKitNetwork():Promise<{network:string;networkPassphrase:string}>{
@@ -76,7 +81,7 @@ export async function signKitTransaction(xdr:string,address:string,passphrase:st
   }
   if(attempt!==generation)throw new Error('Wallet selection changed. Reconnect before signing.');
   // Sign only: never request implicit permissions or call signAndSubmitTransaction.
-  const result=await kit.signTransaction(xdr,{address,networkPassphrase:passphrase});
+  const result=await request.run(()=>kit!.signTransaction(xdr,{address,networkPassphrase:passphrase}));
   if(attempt!==generation||connectedAddress!==address)throw new Error('Wallet selection changed while signing. Reconnect and review again.');
   if(!result.signedTxXdr)throw new Error('Wallet did not return a signed transaction.');
   return validateWalletSignature(xdr,result.signedTxXdr,address,passphrase,result.signerAddress);
