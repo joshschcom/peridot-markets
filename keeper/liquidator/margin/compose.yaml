@@ -1,0 +1,17 @@
+services:
+  liquidator:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8787
+      DEPLOYMENTS_FILE: /app/deployments/network.json
+      STATE_FILE: /app/data/state.json
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - liquidator-data:/app/data
+      - ${DEPLOYMENTS_FILE:?Set an absolute deployment manifest path}:/app/deployments/network.json:ro
+volumes:
+  liquidator-data:
