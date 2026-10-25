@@ -41,5 +41,5 @@ pub const REQUIRED_UNDERLYING_DECIMALS: u32 = 7;
 
 pub const SCALE: u128 = 1_000_000;
 
-pub const TTL_THRESHOLD: u32 = 500_000;
-pub const TTL_EXTEND_TO: u32 = 1_000_000;
+pub const TTL_THRESHOLD: u32 = 100_000;
+pub const TTL_EXTEND_TO: u32 = 400_000;

@@ -83,8 +83,8 @@ const STALE_K: u64 = 2;
 /// Largest `decimals` for which `10^n` fits in an `i128`.
 const MAX_DECIMALS: u32 = 38;
 
-const INSTANCE_TTL_THRESHOLD: u32 = 518_400; // about 30 days
-const INSTANCE_TTL_EXTEND_TO: u32 = 1_036_800; // about 60 days
+const INSTANCE_TTL_THRESHOLD: u32 = 100_000;
+const INSTANCE_TTL_EXTEND_TO: u32 = 400_000;
 
 #[contract]
 pub struct PriceRouterExt;

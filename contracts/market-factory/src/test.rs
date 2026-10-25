@@ -284,7 +284,17 @@ fn guardrails_reject() {
     assert_eq!(f.mf.try_add_market(&f.owner, &id, &c).err().unwrap().unwrap(), FactoryError::PriceModeNotAllowed);
     let mut c = ok.clone();
     c.yield_route = YieldRoute::Blend(BlendRoute { fee_vault: Address::generate(&f.env) });
-    assert_eq!(f.mf.try_add_market(&f.owner, &id, &c).err().unwrap().unwrap(), FactoryError::Unsupported);
+    // Blend is accepted at creation; the fee vault must be allowlisted at attach time
+    c.token = f.xlm.clone();
+    c.price = price_cfg(&f, "XLM");
+    let blend_m = f.mf.add_market(&f.owner, &id, &c);
+    f.mf.activate_market(&f.owner, &id, &blend_m);
+    assert_eq!(f.mf.try_attach_yield(&f.owner, &id, &blend_m).err().unwrap().unwrap(), FactoryError::YieldVaultNotAllowed);
+    // a route of a later phase is still refused
+    let mut z = ok.clone();
+    z.token = token(&f.env, "EURC");
+    z.yield_route = YieldRoute::Xoxno(peridot_interfaces::XoxnoRoute { hub_id: 1, spoke_id: 1 });
+    assert_eq!(f.mf.try_add_market(&f.owner, &id, &z).err().unwrap().unwrap(), FactoryError::Unsupported);
     let mut c = ok.clone();
     c.token = Address::generate(&f.env); // not a token contract
     assert!(f.mf.try_add_market(&f.owner, &id, &c).is_err());

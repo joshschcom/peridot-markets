@@ -70,6 +70,10 @@ impl MockYieldVault {
         env.storage().persistent().get(&Key::Shares(id)).unwrap_or(0)
     }
 
+    pub fn total_supply(env: Env) -> i128 {
+        total_shares(&env)
+    }
+
     pub fn deposit(
         env: Env,
         amounts_desired: Vec<i128>,

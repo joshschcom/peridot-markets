@@ -18,7 +18,7 @@ mod storage;
 mod test;
 
 use peridot_interfaces::{
-    Group, KeeperMode, MarketConfig, PriceConfig, PriceRouterClient, RateModel, RewardDistributorClient,
+    BlendAdapterConfig, Group, KeeperMode, MarketConfig, PriceConfig, PriceRouterClient, RateModel, RewardDistributorClient,
     WasmHashes, YieldRoute,
 };
 use soroban_sdk::{
@@ -28,7 +28,7 @@ use soroban_sdk::{
 pub use errors::FactoryError;
 pub use storage::{MarketRecord, PendingCf, PendingPrice};
 
-use ext::{ControllerClient, DefindexVaultClient, MarketVaultClient, RateModelClient, TokenReadClient};
+use ext::{ControllerClient, DefindexVaultClient, FeeVaultReadClient, MarketVaultClient, RateModelClient, TokenReadClient};
 use storage::DataKey;
 
 // Deployment kinds, part of every salt.
@@ -37,6 +37,7 @@ const KIND_ROUTER: u32 = 2;
 const KIND_VAULT: u32 = 3;
 const KIND_JRM: u32 = 4;
 const KIND_DISTRIBUTOR: u32 = 5;
+const KIND_ADAPTER: u32 = 6;
 
 #[contract]
 pub struct MarketFactory;
@@ -342,7 +343,7 @@ impl MarketFactory {
             return Err(FactoryError::InvalidToken);
         }
         // yield route is validated again at attach time; here only reject routes this phase cannot serve
-        if !matches!(cfg.yield_route, YieldRoute::None | YieldRoute::Defindex(_)) {
+        if !matches!(cfg.yield_route, YieldRoute::None | YieldRoute::Defindex(_) | YieldRoute::Blend(_)) {
             return Err(FactoryError::Unsupported);
         }
         let wasm = storage::wasm(&env)?;
@@ -442,6 +443,37 @@ impl MarketFactory {
             YieldRoute::Defindex(r) => {
                 check_defindex(&env, &r.vault, &rec.cfg.token)?;
                 (r.vault, None)
+            }
+            YieldRoute::Blend(r) => {
+                let allowed: bool = env
+                    .storage()
+                    .instance()
+                    .get(&DataKey::YieldVaultAllowed(r.fee_vault.clone()))
+                    .unwrap_or(false);
+                if !allowed {
+                    return Err(FactoryError::YieldVaultNotAllowed);
+                }
+                let pool = match FeeVaultReadClient::new(&env, &r.fee_vault).try_get_pool() {
+                    Ok(Ok(p)) => p,
+                    _ => return Err(FactoryError::InvalidYieldVault),
+                };
+                let wasm = storage::wasm(&env)?;
+                let hash = wasm.blend_adapter.ok_or(FactoryError::WasmNotSet)?;
+                // the adapter constructor re-checks the pool and that the fee vault has this reserve enabled
+                let adapter = deploy(
+                    &env,
+                    group_id,
+                    KIND_ADAPTER,
+                    hash,
+                    vec![
+                        &env,
+                        me.clone().into_val(&env),
+                        market.clone().into_val(&env),
+                        rec.cfg.token.clone().into_val(&env),
+                        BlendAdapterConfig { fee_vault: r.fee_vault, blend_pool: pool }.into_val(&env),
+                    ],
+                );
+                (adapter.clone(), Some(adapter))
             }
             _ => return Err(FactoryError::Unsupported),
         };

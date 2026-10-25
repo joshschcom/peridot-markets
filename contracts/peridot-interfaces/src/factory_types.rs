@@ -170,3 +170,11 @@ pub struct MarginWasmHashes {
     pub custom: Option<BytesN<32>>,
     pub swap_adapter: BytesN<32>,
 }
+
+/// Constructor config of the Blend vault adapter. `blend_pool` must equal `fee_vault.get_pool()`; the factory reads it.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BlendAdapterConfig {
+    pub fee_vault: Address,
+    pub blend_pool: Address,
+}

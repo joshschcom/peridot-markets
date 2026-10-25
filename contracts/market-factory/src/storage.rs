@@ -3,8 +3,8 @@ use soroban_sdk::{contracttype, Address, Env, Vec};
 
 use crate::errors::FactoryError;
 
-const TTL_THRESHOLD: u32 = 500_000;
-const TTL_EXTEND_TO: u32 = 1_000_000;
+const TTL_THRESHOLD: u32 = 100_000; // below testnet's 120_960 default so creation never bumps
+const TTL_EXTEND_TO: u32 = 400_000;
 
 #[contracttype]
 #[derive(Clone)]

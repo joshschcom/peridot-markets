@@ -1,0 +1,16 @@
+{
+  "network": "testnet",
+  "core_commit": "47858c1a13c2588970395faa2212e7b68bd33060",
+  "admin": "GBZ7C3N43KURCM3DWN4LOOKR5XWHNU6EZEJQT5VGRLHKUUQQYL7UXFMJ",
+  "factory": "CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M",
+  "margin_factory": "CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7",
+  "wasm": {
+    "receipt_vault": "77175698f7ee49a7c9c0002f874b48f1d7f17f94e3b12601c710fcdd8886bc55",
+    "controller": "959ce4f1473ce7f26af76371c23ce119eac8b6b481ecbee508e7a3cd88e9d343",
+    "jump_rate": "b8a565a4913eb27bae3905060eb03d99bb1480d03e179f10128563d9a1b386cc",
+    "swap_adapter": "7b4f5d19b1d2d739a7c1c12db50a97a1c7db91c29431f54f66729813efdfcc46",
+    "margin": "ac0a59519a35e8c05fa18f509cd34335bbb5e4d8798c831cd9920c0e97d7751a",
+    "price_router": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876",
+    "reward_distributor": "2e5790ce46581ad46de216e36ad543b8190ba12cc24b1e3fc3b3f1c10ceb4b71"
+  }
+}

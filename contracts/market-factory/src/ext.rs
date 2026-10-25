@@ -87,3 +87,9 @@ pub trait TokenRead {
     fn decimals(env: Env) -> u32;
     fn symbol(env: Env) -> soroban_sdk::String;
 }
+
+/// Blend fee vault (script3/fee-vault): only the pool getter the adapter constructor checks against.
+#[contractclient(name = "FeeVaultReadClient")]
+pub trait FeeVaultRead {
+    fn get_pool(env: Env) -> Address;
+}

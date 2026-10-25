@@ -14,6 +14,8 @@ use crate::types::{PriceCheck, PriceConfig, VaultState};
 pub trait YieldVault {
     /// SEP-41 share balance.
     fn balance(env: Env, id: Address) -> i128;
+    /// The receipt-vault calls this on redemption.
+    fn total_supply(env: Env) -> i128;
     fn deposit(
         env: Env,
         amounts_desired: Vec<i128>,
