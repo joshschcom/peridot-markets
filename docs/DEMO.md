@@ -112,3 +112,7 @@ The dependency audit reports 29 findings in Wallets Kit's transitive dependency 
 [Open mainnet beta](https://peridot-markets-preview-eg1grm094-peridot3.vercel.app). Source `20099c2`, deployment `dpl_Hur1ciLxFErhC5QbnquhBUxACZng`, private project `peridot3/peridot-markets-preview`. Vercel reports READY and preview target; authentication protection remains enabled. Mainnet is selected, mocks and read-only mode are off, public RPC is configured. Authenticated HTTP verification found the beta banner and both wallet choices, with neither mock nor read-only banner. Wallet signatures are required for real transactions.
 
 This proves deployment and network configuration, not fresh-wallet acceptance or a successful margin trade. The fresh Albedo public address and user-approved signatures are still pending. No [B] READY: app on mainnet marker has been posted.
+
+## Fresh Albedo account preflight
+
+Joshua supplied public address `GBTAM7KI53O5CMJW7QHS2TG7JX65H4Y2TGDXS42ZLJEK6YMGDBBZOOQD`. At mainnet ledger 65134187, the read-only checker returned `accountExists: false` and `acceptanceComplete: false`. Funding is required before protocol transactions. A 5 XLM funding amount was requested for reserves, small deposits and fees; no transfer was initiated by B.
