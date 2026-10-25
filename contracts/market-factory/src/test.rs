@@ -40,6 +40,7 @@ const CONTROLLER: &[u8] = include_bytes!("../../../build/test/simple_peridottrol
 const VAULT: &[u8] = include_bytes!("../../../build/test/receipt_vault.wasm");
 const JRM: &[u8] = include_bytes!("../../../build/test/jump_rate_model.wasm");
 const DISTRIBUTOR: &[u8] = include_bytes!("../../../build/test/reward_distributor.wasm");
+const REAL_ROUTER: &[u8] = include_bytes!("../../../build/test/price_router_ext.wasm");
 const ROUTER: &[u8] = include_bytes!("../../../build/test/mock_price_router.wasm");
 
 // Mainnet per-transaction limits (CPU instructions, memory bytes).
@@ -70,6 +71,10 @@ fn token(env: &Env, name: &str) -> Address {
 }
 
 fn setup<'a>() -> F<'a> {
+    setup_with(ROUTER)
+}
+
+fn setup_with<'a>(router: &[u8]) -> F<'a> {
     let env = Env::default();
     env.mock_all_auths();
     env.ledger().set_timestamp(1_000_000);
@@ -87,7 +92,7 @@ fn setup<'a>() -> F<'a> {
         controller: env.deployer().upload_contract_wasm(CONTROLLER),
         receipt_vault: env.deployer().upload_contract_wasm(VAULT),
         jump_rate: env.deployer().upload_contract_wasm(JRM),
-        price_router: env.deployer().upload_contract_wasm(ROUTER),
+        price_router: env.deployer().upload_contract_wasm(router),
         reward_distributor: env.deployer().upload_contract_wasm(DISTRIBUTOR),
         blend_adapter: None,
         aquarius_vault: None,
@@ -541,4 +546,42 @@ fn rewards_distributor_pays_claims_through_the_real_controller() {
     assert_eq!(f.mf.try_withdraw_unallocated(&mallory, &id, &mallory, &1).err().unwrap().unwrap(), FactoryError::NotOwner);
     f.mf.withdraw_unallocated(&f.owner, &id, &f.owner, &500);
     assert_eq!(reward_c.balance(&f.owner), 500);
+}
+
+#[test]
+fn real_price_router_reads_reflector_through_the_controller() {
+    let f = setup_with(REAL_ROUTER);
+    let refl = mock_reflector::MockReflectorClient::new(&f.env, &f.reflector);
+    let usdc_key = Asset::Other(symbol_short!("USDC"));
+    let xlm_key = Asset::Other(symbol_short!("XLM"));
+    // a market whose asset is not on the feed is rejected when the price source is registered
+    let id = f.mf.create_group(&f.owner, &symbol_short!("Real"));
+    let m = f.mf.add_market(&f.owner, &id, &cfg(&f, &f.usdc, "USDC"));
+    assert!(f.mf.try_activate_market(&f.owner, &id, &m).is_err());
+    refl.set_price(&usdc_key, &PRICE_1_USD, &1_000_000u64);
+    refl.set_price(&xlm_key, &(PRICE_1_USD / 10), &1_000_000u64);
+    f.mf.activate_market(&f.owner, &id, &m);
+    let m2 = add_active(&f, id, &cfg(&f, &f.xlm, "XLM"));
+    let g = f.mf.get_group(&id);
+    let router = peridot_interfaces::PriceRouterClient::new(&f.env, &g.price_router);
+    assert_eq!(router.lastprice(&Asset::Stellar(f.usdc.clone())).unwrap().price, PRICE_1_USD);
+    assert_eq!(router.check(&f.xlm).status, symbol_short!("ok"));
+
+    let usdc = mock_token::MockTokenClient::new(&f.env, &f.usdc);
+    let xlm = mock_token::MockTokenClient::new(&f.env, &f.xlm);
+    let (alice, bob) = (Address::generate(&f.env), Address::generate(&f.env));
+    usdc.mint(&alice, &(1_000 * ONE));
+    xlm.mint(&bob, &(10_000 * ONE));
+    let c = ctrl::Client::new(&f.env, &g.controller);
+    vault::Client::new(&f.env, &m).deposit(&alice, &((1_000 * ONE) as u128));
+    vault::Client::new(&f.env, &m2).deposit(&bob, &((10_000 * ONE) as u128));
+    c.enter_market(&bob, &m2);
+    c.enter_market(&bob, &m);
+    vault::Client::new(&f.env, &m).borrow(&bob, &((100 * ONE) as u128));
+    // the feed goes stale: no more borrowing, the circuit breaker is the missing price
+    f.env.ledger().set_timestamp(1_000_000 + 10_000);
+    assert!(vault::Client::new(&f.env, &m).try_borrow(&bob, &((10 * ONE) as u128)).is_err());
+    refl.set_price(&usdc_key, &PRICE_1_USD, &(1_000_000u64 + 10_000));
+    refl.set_price(&xlm_key, &(PRICE_1_USD / 10), &(1_000_000u64 + 10_000));
+    vault::Client::new(&f.env, &m).borrow(&bob, &((10 * ONE) as u128));
 }

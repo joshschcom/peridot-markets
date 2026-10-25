@@ -20,7 +20,7 @@
 use peridot_interfaces::{Asset, PriceCheck, PriceConfig, PriceData, ReflectorOnlyCfg};
 use soroban_sdk::{
     contract, contractclient, contracterror, contractevent, contractimpl, contracttype,
-    panic_with_error, symbol_short, Address, BytesN, Env, Symbol, Vec,
+    panic_with_error, symbol_short, Address, BytesN, Env, Map, Symbol, Vec,
 };
 
 #[cfg(test)]
@@ -59,7 +59,10 @@ enum Key {
     Admin,
     QuoteDecimals,
     Resolution,
-    Config(Address),
+    /// token -> config. Kept in instance storage: the instance entry is loaded on every call anyway, so
+    /// per-token persistent entries would add one ledger entry per priced token to every borrow
+    /// (Soroban caps a transaction at 100 entries).
+    Configs,
 }
 
 #[contractevent(topics = ["asset_cfg"])]
@@ -82,8 +85,6 @@ const MAX_DECIMALS: u32 = 38;
 
 const INSTANCE_TTL_THRESHOLD: u32 = 518_400; // about 30 days
 const INSTANCE_TTL_EXTEND_TO: u32 = 1_036_800; // about 60 days
-const CONFIG_TTL_THRESHOLD: u32 = 1_036_800;
-const CONFIG_TTL_EXTEND_TO: u32 = 2_073_600; // about 120 days
 
 #[contract]
 pub struct PriceRouterExt;
@@ -95,14 +96,8 @@ fn bump_instance(env: &Env) {
 }
 
 fn read_config(env: &Env, token: &Address) -> Option<PriceConfig> {
-    let key = Key::Config(token.clone());
-    let cfg: Option<PriceConfig> = env.storage().persistent().get(&key);
-    if cfg.is_some() {
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, CONFIG_TTL_THRESHOLD, CONFIG_TTL_EXTEND_TO);
-    }
-    cfg
+    let map: Map<Address, PriceConfig> = env.storage().instance().get(&Key::Configs)?;
+    map.get(token.clone())
 }
 
 fn quote_decimals(env: &Env) -> u32 {
@@ -270,11 +265,10 @@ impl PriceRouterExt {
     ) -> Result<(), RouterError> {
         require_admin(&env, &admin)?;
         validate(&env, &cfg)?;
-        let key = Key::Config(token.clone());
-        env.storage().persistent().set(&key, &cfg);
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, CONFIG_TTL_THRESHOLD, CONFIG_TTL_EXTEND_TO);
+        let mut map: Map<Address, PriceConfig> =
+            env.storage().instance().get(&Key::Configs).unwrap_or(Map::new(&env));
+        map.set(token.clone(), cfg.clone());
+        env.storage().instance().set(&Key::Configs, &map);
         bump_instance(&env);
         AssetConfigSet {
             token,
@@ -298,11 +292,7 @@ impl PriceRouterExt {
             status: Symbol::new(&env, "unavailable"),
             timestamp: 0,
         };
-        let Some(cfg) = env
-            .storage()
-            .persistent()
-            .get::<_, PriceConfig>(&Key::Config(token))
-        else {
+        let Some(cfg) = read_config(&env, &token) else {
             return unavailable(symbol_short!("none"));
         };
         let mode = mode_symbol(&cfg);
