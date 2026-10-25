@@ -50,6 +50,7 @@ pub enum MarginError {
     TooManyPools = 18,
     PoolNotInGroup = 19,
     PoolNotTrusted = 20,
+    PoolRevocationAdminOnly = 90,
     PoolNotAllowed = 21,
     IncentivePending = 22,
     UnknownMarket = 23,
@@ -73,6 +74,7 @@ enum Key {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct MarginRecord {
+    group_id: u32,
     controller: Address,
     swap_adapter: Address,
     variant: MarginVariant,
@@ -412,6 +414,7 @@ impl MarginFactory {
         );
 
         let mut rec = MarginRecord {
+            group_id,
             controller: controller.clone(),
             swap_adapter: swap_adapter.clone(),
             variant: cfg.variant,
@@ -638,10 +641,8 @@ impl MarginFactory {
             }
             sa.set_pool_allowed(&xf, &pool, &true);
         } else {
-            if let Some(i) = pools.first_index_of(&pool) {
-                pools.remove(i);
-            }
-            sa.set_pool_allowed(&xf, &pool, &false);
+            // Revoking an exit route could strand open positions: only Peridot's admin may do it.
+            return Err(MarginError::PoolRevocationAdminOnly);
         }
         env.storage().persistent().set(&Key::Pools(group_id), &pools);
         extend_persistent(&env, &Key::Pools(group_id));
@@ -667,7 +668,10 @@ impl MarginFactory {
         bump_instance(&env);
         require_owner(&env, &owner, group_id)?;
         let rec = load_record(&env, group_id)?;
-        if allowed && !load_pools(&env, group_id).contains(&pool) {
+        if !allowed {
+            return Err(MarginError::PoolRevocationAdminOnly);
+        }
+        if !load_pools(&env, group_id).contains(&pool) {
             return Err(MarginError::PoolNotAllowed);
         }
         let xf = env.current_contract_address();
@@ -746,6 +750,39 @@ impl MarginFactory {
         let cf = GroupControllerClient::new(&env, &group.controller).get_market_cf(&market);
         let by_cf = if cf >= SCALE { u128::MAX } else { SCALE / (SCALE - cf) };
         Ok(by_cf.min(rec.cfg.max_leverage))
+    }
+
+    /// Peridot admin only: remove a pool from a group's swap adapter (incident response).
+    pub fn admin_revoke_pool(env: Env, admin: Address, group_id: u32, pool: Address, pool_id: Option<BytesN<32>>) -> Result<(), MarginError> {
+        bump_instance(&env);
+        let stored: Address = env.storage().instance().get(&Key::Admin).unwrap();
+        if stored != admin {
+            return Err(MarginError::NotAdmin);
+        }
+        admin.require_auth();
+        let rec = load_record(&env, group_id)?;
+        let xf = env.current_contract_address();
+        let sa = SwapAdapterClient::new(&env, &rec.swap_adapter);
+        sa.set_pool_allowed(&xf, &pool, &false);
+        if let Some(id) = pool_id {
+            sa.set_pool_binding(&xf, &id, &pool, &false);
+        }
+        let mut pools = load_pools(&env, group_id);
+        if let Some(i) = pools.first_index_of(&pool) {
+            pools.remove(i);
+        }
+        env.storage().persistent().set(&Key::Pools(group_id), &pools);
+        extend_persistent(&env, &Key::Pools(group_id));
+        PoolAllowed { group_id, pool, allowed: false }.publish(&env);
+        Ok(())
+    }
+
+    /// Permissionless: re-apply every pair's leverage cap (after a collateral factor change is applied).
+    pub fn sync_pairs(env: Env, group_id: u32) -> Result<(), MarginError> {
+        bump_instance(&env);
+        let rec = load_record(&env, group_id)?;
+        apply_all_pairs(&env, &rec);
+        Ok(())
     }
 
     pub fn get_admin(env: Env) -> Address {
@@ -919,12 +956,34 @@ fn pair_incentive(group_incentive: u128) -> u128 {
         .min(MAX_PAIR_LIQUIDATION_INCENTIVE)
 }
 
+/// Leverage allowed for a pair: the requested value capped by `1 / (1 - CF)` of the margin asset's market,
+/// so the advertised effective maximum is enforced by the controller and not only shown in a view.
+fn capped_leverage(env: &Env, rec: &MarginRecord, margin_asset: &Address, leverage: u128) -> u128 {
+    if leverage <= 1 {
+        return leverage;
+    }
+    let Some(i) = rec.tokens.first_index_of(margin_asset) else { return 1 };
+    let market = rec.markets.get(i).unwrap();
+    let group = group_of(env, rec.group_id);
+    let cf = GroupControllerClient::new(env, &group.controller).get_market_cf(&market);
+    let by_cf = if cf >= SCALE { u128::MAX } else { SCALE / (SCALE - cf) };
+    by_cf.min(leverage).max(1)
+}
+
 fn set_pair(env: &Env, rec: &MarginRecord, a: &Address, b: &Address, leverage: u128) {
     let xf = env.current_contract_address();
     let mc = MarginControllerClient::new(env, &rec.controller);
     let li = pair_incentive(rec.cfg.liquidation_incentive);
-    mc.set_perps_pair_config(&xf, a, b, &PositionSide::Long, &leverage, &MAINTENANCE_MARGIN, &li);
-    mc.set_perps_pair_config(&xf, a, b, &PositionSide::Short, &leverage, &MAINTENANCE_MARGIN, &li);
+    let leverage = capped_leverage(env, rec, a, leverage);
+    for side in [PositionSide::Long, PositionSide::Short] {
+        mc.set_perps_pair_config(&xf, a, b, &side, &leverage, &MAINTENANCE_MARGIN, &li);
+        // V3 reads per-pair execution limits, not the global slippage: enforce the group's max slippage on
+        // opens and closes (liquidation slippage keeps the controller default so liquidations still execute).
+        let mut exec = mc.get_perps_pair_execution_config(a, b, &side);
+        exec.open_slippage_scaled = rec.cfg.max_slippage;
+        exec.close_slippage_scaled = rec.cfg.max_slippage;
+        mc.set_perps_pair_execution_config(&xf, a, b, &side, &exec);
+    }
 }
 
 /// Pairs between `token` and every other known token, both orders. Pairs with an inactive token

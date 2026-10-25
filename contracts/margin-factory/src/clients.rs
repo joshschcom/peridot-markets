@@ -66,8 +66,32 @@ pub trait MarginControllerApi {
         maintenance_margin_scaled: u128,
         liquidation_incentive_scaled: u128,
     );
+    fn set_perps_pair_execution_config(
+        env: Env,
+        admin: Address,
+        margin_asset: Address,
+        base_asset: Address,
+        side: PositionSide,
+        config: PerpsPairExecutionConfig,
+    );
+    fn get_perps_pair_execution_config(
+        env: Env,
+        margin_asset: Address,
+        base_asset: Address,
+        side: PositionSide,
+    ) -> PerpsPairExecutionConfig;
     fn propose_upgrade_wasm(env: Env, admin: Address, new_wasm_hash: BytesN<32>);
     fn upgrade_wasm(env: Env, admin: Address, new_wasm_hash: BytesN<32>);
+}
+
+/// Same layout as the controller's `PerpsPairExecutionConfig`.
+#[soroban_sdk::contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PerpsPairExecutionConfig {
+    pub max_open_deviation_scaled: u128,
+    pub open_slippage_scaled: u128,
+    pub close_slippage_scaled: u128,
+    pub liquidation_slippage_scaled: u128,
 }
 
 /// Audited `swap-adapter`. Admin is this factory.

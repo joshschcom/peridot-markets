@@ -2918,6 +2918,14 @@
                   },
                   {
                     "key": {
+                      "symbol": "group_id"
+                    },
+                    "val": {
+                      "u32": 1
+                    }
+                  },
+                  {
+                    "key": {
                       "symbol": "incentive_staged_at"
                     },
                     "val": {
@@ -2966,7 +2974,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -2993,7 +3001,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -3100,7 +3108,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -4531,7 +4539,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       }
     ]
   },

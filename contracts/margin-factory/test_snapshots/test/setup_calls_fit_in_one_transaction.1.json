@@ -2579,6 +2579,238 @@
                           }
                         ]
                       }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Long"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Short"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Long"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Short"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "70000"
+                            }
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -4181,6 +4413,14 @@
                   },
                   {
                     "key": {
+                      "symbol": "group_id"
+                    },
+                    "val": {
+                      "u32": 1
+                    }
+                  },
+                  {
+                    "key": {
                       "symbol": "incentive_staged_at"
                     },
                     "val": {
@@ -4243,7 +4483,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -4274,7 +4514,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -4381,7 +4621,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -5854,7 +6094,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       }
     ]
   },

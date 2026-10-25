@@ -649,7 +649,12 @@ fn market_without_allowlisted_pool_cannot_be_enabled() {
     // Removing the only pool makes the market ineligible again.
     w.x().set_pool_allowed(&w.owner, &GROUP, &w.pool, &true);
     w.x().set_market_margin(&w.owner, &GROUP, &w.uvault, &true);
-    w.x().set_pool_allowed(&w.owner, &GROUP, &w.pool, &false);
+    // owners cannot revoke an exit route; the Peridot admin can
+    assert_eq!(
+        err(w.x().try_set_pool_allowed(&w.owner, &GROUP, &w.pool, &false)),
+        MarginError::PoolRevocationAdminOnly
+    );
+    w.x().admin_revoke_pool(&w.xf_admin, &GROUP, &w.pool, &None);
     assert_eq!(
         err(w.x().try_set_market_margin(&w.owner, &GROUP, &w.xvault, &true)),
         MarginError::NoAllowlistedPool
@@ -742,7 +747,7 @@ fn owner_calls_require_the_owner_signature() {
 
 #[test]
 fn underwater_position_is_liquidated() {
-    let w = world(750_000);
+    let w = world(800_000);
     let mc = w.enable_all(5);
     let user = w.user_with_margin(1_000);
     let id = w.open_long(&mc, &user, 1_000, 5);
@@ -832,7 +837,7 @@ fn incentive_stages_for_60s_and_apply_margin_applies_it() {
 
 #[test]
 fn update_margin_changes_leverage_slippage_and_blocks_variant_switch() {
-    let w = world(750_000);
+    let w = world(800_000);
     let mc = w.enable_all(3);
     let mut next = cfg(5);
     next.max_slippage = 80_000;
@@ -1053,4 +1058,22 @@ fn state_changes_emit_events() {
     assert!(n > 0);
     w.x().set_pool_allowed(&w.owner, &GROUP, &w.pool, &true);
     assert!(w.env.events().all().events().len() > 0);
+}
+
+#[test]
+fn pairs_enforce_group_slippage_and_the_collateral_factor_leverage_cap() {
+    let w = world(750_000); // 1 / (1 - 0.75) = 4x
+    let mc = w.enable_all(5);
+    let slip = w.x().get_margin(&GROUP).unwrap().cfg.max_slippage;
+    for (a, b) in [(&w.usdt, &w.xlm), (&w.xlm, &w.usdt)] {
+        for side in [mcw::PositionSide::Long, mcw::PositionSide::Short] {
+            assert_eq!(w.mcc(&mc).get_perps_pair_config(a, b, &side).unwrap().max_leverage, 4);
+            let exec = w.mcc(&mc).get_perps_pair_execution_config(a, b, &side);
+            assert_eq!(exec.open_slippage_scaled, slip);
+            assert_eq!(exec.close_slippage_scaled, slip);
+        }
+    }
+    assert_eq!(w.x().effective_max_leverage(&GROUP, &w.xvault), 4);
+    // anyone can re-sync the caps after a collateral factor change
+    w.x().sync_pairs(&GROUP);
 }

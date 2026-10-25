@@ -176,7 +176,7 @@
                   "address": "CAZLY4W5HLJTS7F55I7ATXL24IZDSA7JKFS5HQI5TTY5HIIJ2O5TQRCV"
                 },
                 {
-                  "u128": "750000"
+                  "u128": "800000"
                 }
               ]
             }
@@ -217,7 +217,7 @@
                   "address": "CD5M24KZHINN46ZCECBNWYKINAIJGRO4WTZNGUCISPZIYUZZAWDS6H7Y"
                 },
                 {
-                  "u128": "750000"
+                  "u128": "800000"
                 }
               ]
             }
@@ -3415,6 +3415,238 @@
                           }
                         ]
                       }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Long"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Short"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Long"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PerpsPairExecutionConfig"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                          },
+                          {
+                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "Short"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "close_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "liquidation_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "max_open_deviation_scaled"
+                            },
+                            "val": {
+                              "u128": "100000"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "open_slippage_scaled"
+                            },
+                            "val": {
+                              "u128": "80000"
+                            }
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -3469,7 +3701,7 @@
                       "symbol": "collateral_factor"
                     },
                     "val": {
-                      "u128": "750000"
+                      "u128": "800000"
                     }
                   },
                   {
@@ -3664,7 +3896,7 @@
                       "symbol": "collateral_factor"
                     },
                     "val": {
-                      "u128": "750000"
+                      "u128": "800000"
                     }
                   },
                   {
@@ -5223,6 +5455,14 @@
                   },
                   {
                     "key": {
+                      "symbol": "group_id"
+                    },
+                    "val": {
+                      "u32": 1
+                    }
+                  },
+                  {
+                    "key": {
                       "symbol": "incentive_staged_at"
                     },
                     "val": {
@@ -5285,7 +5525,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -5316,7 +5556,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -5423,7 +5663,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -5573,7 +5813,7 @@
               },
               "durability": "persistent",
               "val": {
-                "u128": "750000"
+                "u128": "800000"
               }
             }
           },
@@ -5600,7 +5840,7 @@
               },
               "durability": "persistent",
               "val": {
-                "u128": "750000"
+                "u128": "800000"
               }
             }
           },
@@ -6950,7 +7190,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       }
     ]
   },

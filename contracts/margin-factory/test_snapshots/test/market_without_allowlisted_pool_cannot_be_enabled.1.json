@@ -473,17 +473,18 @@
         }
       ]
     ],
+    [],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CBU45Z6S42LXHP3KVBEEQG5YVLRNJXZCUY5GKTXWHE6SKO2VJ4E6KM26",
-              "function_name": "set_pool_allowed",
+              "function_name": "admin_revoke_pool",
               "args": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
                 },
                 {
                   "u32": 1
@@ -491,9 +492,7 @@
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON"
                 },
-                {
-                  "bool": false
-                }
+                "void"
               ]
             }
           },
@@ -559,6 +558,26 @@
           "data": {
             "contract_data": {
               "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "ledger_key_nonce": {
+                  "nonce": "3736142932239307322"
+                }
+              },
+              "durability": "temporary",
+              "val": "void"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 6311999
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
                 "ledger_key_nonce": {
@@ -603,26 +622,6 @@
               "key": {
                 "ledger_key_nonce": {
                   "nonce": "6391496069076573377"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-              "key": {
-                "ledger_key_nonce": {
-                  "nonce": "8077058277077262192"
                 }
               },
               "durability": "temporary",
@@ -3378,6 +3377,14 @@
                   },
                   {
                     "key": {
+                      "symbol": "group_id"
+                    },
+                    "val": {
+                      "u32": 1
+                    }
+                  },
+                  {
+                    "key": {
                       "symbol": "incentive_staged_at"
                     },
                     "val": {
@@ -3434,7 +3441,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -3461,7 +3468,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -3568,7 +3575,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       },
       {
         "entry": {
@@ -4951,7 +4958,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 400000
       }
     ]
   },
