@@ -12,6 +12,7 @@ pub enum DataKey {
     Admin,
     Treasury,
     MarginFactory,
+    Launchpad,
     Wasm,
     AllowlistMode,
     CreatorAllowed(Address),

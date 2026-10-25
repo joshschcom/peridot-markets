@@ -281,6 +281,7 @@ fn guardrails_reject() {
     });
     assert_eq!(f.mf.try_add_market(&f.owner, &id, &c).err().unwrap().unwrap(), FactoryError::OracleNotAllowed);
     let mut c = ok.clone();
+    c.collateral_factor = 250_000;
     c.price = PriceConfig::AquariusOnly(peridot_interfaces::AquariusOnlyCfg {
         pool: Address::generate(&f.env),
         quote_token: f.xlm.clone(),
@@ -712,4 +713,42 @@ fn redeem_pause_is_admin_only() {
     f.mf.set_redeem_pause(&f.admin, &id, &m, &true);
     assert!(ctrl::Client::new(&f.env, &g.controller).is_redeem_paused(&m));
     assert!(f.mf.try_set_redeem_pause(&f.owner, &id, &m, &true).is_err());
+}
+
+#[test]
+fn aquarius_only_markets_are_for_the_launchpad_only() {
+    let f = setup();
+    let launchpad = Address::generate(&f.env);
+    let aq = |f: &F, cf: u128| {
+        let mut c = cfg(f, &f.xlm, "XLM");
+        c.collateral_factor = cf;
+        c.price = PriceConfig::AquariusOnly(peridot_interfaces::AquariusOnlyCfg {
+            pool: Address::generate(&f.env),
+            quote_token: f.usdc.clone(),
+        });
+        c
+    };
+    // a normal owner cannot pick a pool-priced market
+    let id = f.mf.create_group(&f.owner, &symbol_short!("Own"));
+    assert_eq!(f.mf.try_add_market(&f.owner, &id, &aq(&f, 250_000)).err().unwrap().unwrap(), FactoryError::PriceModeNotAllowed);
+    // the registered launchpad can, as group owner, within the 50% collateral cap
+    f.mf.set_launchpad(&f.admin, &launchpad);
+    assert!(f.mf.try_set_launchpad(&launchpad, &launchpad).is_err());
+    let gid = f.mf.create_group(&launchpad, &symbol_short!("Grad"));
+    assert_eq!(f.mf.try_add_market(&launchpad, &gid, &aq(&f, 600_000)).err().unwrap().unwrap(), FactoryError::CollateralFactorTooHigh);
+    let m = f.mf.add_market(&launchpad, &gid, &aq(&f, 250_000));
+    f.mf.activate_market(&launchpad, &gid, &m);
+    // margin is never allowed on such a market
+    let mut c = aq(&f, 250_000);
+    c.token = f.usdc.clone();
+    c.margin_enabled = true;
+    assert_eq!(f.mf.try_add_market(&launchpad, &gid, &c).err().unwrap().unwrap(), FactoryError::MarginNotAllowedForMode);
+    // and the price mode cannot be switched to AquariusOnly later
+    let (id2, m2) = group_with_market(&f);
+    let p = PriceConfig::AquariusOnly(peridot_interfaces::AquariusOnlyCfg { pool: Address::generate(&f.env), quote_token: f.xlm.clone() });
+    assert_eq!(f.mf.try_update_price(&f.owner, &id2, &m2, &p).err().unwrap().unwrap(), FactoryError::PriceModeNotAllowed);
+    // the launchpad hands the group to the creator, who signs
+    let creator = Address::generate(&f.env);
+    f.mf.transfer_ownership(&launchpad, &gid, &creator);
+    assert_eq!(f.mf.get_group(&gid).owner, creator);
 }

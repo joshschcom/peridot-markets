@@ -231,6 +231,18 @@ impl MarketFactory {
         Ok(())
     }
 
+    /// The launchpad contract allowed to create `AquariusOnly` markets (graduated tokens).
+    pub fn set_launchpad(env: Env, admin: Address, launchpad: Address) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        env.storage().instance().set(&DataKey::Launchpad, &launchpad);
+        storage::bump_instance(&env);
+        Ok(())
+    }
+
+    pub fn get_launchpad(env: Env) -> Option<Address> {
+        env.storage().instance().get(&DataKey::Launchpad)
+    }
+
     pub fn get_margin_factory(env: Env) -> Option<Address> {
         env.storage().instance().get(&DataKey::MarginFactory)
     }
@@ -363,6 +375,13 @@ impl MarketFactory {
             return Err(FactoryError::MarketsLockedByRewards);
         }
         guardrails::check_market_config(&cfg)?;
+        if matches!(cfg.price, PriceConfig::AquariusOnly(_)) {
+            // only the registered launchpad may pick a pool-priced market (the pool is the one it created)
+            let lp: Option<Address> = env.storage().instance().get(&DataKey::Launchpad);
+            if lp != Some(owner.clone()) {
+                return Err(FactoryError::PriceModeNotAllowed);
+            }
+        }
         check_price_allowed(&env, &cfg.token, &cfg.price)?;
         if g.markets.len() + storage::pending_count(&env, group_id) >= guardrails::MAX_MARKETS_PER_GROUP {
             return Err(FactoryError::TooManyMarkets);
@@ -704,6 +723,9 @@ impl MarketFactory {
     pub fn update_price(env: Env, owner: Address, group_id: u32, market: Address, cfg: PriceConfig) -> Result<(), FactoryError> {
         require_owner(&env, &owner, group_id)?;
         guardrails::check_price_mode(&cfg)?;
+        if matches!(cfg, PriceConfig::AquariusOnly(_)) {
+            return Err(FactoryError::PriceModeNotAllowed); // AquariusOnly is set at creation by the launchpad only
+        }
         let mut rec = storage::get_market(&env, group_id, &market)?;
         check_price_allowed(&env, &rec.cfg.token, &cfg)?;
         let execute_after = env.ledger().timestamp() + guardrails::STAGED_DELAY_SECS;

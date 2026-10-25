@@ -76,10 +76,11 @@ pub fn check_speed(speed: u128) -> Result<(), FactoryError> {
     Ok(())
 }
 
-/// Phase 1 allows `ReflectorOnly` only. Phase 3 will lift the other two modes.
+/// `ReflectorOnly` for any owner; `AquariusOnly` only for markets created by the registered launchpad
+/// (enforced in `add_market`, because the pool must be the one the launchpad created). The guard mode is phase 3.
 pub fn check_price_mode(price: &PriceConfig) -> Result<(), FactoryError> {
     match price {
-        PriceConfig::ReflectorOnly(_) => Ok(()),
+        PriceConfig::ReflectorOnly(_) | PriceConfig::AquariusOnly(_) => Ok(()),
         _ => Err(FactoryError::PriceModeNotAllowed),
     }
 }
