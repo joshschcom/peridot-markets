@@ -5,7 +5,8 @@ use mock_token::{MockToken, MockTokenClient};
 use soroban_sdk::{testutils::Address as _, Address, Env, String};
 
 use crate::params::{validate, CurveParams, ParamError, MAX_AMOUNT};
-use crate::{CurveError, LaunchpadCurve, LaunchpadCurveClient, Phase};
+use crate::{CurveError, GraduationConfig, GraduationVenue, LaunchpadCurve, LaunchpadCurveClient, Phase};
+use peridot_interfaces::{Asset, PriceConfig, ReflectorOnlyCfg};
 use launchpad_token::{LaunchpadToken, LaunchpadTokenClient};
 
 const X7: i128 = 10_000_000;
@@ -22,6 +23,19 @@ fn std_params() -> CurveParams {
         trade_fee_bps: 100,
         creator_fee_share_bps: 0,
         creator_cap_bps: 500,
+    }
+}
+
+/// Graduation wiring for stage 1 tests, which never graduate (addresses are placeholders).
+fn stub_graduation(env: &Env) -> GraduationConfig {
+    GraduationConfig {
+        venue: GraduationVenue::Aquarius,
+        router: Address::generate(env),
+        market_factory: Address::generate(env),
+        quote_price: PriceConfig::ReflectorOnly(ReflectorOnlyCfg {
+            oracle: Address::generate(env),
+            asset: Asset::Other(soroban_sdk::Symbol::new(env, "XLM")),
+        }),
     }
 }
 
@@ -64,7 +78,7 @@ fn setup(params: CurveParams) -> Ctx {
     env.register_at(
         &curve_addr,
         LaunchpadCurve,
-        (&token_id, &quote_id, &creator, &factory, &treasury, params.clone()),
+        (&token_id, &quote_id, &creator, &factory, &treasury, params.clone(), stub_graduation(&env)),
     );
     Ctx {
         curve: LaunchpadCurveClient::new(&env, &curve_addr),
@@ -455,34 +469,29 @@ fn buy_crossing_target_is_clamped_to_a_partial_fill() {
 }
 
 #[test]
-fn trading_stops_at_target_but_sells_still_work() {
+fn trading_stops_at_target_but_sells_still_work_and_graduatable_is_sticky() {
     let c = setup(std_params());
     let (u, _, _) = buy_to_target(&c);
     let other = c.funded_user(1_000 * X7);
     assert_eq!(c.curve.try_buy(&other, &(10 * X7), &1).unwrap_err().unwrap(), CurveError::TradingClosed);
     assert_eq!(c.curve.try_quote_buy(&(10 * X7)).unwrap_err().unwrap(), CurveError::TradingClosed);
 
-    // a sell is allowed and drops the curve back under the target
+    // a sell is allowed (holders are never locked in before graduation starts) ...
     let t = c.token.balance(&u) / 10;
     c.curve.sell(&u, &t, &1);
     let st = c.curve.get_state();
     assert!(st.real_quote < c.params.graduation_target);
-    assert_eq!(st.phase, Phase::Trading);
-    // buying refills exactly up to the target again
-    c.curve.buy(&other, &(1_000 * X7), &1);
-    let st = c.curve.get_state();
-    assert!(st.real_quote <= c.params.graduation_target);
-    assert!(st.sold <= c.params.curve_supply);
+    // ... but the phase is sticky: it does NOT fall back to Trading, so buys stay closed
+    assert_eq!(st.phase, Phase::Graduatable);
+    assert_eq!(c.curve.try_buy(&other, &(1_000 * X7), &1).unwrap_err().unwrap(), CurveError::TradingClosed);
 }
 
 #[test]
-fn graduate_stub_enforces_state_machine() {
+fn graduate_before_the_target_reverts() {
     let c = setup(std_params());
-    assert_eq!(c.curve.try_graduate().unwrap_err().unwrap(), CurveError::NotGraduatable);
-    buy_to_target(&c);
-    assert_eq!(c.curve.try_graduate().unwrap_err().unwrap(), CurveError::NotImplemented);
-    // nothing moved
-    assert_eq!(c.curve.get_state().real_quote, c.params.graduation_target);
+    let payer = Address::generate(&c.env);
+    assert_eq!(c.curve.try_graduate(&payer).unwrap_err().unwrap(), CurveError::NotGraduatable);
+    assert!(c.curve.get_graduation().is_none());
 }
 
 #[test]
@@ -556,7 +565,7 @@ fn constructor_requires_a_funded_curve() {
             String::from_str(&env, ""),
         ),
     );
-    env.register(LaunchpadCurve, (&token_id, &quote_id, &a, &a, &a, p));
+    env.register(LaunchpadCurve, (&token_id, &quote_id, &a, &a, &a, p, stub_graduation(&env)));
 }
 
 // ---- upgrade auth ----
@@ -646,13 +655,15 @@ fn run_property_sequence(seed: u64, params: CurveParams, steps: u32) -> u32 {
     let mut sells = 0u32;
     let mut closed = 0u32;
     let mut graduatable_steps = 0u32;
+    let mut seen_graduatable = false;
 
     for step in 0..steps {
         let who = &users[(rng.next() % users.len() as u64) as usize];
         let do_buy = rng.next() % 5 < 3;
         if do_buy {
-            // amounts between 1e3 and ~9e12 stroops (up to 900k XLM)
-            let exp = 3 + (rng.next() % 10) as u32;
+            // amounts between 1e3 and ~9e9 stroops (up to 900 XLM): Graduatable is sticky, so a walk that jumps
+            // straight to the target would leave nothing to exercise
+            let exp = 3 + (rng.next() % 7) as u32;
             let q = ((rng.next() % 9 + 1) as i128) * 10i128.pow(exp);
             match c.curve.try_buy(who, &q, &1) {
                 Ok(Ok(_)) => buys += 1,
@@ -696,14 +707,16 @@ fn run_property_sequence(seed: u64, params: CurveParams, steps: u32) -> u32 {
             s.real_quote + s.fees_treasury_pending + s.fees_creator_pending,
             "quote held = real_quote + unclaimed fees"
         );
-        let expected_phase = if s.real_quote >= params.graduation_target { Phase::Graduatable } else { Phase::Trading };
+        // Graduatable is sticky: once reached it stays, whatever later sells do to real_quote.
+        seen_graduatable |= s.real_quote >= params.graduation_target;
+        let expected_phase = if seen_graduatable { Phase::Graduatable } else { Phase::Trading };
         assert_eq!(s.phase, expected_phase);
         if s.phase == Phase::Graduatable {
             graduatable_steps += 1;
         }
         assert!(s.creator_bought <= (params.curve_supply * params.creator_cap_bps as i128) / 10_000);
     }
-    assert!(buys > 20 && sells > 10, "sequence must exercise both sides ({buys} buys, {sells} sells, {closed} reverts)");
+    assert!(buys >= 3 && sells >= 5, "sequence must exercise both sides ({buys} buys, {sells} sells, {closed} reverts)");
     graduatable_steps
 }
 

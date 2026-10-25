@@ -1,3 +1,4 @@
+use peridot_interfaces::PriceConfig;
 use soroban_sdk::{contractevent, Address, BytesN};
 
 use crate::types::Preset;
@@ -59,4 +60,17 @@ pub struct LaunchUpgraded {
     #[topic]
     pub curve: Address,
     pub wasm_hash: BytesN<32>,
+}
+
+#[contractevent(topics = ["graduation_set"])]
+pub struct GraduationSet {
+    pub router: Address,
+    pub market_factory: Address,
+}
+
+#[contractevent(topics = ["quote_price_set"])]
+pub struct QuotePriceSet {
+    #[topic]
+    pub quote_token: Address,
+    pub price: PriceConfig,
 }

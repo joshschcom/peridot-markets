@@ -475,8 +475,8 @@ fn effective_max_leverage(group_id, market) -> u128;              // min(group m
 
 ## Launchpad
 
-Stage 1 (token, bonding curve, factory). Graduation (Aquarius pool, locked LP, market group) and the ICO are
-not built; `graduate()` is a stub. Crates: `launchpad-token`, `launchpad-curve`, `launchpad-factory`.
+Stage 1 (token, bonding curve, factory) and stage 2 (graduation, see "Graduation (stage 2)" below). The ICO is not
+built. Crates: `launchpad-token`, `launchpad-curve`, `launchpad-factory`.
 
 - **Token** (`launchpad-token`): OpenZeppelin fungible `Base`, 7 decimals, the whole supply minted once in
   `__constructor(recipient, name, symbol, supply, metadata_uri)` to the curve. No mint, no admin, no freeze, no
@@ -487,7 +487,7 @@ not built; `graduate()` is a stub. Crates: `launchpad-token`, `launchpad-curve`,
   `y - ceil(k / (x + n))` tokens, a sell of `t` tokens pays `x - ceil(k / (y + t))` quote. Rounding always favours
   the curve, so `sold <= vt * real_quote / (vq + real_quote)` at all times and `x * y - k < max(x, y)`. All math is
   checked `u128`; every reserve, supply and target is bounded by 1e19 base units so no product overflows.
-  Constructor: `(token, quote_token, creator, factory, treasury, params: CurveParams)` (Soroban allows 10 arguments
+  Constructor: `(token, quote_token, creator, factory, treasury, params: CurveParams, graduation: GraduationConfig)` (Soroban allows 10 arguments
   at most, so the numeric parameters travel in `CurveParams`: `virtual_quote`, `virtual_token`, `curve_supply`,
   `lp_supply`, `graduation_target`, `trade_fee_bps` (max 500, default 100), `creator_fee_share_bps` (max 5000),
   `creator_cap_bps` (max 2000, default 500)). It reverts unless `token.balance(curve) >= curve_supply + lp_supply`.
@@ -495,12 +495,13 @@ not built; `graduate()` is a stub. Crates: `launchpad-token`, `launchpad-curve`,
   (treasury, creator share) and paid by the permissionless `claim_fees()`; there is no other outflow of quote except
   sellers. Held quote always equals `real_quote + unclaimed fees`. `min_tokens_out` and `min_quote_out` must be
   positive. Dust trades (zero output) revert.
-- **Target and phases**: `Trading -> Graduatable -> Graduated`. A buy that would cross `graduation_target` is
-  CLAMPED (partial fill): only the quote needed to land exactly on the target is charged, the rest stays with the
-  buyer. Buys stop in `Graduatable`; sells keep working so holders are never locked in while a graduation is
-  pending, and a sell that takes `real_quote` under the target moves the phase back to `Trading` (known grief
-  vector: a holder can delay graduation by selling a little, at the cost of the fee and price impact; stage 2 may
-  make `Graduatable` sticky). The constructor guarantees the target is reachable within `curve_supply`.
+- **Target and phases**: `Trading -> Graduatable -> Graduating -> Graduated`. A buy that would cross
+  `graduation_target` is CLAMPED (partial fill): only the quote needed to land exactly on the target is charged, the
+  rest stays with the buyer. `Graduatable` is STICKY (stage 2 change): once reached it never falls back to `Trading`,
+  so buys stay closed. Sells keep working in `Graduatable` so holders are never locked in while nobody has started
+  the graduation; they stop for good with the first graduation step (`Graduating`). A sell in `Graduatable` lowers
+  `real_quote`, and the pool is seeded with whatever `real_quote` is at the pool step. The constructor guarantees
+  the target is reachable within `curve_supply`.
 - **Anti-rug**: creator buys capped cumulatively (default 5% of `curve_supply`, sells do not reset it; the cap is
   per address, not a Sybil defence); parameters immutable; no withdrawal path before graduation. Trust assumption
   to state in the app: every curve is upgradeable by the factory admin (`upgrade_launch`), as the house rule
@@ -513,6 +514,102 @@ not built; `graduate()` is a stub. Crates: `launchpad-token`, `launchpad-curve`,
   deployed first minting to it, then the curve with the real token address. Name 1..32 and symbol 2..12 ASCII
   characters, at most 100 launches per creator, optional launch fee to the treasury, optional atomic first buy.
   Views: `list_launches(start, limit<=50)`, `launches_of(creator)`, `get_launch(token)`, `get_preset`, `config`.
+
+### Graduation (stage 2)
+
+Venue: an Aquarius standard (constant product) pool at 30 bps, only (`enum GraduationVenue { Aquarius }` is the
+extension point; XOXNO has nothing to call, see the research below). Result of a finished raise: (1) a pool with
+permanently locked liquidity, (2) the token's own Peridot market group. No mint, no new admin power: the factory
+admin still only configures FUTURE launches and upgrades contracts as in stage 1.
+
+**ABI (curve)**
+
+```rust
+fn graduate(payer: Address) -> GradStep;          // permissionless, one step per call; payer signs only step 1
+fn claim_group(creator: Address) -> u32;          // creator only, after Graduated; returns the group id
+fn graduation_cost() -> (Address, i128);          // (AQUA, fee) read live from the router
+fn get_graduation() -> Option<Graduation>;        // pool, pool_index, share_token, amounts, burned, group_id, markets, claimed
+enum Phase { Trading = 0, Graduatable = 1, Graduated = 2, Graduating = 3 }      // Graduating is new
+enum GradStep { NotStarted = 0, PoolCreated, GroupCreated, QuoteMarketAdded, QuoteMarketActivated, TokenMarketAdded, Graduated }
+// constructor adds: GraduationConfig { venue: GraduationVenue, router, market_factory, quote_price: PriceConfig }
+```
+
+Factory additions: `is_curve(curve) -> bool` (indexed at launch, asked by the market factory before it lets a
+curve own `AquariusOnly` markets), `set_graduation(admin, router, market_factory)`, `set_quote_price(admin,
+quote_token, PriceConfig)` (must be `ReflectorOnly`, and the market factory must have approved the mapping with
+`set_price_feed_allowed`), `graduation_targets()`, `get_quote_price(quote)`. `launch_curve` reverts with
+`GraduationNotSet` / `QuotePriceNotSet` until both are set, and freezes them into the curve it deploys.
+
+**Steps** (each `graduate` call performs the next one; six calls). Reads/writes are ledger entries per transaction,
+measured with the curve running as Wasm and the real market factory and core Wasm (launch-factory test
+`factory_launched_wasm_curve_graduates_into_pool_and_group`); limits used: 400M cpu, 100 reads, 50 writes.
+
+| # | Returns | Does | CPU | Reads | Writes |
+|---|---|---|---|---|---|
+| 1 | `PoolCreated` | pulls the AQUA creation fee from `payer`, `init_standard_pool`, deposits all `real_quote` and the whole `lp_supply`, burns every LP share, burns the unsold curve tokens; trading ends | 3.8M (double; the real router costs more, measure on testnet) | 19 | 14 |
+| 2 | `GroupCreated` | `market_factory.create_group(owner = curve, name = symbol)` | 9.9M | 28 | 20 |
+| 3 | `QuoteMarketAdded` | `add_market` for the quote asset | 26.3M | 52 | 37 |
+| 4 | `QuoteMarketActivated` | `activate_market` (quote) | 24.6M | 68 | 14 |
+| 5 | `TokenMarketAdded` | `add_market` for the token, `AquariusOnly { pool, quote_token }` | 27.6M | 55 | 37 |
+| 6 | `Graduated` | `activate_market` (token); phase `Graduated` | 24.8M | 68 | 14 |
+
+Merging steps does not fit: `create_group + add_market` alone needs about 57 writes. Every step is atomic, so a
+failed call (no AQUA, registry refusing, front-run pool) leaves the previous step intact and can be retried.
+Events: `pool_created`, `group_created`, `market_added`, `market_activated`, and the final `graduated { token,
+pool, group_id }`.
+
+**Pool step details**
+- Tokens are sorted with the soroban `Address` order (host byte order, NOT strkey text order); the test double
+  rejects unsorted input with contract error 2002 like the router, and both orders are tested.
+- The fee is read live (`get_init_pool_payment_token / _amount / _address`), pulled from `payer` into the curve,
+  forwarded by the router, and any unspent part is refunded to `payer` (a pair that already has a 30 bps pool costs
+  nothing). If `payer` lacks the AQUA the whole step reverts with nothing changed. Mainnet: 300,000 AQUA, testnet: 1.
+- Fresh-pool guard instead of slippage: the deposit must consume EXACTLY the offered amounts, otherwise
+  `PoolNotFresh` (somebody created the pair first and seeded another ratio). `min_shares` is 1 because the shares
+  are burned anyway. Known griefing vector: on mainnet creating a dust pool costs the attacker the AQUA fee, and
+  it blocks that token's graduation until the factory admin ships a curve upgrade. Accepted for the testnet demo.
+- Locking: the curve burns its whole LP balance and checks the balance is zero. Third-party keys (router
+  upgrade, pool `kill_*`) can still affect the pool; say so in the risk copy.
+- Unsold curve tokens (`curve_supply - sold`) are burned, so the fixed supply shrinks to `lp_supply + sold`.
+  The raised quote minus unclaimed fees goes into the pool; fees stay claimable with `claim_fees`.
+
+**Authorization (verified against recorded mainnet simulations of router v220, `--send=no`)**
+- `init_standard_pool(user = curve, ...)`: the router itself transfers the fee, so the tree is
+  `AQUA.transfer(curve, payment_address, fee)` as a child of the router call. The curve authorizes exactly that
+  entry with `authorize_as_current_contract`.
+- `deposit(user = curve, ...)`: the standard pool DOES `require_auth` (unlike the concentrated pool in the memory
+  note) and pulls the DESIRED amounts: `router.deposit` > `pool.deposit(curve, desired: Vec<u128>, min_shares:
+  u128)` > `token.transfer(curve, pool, amount: i128)` for each token. The curve authorizes the `pool.deposit`
+  entry with both transfers nested under it. Two separate `authorize_as_current_contract` calls, each directly
+  before its router call, every read before them.
+- The test doubles require auth at the same places; `the_pool_step_needs_only_the_payer_signature` mocks only the
+  payer's authorization, and a one-stroop change of the nested amount makes it fail with `Auth, InvalidAction`.
+
+**Market preset** (market-factory guardrails apply; the curve is the group owner during graduation)
+
+| | Quote asset market | Graduated token market |
+|---|---|---|
+| Price | the frozen `quote_price` (`ReflectorOnly`) | `AquariusOnly { pool, quote_token }` (quote is added first) |
+| Collateral factor | 60% | 25% (factory cap for `AquariusOnly` is 50%) |
+| Supply cap | the quote deposited in the pool | 10% of the tokens in the pool (equal in value to 10% of the pool's quote side) |
+| Borrow cap | 10% of supply cap | 10% of supply cap |
+| Rates | stable `{0, 80_000, 2_000_000, 900_000}` | volatile `{10_000, 180_000, 4_000_000, 800_000}` |
+| Reserve factor / idle buffer / yield | 10% / 50% / none | 10% / 50% / none |
+| Margin | off | off (the owner may opt in through the margin factory; pairs touching it are capped at 2x) |
+
+Caps are never zero. After `Graduated`, the creator calls `claim_group(creator)`, which makes the curve call
+`market_factory.transfer_ownership(curve, group_id, creator)`; the factory requires the creator's signature, so the
+creator's top-level authorization is `claim_group` with `transfer_ownership` nested. Until then the curve owns the
+group and nobody else can touch it. Other creators or strangers revert with `NotCreator`.
+
+**Requirements and risks**
+- The market factory must have `set_launchpad(admin, launchpad_factory)`; with `AllowlistMode` on, every curve would
+  also need `set_creator_allowed`.
+- The real price router rejects `AquariusOnly` unless the quote token already has a `ReflectorOnly` config in that
+  group router (the quote market is added first for this reason), needs `get_tokens / get_reserves / estimate_swap`
+  on the pool, and serves no price below `MIN_DEPTH_USD = 500` per pool side. A sold-down curve can activate but
+  serve no price (borrowing is then blocked, supplying works).
+- Sells in `Graduatable` can lower the pool's depth; there is no minimum, only the caps scaling with the deposit.
 
 ## XOXNO as a graduation venue
 

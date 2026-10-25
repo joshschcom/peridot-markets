@@ -12,23 +12,35 @@
 //! - `upgrade` is callable only through the launch factory (immediate, house rule). That is the one trust
 //!   assumption besides the token, which is immutable.
 //!
-//! Stage 2 (graduation into an Aquarius pool, locked LP, market group) plugs into `graduate`, which is a stub.
+//! Graduation (stage 2): once the target is reached, the permissionless `graduate(payer)` state machine
+//! (see `graduation.rs` and docs/SPECS.md) seeds an Aquarius standard pool with all raised quote and the whole
+//! `lp_supply`, burns the LP shares (liquidity locked for good) and the unsold curve tokens, then builds the
+//! token's own Peridot market group. The curve owns the group until the creator calls `claim_group`.
 #![no_std]
 
 mod errors;
 mod events;
+mod graduation;
 mod math;
 pub mod params;
 mod types;
 
 #[cfg(test)]
 mod test;
+#[cfg(test)]
+mod test_aquarius;
+#[cfg(test)]
+mod test_grad;
 
 use soroban_sdk::{contract, contractimpl, token, Address, BytesN, Env};
 
+use graduation::{MarketFactoryClient};
+
 pub use errors::CurveError;
 pub use params::{CurveParams, DEFAULT_CREATOR_CAP_BPS, DEFAULT_TRADE_FEE_BPS};
-pub use types::{BuyQuote, Config, CurveInfo, Phase, SellQuote, State};
+pub use types::{
+    BuyQuote, Config, CurveInfo, GradStep, Graduation, GraduationConfig, GraduationVenue, Phase, SellQuote, State,
+};
 
 use params::{validate, ParamError, BPS};
 
@@ -41,6 +53,7 @@ const PRICE_SCALE: u128 = 10_000_000;
 enum DataKey {
     Config,
     State,
+    Graduation,
 }
 
 fn config(env: &Env) -> Config {
@@ -53,6 +66,14 @@ fn state(env: &Env) -> State {
 
 fn save_state(env: &Env, s: &State) {
     env.storage().instance().set(&DataKey::State, s);
+}
+
+fn graduation_state(env: &Env) -> Option<Graduation> {
+    env.storage().instance().get(&DataKey::Graduation)
+}
+
+fn save_graduation(env: &Env, g: &Graduation) {
+    env.storage().instance().set(&DataKey::Graduation, g);
 }
 
 fn bump(env: &Env) {
@@ -92,15 +113,19 @@ fn creator_cap(cfg: &Config) -> i128 {
     cfg.params.curve_supply * i128::from(cfg.params.creator_cap_bps) / BPS as i128
 }
 
-/// Re-derives the phase from `real_quote`, emitting `StateChanged` on a transition. `Graduated` is terminal.
+/// Enters `Graduatable` once `real_quote` reaches the target, emitting `StateChanged`. `Graduatable` is
+/// STICKY: later sells never move the phase back to `Trading`, so buys stay closed.
 fn sync_phase(env: &Env, cfg: &Config, s: &mut State) {
-    if s.phase == Phase::Graduated {
-        return;
+    if s.phase == Phase::Trading && s.real_quote >= cfg.params.graduation_target {
+        events::StateChanged { from: s.phase, to: Phase::Graduatable, real_quote: s.real_quote }.publish(env);
+        s.phase = Phase::Graduatable;
     }
-    let next = if s.real_quote >= cfg.params.graduation_target { Phase::Graduatable } else { Phase::Trading };
-    if next != s.phase {
-        events::StateChanged { from: s.phase, to: next, real_quote: s.real_quote }.publish(env);
-        s.phase = next;
+}
+
+fn set_phase(env: &Env, s: &mut State, to: Phase) {
+    if s.phase != to {
+        events::StateChanged { from: s.phase, to, real_quote: s.real_quote }.publish(env);
+        s.phase = to;
     }
 }
 
@@ -123,7 +148,8 @@ fn quote_sell_inner(cfg: &Config, s: &State, tokens_in: i128) -> Result<math::Se
     if tokens_in <= 0 {
         return Err(CurveError::InvalidAmount);
     }
-    if s.phase == Phase::Graduated {
+    // Sells work in `Trading` and `Graduatable` only: after the first graduation step all trading ends.
+    if s.phase == Phase::Graduating || s.phase == Phase::Graduated {
         return Err(CurveError::TradingClosed);
     }
     if tokens_in > s.sold {
@@ -153,6 +179,7 @@ impl LaunchpadCurve {
         factory: Address,
         treasury: Address,
         params: CurveParams,
+        graduation: GraduationConfig,
     ) -> Result<(), CurveError> {
         validate(&params).map_err(map_param_error)?;
         if token == quote_token {
@@ -164,7 +191,7 @@ impl LaunchpadCurve {
             return Err(CurveError::CurveNotFunded);
         }
         let k = u(params.virtual_quote).checked_mul(u(params.virtual_token)).ok_or(CurveError::Overflow)?;
-        let cfg = Config { token, quote_token, creator, factory, treasury, params, k };
+        let cfg = Config { token, quote_token, creator, factory, treasury, params, k, graduation };
         env.storage().instance().set(&DataKey::Config, &cfg);
         save_state(
             &env,
@@ -331,14 +358,114 @@ impl LaunchpadCurve {
         config(&env)
     }
 
-    /// Permissionless graduation. STAGE 2: not implemented. Reverts `NotGraduatable` before the target is
-    /// reached and `NotImplemented` once it is, so the state machine is already enforced.
-    pub fn graduate(env: Env) -> Result<(), CurveError> {
-        let s = state(&env);
-        if s.phase != Phase::Graduatable {
-            return Err(CurveError::NotGraduatable);
+    /// Permissionless graduation, one step per call (Soroban bounds the ledger entries a transaction may touch).
+    /// Each call performs the NEXT step and returns the step reached; the last one returns `Graduated`:
+    /// 1. `PoolCreated`: pulls the Aquarius creation fee (live from the router, in AQUA) from `payer`, creates the
+    ///    standard 30 bps pool, seeds it with all raised quote and `lp_supply`, burns the LP shares and the unsold
+    ///    curve tokens. Trading is closed from here on. Only this step needs `payer`'s signature; later steps
+    ///    ignore it. Unspent fee (pool already existed) is refunded to `payer`.
+    /// 2. `GroupCreated`: `market_factory.create_group(owner = this curve, name = token symbol)`.
+    /// 3. `QuoteMarketAdded`, 4. `QuoteMarketActivated`: the quote asset market.
+    /// 5. `TokenMarketAdded`, 6. `Graduated`: the token market priced from the pool (`AquariusOnly`).
+    /// Reverts `NotGraduatable` before the target, `AlreadyGraduated` after the last step.
+    pub fn graduate(env: Env, payer: Address) -> Result<GradStep, CurveError> {
+        let cfg = config(&env);
+        let mut s = state(&env);
+        let mut g = match graduation_state(&env) {
+            Some(g) => g,
+            None => {
+                if s.phase != Phase::Graduatable {
+                    return Err(CurveError::NotGraduatable);
+                }
+                payer.require_auth();
+                let g = graduation::pool_step(&env, &cfg, &payer, s.real_quote)?;
+                set_phase(&env, &mut s, Phase::Graduating);
+                save_state(&env, &s);
+                save_graduation(&env, &g);
+                bump(&env);
+                return Ok(GradStep::PoolCreated);
+            }
+        };
+        let this = env.current_contract_address();
+        let mf = MarketFactoryClient::new(&env, &cfg.graduation.market_factory);
+        match g.step {
+            GradStep::PoolCreated => {
+                g.group_id = mf.create_group(&this, &graduation::group_name(&env, &cfg.token));
+                g.step = GradStep::GroupCreated;
+                events::GroupCreated { group_id: g.group_id }.publish(&env);
+            }
+            GradStep::GroupCreated => {
+                let m = mf.add_market(&this, &g.group_id, &graduation::quote_market_config(&cfg, &g));
+                events::MarketAdded { group_id: g.group_id, market: m.clone(), underlying: cfg.quote_token.clone(), is_quote: true }
+                    .publish(&env);
+                g.quote_market = Some(m);
+                g.step = GradStep::QuoteMarketAdded;
+            }
+            GradStep::QuoteMarketAdded => {
+                let m = g.quote_market.clone().expect("quote market");
+                mf.activate_market(&this, &g.group_id, &m);
+                events::MarketActivated { group_id: g.group_id, market: m, is_quote: true }.publish(&env);
+                g.step = GradStep::QuoteMarketActivated;
+            }
+            GradStep::QuoteMarketActivated => {
+                let m = mf.add_market(&this, &g.group_id, &graduation::token_market_config(&cfg, &g));
+                events::MarketAdded { group_id: g.group_id, market: m.clone(), underlying: cfg.token.clone(), is_quote: false }
+                    .publish(&env);
+                g.token_market = Some(m);
+                g.step = GradStep::TokenMarketAdded;
+            }
+            GradStep::TokenMarketAdded => {
+                let m = g.token_market.clone().expect("token market");
+                mf.activate_market(&this, &g.group_id, &m);
+                events::MarketActivated { group_id: g.group_id, market: m, is_quote: false }.publish(&env);
+                g.step = GradStep::Graduated;
+                set_phase(&env, &mut s, Phase::Graduated);
+                save_state(&env, &s);
+                events::Graduated { token: cfg.token.clone(), pool: g.pool.clone(), group_id: g.group_id }.publish(&env);
+            }
+            _ => return Err(CurveError::AlreadyGraduated),
         }
-        Err(CurveError::NotImplemented)
+        save_graduation(&env, &g);
+        bump(&env);
+        Ok(g.step)
+    }
+
+    /// The creator takes the market group (the curve is its owner until now). Requires `Graduated` and the
+    /// creator's signature (the market factory needs the new owner to sign `transfer_ownership`).
+    pub fn claim_group(env: Env, creator: Address) -> Result<u32, CurveError> {
+        let cfg = config(&env);
+        if creator != cfg.creator {
+            return Err(CurveError::NotCreator);
+        }
+        creator.require_auth();
+        let mut g = match graduation_state(&env) {
+            Some(g) if g.step == GradStep::Graduated => g,
+            _ => return Err(CurveError::NotGraduated),
+        };
+        if g.claimed {
+            return Err(CurveError::GroupAlreadyClaimed);
+        }
+        g.claimed = true;
+        save_graduation(&env, &g);
+        bump(&env);
+        MarketFactoryClient::new(&env, &cfg.graduation.market_factory).transfer_ownership(
+            &env.current_contract_address(),
+            &g.group_id,
+            &creator,
+        );
+        events::GroupClaimed { group_id: g.group_id, owner: creator }.publish(&env);
+        Ok(g.group_id)
+    }
+
+    /// `(fee token, amount)` the payer of the pool step must hold: read live from the Aquarius router (a pool
+    /// that already exists costs nothing, and any unspent amount is refunded).
+    pub fn graduation_cost(env: Env) -> Result<(Address, i128), CurveError> {
+        graduation::creation_fee(&env, &config(&env))
+    }
+
+    /// Graduation facts (None until the pool step ran).
+    pub fn get_graduation(env: Env) -> Option<Graduation> {
+        graduation_state(&env)
     }
 
     /// Immediate upgrade (house rule). `admin` must be the launch factory, which exposes it to its own admin.

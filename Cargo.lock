@@ -829,7 +829,10 @@ name = "launchpad-curve"
 version = "0.1.0"
 dependencies = [
  "launchpad-token",
+ "market-factory",
+ "mock-price-router",
  "mock-token",
+ "peridot-interfaces",
  "soroban-sdk",
 ]
 
@@ -837,7 +840,10 @@ dependencies = [
 name = "launchpad-factory"
 version = "0.1.0"
 dependencies = [
+ "market-factory",
+ "mock-price-router",
  "mock-token",
+ "peridot-interfaces",
  "soroban-sdk",
 ]
 

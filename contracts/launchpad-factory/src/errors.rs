@@ -19,4 +19,10 @@ pub enum FactoryError {
     BadCurveParams = 11,
     InvalidFee = 12,
     Overflow = 13,
+    /// `set_graduation` has not been called.
+    GraduationNotSet = 14,
+    /// No price config for this quote token (`set_quote_price`).
+    QuotePriceNotSet = 15,
+    /// The quote price must be a `ReflectorOnly` mapping.
+    InvalidQuotePrice = 16,
 }

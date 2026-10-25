@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 7,
+    "address": 10,
     "nonce": 0,
     "mux_id": 0
   },
@@ -61,6 +61,78 @@
                             },
                             "val": {
                               "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "graduation"
+                            },
+                            "val": {
+                              "map": [
+                                {
+                                  "key": {
+                                    "symbol": "market_factory"
+                                  },
+                                  "val": {
+                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARQG5"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "quote_price"
+                                  },
+                                  "val": {
+                                    "vec": [
+                                      {
+                                        "symbol": "ReflectorOnly"
+                                      },
+                                      {
+                                        "map": [
+                                          {
+                                            "key": {
+                                              "symbol": "asset"
+                                            },
+                                            "val": {
+                                              "vec": [
+                                                {
+                                                  "symbol": "Other"
+                                                },
+                                                {
+                                                  "symbol": "XLM"
+                                                }
+                                              ]
+                                            }
+                                          },
+                                          {
+                                            "key": {
+                                              "symbol": "oracle"
+                                            },
+                                            "val": {
+                                              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "router"
+                                  },
+                                  "val": {
+                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "venue"
+                                  },
+                                  "val": {
+                                    "u32": 0
+                                  }
+                                }
+                              ]
                             }
                           },
                           {

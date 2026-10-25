@@ -45,3 +45,56 @@ pub struct FeesClaimed {
 pub struct Upgraded {
     pub wasm_hash: BytesN<32>,
 }
+
+#[contractevent(topics = ["pool_created"])]
+pub struct PoolCreated {
+    #[topic]
+    pub pool: Address,
+    pub pool_index: BytesN<32>,
+    pub share_token: Address,
+    pub payer: Address,
+    pub quote_amount: i128,
+    pub token_amount: i128,
+    pub lp_shares_burned: i128,
+    pub unsold_burned: i128,
+    pub fee_token: Address,
+    pub fee_paid: i128,
+}
+
+#[contractevent(topics = ["group_created"])]
+pub struct GroupCreated {
+    #[topic]
+    pub group_id: u32,
+}
+
+#[contractevent(topics = ["market_added"])]
+pub struct MarketAdded {
+    #[topic]
+    pub group_id: u32,
+    pub market: Address,
+    pub underlying: Address,
+    pub is_quote: bool,
+}
+
+#[contractevent(topics = ["market_activated"])]
+pub struct MarketActivated {
+    #[topic]
+    pub group_id: u32,
+    pub market: Address,
+    pub is_quote: bool,
+}
+
+#[contractevent(topics = ["graduated"])]
+pub struct Graduated {
+    #[topic]
+    pub token: Address,
+    pub pool: Address,
+    pub group_id: u32,
+}
+
+#[contractevent(topics = ["group_claimed"])]
+pub struct GroupClaimed {
+    #[topic]
+    pub group_id: u32,
+    pub owner: Address,
+}

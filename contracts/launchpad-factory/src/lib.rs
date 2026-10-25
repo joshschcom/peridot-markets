@@ -20,14 +20,22 @@ mod types;
 
 #[cfg(test)]
 mod test;
+#[cfg(test)]
+mod test_e2e;
+#[cfg(test)]
+#[path = "../../launchpad-curve/src/test_aquarius.rs"]
+mod test_aquarius;
 
+use peridot_interfaces::PriceConfig;
 use soroban_sdk::{
     contract, contractclient, contractimpl, contracttype, token, Address, Bytes, BytesN, Env, String, Vec,
 };
 
 pub use errors::FactoryError;
 pub use params::CurveParams;
-pub use types::{FactoryConfig, LaunchInfo, LaunchParams, Preset};
+pub use types::{
+    FactoryConfig, GraduationConfig, GraduationTargets, GraduationVenue, LaunchInfo, LaunchParams, Preset,
+};
 
 const TTL_THRESHOLD: u32 = 100_000; // below testnet's 120_960 default so creation never bumps
 const TTL_EXTEND_TO: u32 = 400_000;
@@ -87,11 +95,16 @@ enum DataKey {
     Paused,
     FeeToken,
     LaunchFee,
+    Graduation,
     Count,
     Preset(Address, Preset),
     Launch(u32),
     TokenIndex(Address),
     CreatorLaunches(Address),
+    /// Quote token -> price config of its market in graduated groups.
+    QuotePrice(Address),
+    /// Curve address -> true, for every curve this factory deployed (`is_curve`).
+    CurveIndex(Address),
 }
 
 fn inst_bump(env: &Env) {
@@ -208,6 +221,42 @@ impl LaunchFactory {
         Ok(())
     }
 
+    /// Registers the Aquarius router and the Peridot market factory every NEW curve graduates through.
+    /// Existing curves keep the wiring they were deployed with.
+    pub fn set_graduation(
+        env: Env,
+        admin: Address,
+        router: Address,
+        market_factory: Address,
+    ) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        env.storage().instance().set(&DataKey::Graduation, &GraduationTargets {
+            router: router.clone(),
+            market_factory: market_factory.clone(),
+        });
+        events::GraduationSet { router, market_factory }.publish(&env);
+        Ok(())
+    }
+
+    /// Price config of the QUOTE asset market that graduated groups create (a `ReflectorOnly` mapping that
+    /// the market factory has approved with `set_price_feed_allowed`). Frozen into each curve at launch.
+    pub fn set_quote_price(
+        env: Env,
+        admin: Address,
+        quote_token: Address,
+        price: PriceConfig,
+    ) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        if !matches!(price, PriceConfig::ReflectorOnly(_)) {
+            return Err(FactoryError::InvalidQuotePrice);
+        }
+        let key = DataKey::QuotePrice(quote_token.clone());
+        env.storage().persistent().set(&key, &price);
+        pbump(&env, &key);
+        events::QuotePriceSet { quote_token, price }.publish(&env);
+        Ok(())
+    }
+
     /// Optional launch fee, paid by the creator to the treasury inside `launch_curve`. `amount == 0` disables.
     pub fn set_launch_fee(env: Env, admin: Address, fee_token: Address, amount: i128) -> Result<(), FactoryError> {
         require_admin(&env, &admin)?;
@@ -306,6 +355,13 @@ impl LaunchFactory {
             .persistent()
             .get(&DataKey::Preset(params.quote_token.clone(), params.preset))
             .ok_or(FactoryError::PresetNotSet)?;
+        let targets: GraduationTargets =
+            env.storage().instance().get(&DataKey::Graduation).ok_or(FactoryError::GraduationNotSet)?;
+        let quote_price: PriceConfig = env
+            .storage()
+            .persistent()
+            .get(&DataKey::QuotePrice(params.quote_token.clone()))
+            .ok_or(FactoryError::QuotePriceNotSet)?;
         // A preset is validated when stored, but re-check so a bad migration can never deploy.
         params::validate(&cfg).map_err(|_| FactoryError::BadCurveParams)?;
 
@@ -336,6 +392,12 @@ impl LaunchFactory {
                 this,
                 treasury.clone(),
                 cfg,
+                GraduationConfig {
+                    venue: GraduationVenue::Aquarius,
+                    router: targets.router,
+                    market_factory: targets.market_factory,
+                    quote_price,
+                },
             ),
         );
         debug_assert!(deployed_curve == curve_addr);
@@ -366,6 +428,9 @@ impl LaunchFactory {
         let launch_key = DataKey::Launch(id);
         env.storage().persistent().set(&launch_key, &info);
         pbump(&env, &launch_key);
+        let curve_key = DataKey::CurveIndex(curve_addr.clone());
+        env.storage().persistent().set(&curve_key, &true);
+        pbump(&env, &curve_key);
         let idx_key = DataKey::TokenIndex(token_addr.clone());
         env.storage().persistent().set(&idx_key, &id);
         pbump(&env, &idx_key);
@@ -396,6 +461,7 @@ impl LaunchFactory {
         let info = get_launch_by_id(&env, id)?;
         pbump(&env, &DataKey::Launch(id));
         pbump(&env, &DataKey::TokenIndex(info.token));
+        pbump(&env, &DataKey::CurveIndex(info.curve.clone()));
         pbump(&env, &DataKey::CreatorLaunches(info.creator));
         inst_bump(&env);
         Ok(())
@@ -441,6 +507,20 @@ impl LaunchFactory {
             .get(&DataKey::TokenIndex(token))
             .ok_or(FactoryError::LaunchNotFound)?;
         get_launch_by_id(&env, id)
+    }
+
+    /// True for every curve this factory deployed. The market factory asks this before it lets a curve own
+    /// groups with pool-priced (`AquariusOnly`) markets.
+    pub fn is_curve(env: Env, curve: Address) -> bool {
+        env.storage().persistent().get(&DataKey::CurveIndex(curve)).unwrap_or(false)
+    }
+
+    pub fn graduation_targets(env: Env) -> Option<GraduationTargets> {
+        env.storage().instance().get(&DataKey::Graduation)
+    }
+
+    pub fn get_quote_price(env: Env, quote_token: Address) -> Option<PriceConfig> {
+        env.storage().persistent().get(&DataKey::QuotePrice(quote_token))
     }
 
     pub fn get_preset(env: Env, quote_token: Address, preset: Preset) -> Result<CurveParams, FactoryError> {

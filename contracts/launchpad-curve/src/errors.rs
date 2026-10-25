@@ -28,5 +28,12 @@ pub enum CurveError {
     // admin and lifecycle
     NotFactory = 18,
     NotGraduatable = 19,
-    NotImplemented = 20,
+    // graduation (stage 2)
+    AlreadyGraduated = 21,
+    /// The Aquarius pool already held liquidity at another ratio: the deposit did not take the exact amounts.
+    PoolNotFresh = 22,
+    NothingBurned = 23,
+    NotCreator = 24,
+    NotGraduated = 25,
+    GroupAlreadyClaimed = 26,
 }

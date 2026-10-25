@@ -1,3 +1,4 @@
+use peridot_interfaces::PriceConfig;
 use soroban_sdk::{contracttype, Address, String};
 
 /// Graduation-speed presets. The numbers behind a preset are configured per quote token by the admin
@@ -51,4 +52,32 @@ pub struct FactoryConfig {
     pub fee_token: Option<Address>,
     pub launch_fee: i128,
     pub launch_count: u32,
+}
+
+/// Where graduated liquidity lives. MUST stay identical to `launchpad-curve`'s `GraduationVenue` (it is
+/// encoded into the curve constructor; the Wasm launch tests prove the encodings match).
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[repr(u32)]
+pub enum GraduationVenue {
+    Aquarius = 0,
+}
+
+/// Immutable graduation wiring handed to every new curve. MUST stay identical to `launchpad-curve`'s
+/// `GraduationConfig`.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GraduationConfig {
+    pub venue: GraduationVenue,
+    pub router: Address,
+    pub market_factory: Address,
+    pub quote_price: PriceConfig,
+}
+
+/// The addresses the admin registers once for graduation.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GraduationTargets {
+    pub router: Address,
+    pub market_factory: Address,
 }

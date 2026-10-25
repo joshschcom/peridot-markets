@@ -10,7 +10,8 @@ const TOKEN_WASM: &[u8] = include_bytes!("../testdata/launchpad_token.wasm");
 const CURVE_WASM: &[u8] = include_bytes!("../testdata/launchpad_curve.wasm");
 
 use mock_token::{MockToken, MockTokenClient};
-use soroban_sdk::{testutils::Address as _, token, Address, Bytes, BytesN, Env, String};
+use peridot_interfaces::{Asset, PriceConfig, ReflectorOnlyCfg};
+use soroban_sdk::{testutils::Address as _, token, Address, Bytes, BytesN, Env, String, Symbol};
 
 use crate::{
     default_preset, CurveParams, FactoryError, LaunchFactory, LaunchFactoryClient, LaunchParams, Preset,
@@ -30,6 +31,10 @@ struct Ctx {
     curve_hash: BytesN<32>,
 }
 
+fn xlm_price(env: &Env, oracle: &Address) -> PriceConfig {
+    PriceConfig::ReflectorOnly(ReflectorOnlyCfg { oracle: oracle.clone(), asset: Asset::Other(Symbol::new(env, "XLM")) })
+}
+
 fn setup() -> Ctx {
     let env = Env::default();
     env.mock_all_auths();
@@ -45,6 +50,8 @@ fn setup() -> Ctx {
     let curve_hash = env.deployer().upload_contract_wasm(Bytes::from_slice(&env, CURVE_WASM));
     f.set_wasm(&admin, &token_hash, &curve_hash);
     f.set_default_presets(&admin, &quote_id);
+    f.set_graduation(&admin, &Address::generate(&env), &Address::generate(&env));
+    f.set_quote_price(&admin, &quote_id, &xlm_price(&env, &Address::generate(&env)));
     Ctx { env, f, f_addr, admin, treasury, quote, quote_id, token_hash, curve_hash }
 }
 
@@ -461,4 +468,68 @@ fn cpu_report_for_launch_buy_sell() {
     for v in [launch_cpu, launch_buy_cpu, buy_cpu, sell_cpu, claim_cpu] {
         assert!(v < 400_000_000);
     }
+}
+
+#[test]
+fn is_curve_answers_for_deployed_curves_only() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    let (tok, curve) = c.launch(&creator, "Meridian Coin", "MRD", Preset::Standard);
+    let (tok2, curve2) = c.launch(&creator, "Second", "SEC", Preset::Fast);
+    assert!(c.f.is_curve(&curve));
+    assert!(c.f.is_curve(&curve2));
+    // the token, the factory, the creator and a stranger are not curves
+    for not in [tok, tok2, c.f_addr.clone(), creator.clone(), Address::generate(&c.env)] {
+        assert!(!c.f.is_curve(&not));
+    }
+    // extending a launch keeps the curve index alive
+    c.f.extend_launch(&0);
+    assert!(c.f.is_curve(&curve));
+}
+
+#[test]
+fn launching_needs_graduation_wiring_and_a_quote_price() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.cost_estimate().budget().reset_unlimited();
+    let admin = Address::generate(&env);
+    let f_addr = env.register(LaunchFactory, (&admin, &Address::generate(&env)));
+    let f = LaunchFactoryClient::new(&env, &f_addr);
+    let quote_id = env.register(MockToken, ());
+    MockTokenClient::new(&env, &quote_id).initialize(&String::from_str(&env, "Lumens"), &String::from_str(&env, "XLM"), &7);
+    f.set_wasm(
+        &admin,
+        &env.deployer().upload_contract_wasm(Bytes::from_slice(&env, TOKEN_WASM)),
+        &env.deployer().upload_contract_wasm(Bytes::from_slice(&env, CURVE_WASM)),
+    );
+    f.set_default_presets(&admin, &quote_id);
+    let creator = Address::generate(&env);
+    let launch = || {
+        f.try_launch_curve(
+            &creator,
+            &String::from_str(&env, "Coin"),
+            &String::from_str(&env, "CN"),
+            &LaunchParams {
+                quote_token: quote_id.clone(),
+                preset: Preset::Fast,
+                metadata_uri: String::from_str(&env, ""),
+                creator_buy: 0,
+                min_tokens_out: 0,
+            },
+        )
+    };
+    assert_eq!(launch().unwrap_err().unwrap(), FactoryError::GraduationNotSet);
+    f.set_graduation(&admin, &Address::generate(&env), &Address::generate(&env));
+    assert_eq!(launch().unwrap_err().unwrap(), FactoryError::QuotePriceNotSet);
+    // only a ReflectorOnly mapping is accepted, and only the admin sets it
+    let oracle = Address::generate(&env);
+    let aq = PriceConfig::AquariusOnly(peridot_interfaces::AquariusOnlyCfg {
+        pool: Address::generate(&env),
+        quote_token: quote_id.clone(),
+    });
+    assert_eq!(f.try_set_quote_price(&admin, &quote_id, &aq).unwrap_err().unwrap(), FactoryError::InvalidQuotePrice);
+    assert!(f.try_set_quote_price(&creator, &quote_id, &xlm_price(&env, &oracle)).is_err());
+    f.set_quote_price(&admin, &quote_id, &xlm_price(&env, &oracle));
+    assert_eq!(f.get_quote_price(&quote_id), Some(xlm_price(&env, &oracle)));
+    assert!(launch().is_ok());
 }
