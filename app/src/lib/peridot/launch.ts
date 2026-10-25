@@ -2,7 +2,7 @@ import { Address, StrKey, scValToNative, xdr } from '@stellar/stellar-sdk';
 import type { GroupMarginConfig, MarketConfig } from './types';
 import { getDeployments, network } from './network';
 import { parseAmount } from './amount';
-import { encodeMarketConfig, getTokenMetadata, isOracleAllowed, isYieldVaultAllowed, normalizeContract, scBool, scAddress, scEnum, scI128, scMap, scSymbol, scU128, scU32, writeFactory } from './factory';
+import { encodeMarketConfig, getTokenMetadata, isPriceFeedAllowed, isYieldVaultAllowed, normalizeContract, scBool, scAddress, scEnum, scI128, scMap, scSymbol, scU128, scU32, writeFactory } from './factory';
 import { assertRpcNetwork, getPendingTransaction, getRpc, isDefinitivelyExpired, readContract, readContractRaw, reconcilePendingTransaction, submitContract, TransactionRejectedError, type PendingTransaction, type Signer, type TxProgress } from './rpc';
 import { mockCreateMarket, mockActivateMarket, mutateMockState, readMockState, writeMockEvent } from './mock';
 import { marketDraftToConfig, validateMarketDraft, type MarketDraft } from './market-config';
@@ -171,6 +171,13 @@ export async function runNextLaunchStep(session:LaunchSession,signer:Signer,onPr
     saveLaunch(pending);onProgress?.(p);
   };
   try {
+    if(step.kind==='create'||step.kind==='market'||step.kind==='activate'){
+      const checked=step.kind==='create'?session.draft.markets:[session.draft.markets[step.marketIndex!]];
+      await Promise.all(checked.map(async market=>{
+        if(!market.price||!await isPriceFeedAllowed(market.token,market.price))throw new Error(`The token, oracle and asset mapping for ${market.symbol} is not approved by the factory.`);
+        if(market.route!=='None'&&!await isYieldVaultAllowed(market.routeAddress))throw new Error(`The yield vault for ${market.symbol} is not approved by the factory.`);
+      }));
+    }
     if(network.useMocks){
       if(step.kind==='applymargin'){
         const extra=readMockState().pending[`control:${groupId(session)}`] as {margin:{incentive_apply_after:bigint}};
@@ -183,10 +190,6 @@ export async function runNextLaunchStep(session:LaunchSession,signer:Signer,onPr
     let result:{hash:string;value:unknown};
     const draft=session.draft.markets[step.marketIndex!];
     if(step.kind==='create'){
-      await Promise.all(session.draft.markets.map(async market=>{
-        if(market.price?.tag!=='ReflectorOnly'||!await isOracleAllowed(market.price.values[0].oracle))throw new Error(`The price feed for ${market.symbol} is not approved by the factory.`);
-        if(market.route!=='None'&&!await isYieldVaultAllowed(market.routeAddress))throw new Error(`The yield vault for ${market.symbol} is not approved by the factory.`);
-      }));
       result=await writeFactory('create_group',[owner,scSymbol(session.draft.name)],signer,progress);
     }else if(step.kind==='market'){
       const cfg=marketDraftToConfig(draft,session.draft.rewardDecimals);cfg.supply_reward_per_sec=0n;cfg.borrow_reward_per_sec=0n;

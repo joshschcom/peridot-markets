@@ -92,6 +92,7 @@ interface ContractInput {
   onProgress?: (progress: TxProgress) => void;
 }
 export async function submitContract<T>(input: ContractInput): Promise<TxResult<T>> {
+  if (network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
   return withWalletLock(input.signer.address, () => submitContractLocked<T>(input));
 }
 async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T>> {

@@ -6,7 +6,7 @@ const selected = process.argv[2];
 if (!['mainnet', 'testnet'].includes(selected)) throw new Error('Usage: node scripts/sync-deployments.mjs mainnet|testnet');
 const root = new URL('../../', import.meta.url);
 const board = await readFile(new URL('docs/COORDINATION.md', root), 'utf8');
-if (!new RegExp(`\\[A\\][^\\n]*READY: ${selected} phase-1`).test(board)) throw new Error(`Lead A has not announced ${selected} phase-1 readiness.`);
+if (!new RegExp(`^(?:\\*\\*)?\\[A\\][^\\n]*READY: ${selected} phase-1\\b`, 'm').test(board)) throw new Error(`Lead A has not announced ${selected} phase-1 readiness.`);
 const source = JSON.parse(await readFile(new URL(`deployments/${selected}.json`, root), 'utf8'));
 if (source.network !== selected) throw new Error('Manifest network mismatch.');
 for (const key of ['factory', 'margin_factory']) if (!StrKey.isValidContract(source[key] || '')) throw new Error(`Invalid ${key}.`);

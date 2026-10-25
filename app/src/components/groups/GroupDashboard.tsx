@@ -45,7 +45,7 @@ export default function GroupDashboard({id}:{id:string}) {
     try{await task();if(clearReview){setReview(null);setCloseReview(null);}await refresh();}catch(e){setError(readable(e));await refresh().catch(()=>{});setError(readable(e));}finally{flight.current=false;setBusy(false);}
   };
   const signer=()=>{if(!wallet.address)throw new Error('Connect Freighter first.');if(wallet.networkMismatch)throw new Error('Switch Freighter to the selected app network.');return {address:wallet.address,signTransaction:wallet.signTransaction};};
-  const selected=markets.find(m=>m.address===active),disabled=busy||!wallet.address||wallet.networkMismatch;
+  const selected=markets.find(m=>m.address===active),disabled=busy||!wallet.address||wallet.networkMismatch||network.readOnly;
   const mAsset=markets.find(m=>m.address===marginMarket),bAsset=markets.find(m=>m.address===baseMarket);
   const maxLeverage=margin&&mAsset&&bAsset?Math.floor(effectiveLeverage(Number(margin.info.cfg.max_leverage),(side==='Long'?bAsset:mAsset).config.collateral_factor)):2;
   if(loading)return <section className="panel" aria-busy="true">Loading group and market balances...</section>;

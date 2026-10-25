@@ -22,7 +22,7 @@ beforeEach(async()=>{
  const {mocks}=await load();
  initial??=JSON.stringify(mocks.readMockState(),(_key,v)=>typeof v==='bigint'?{__peridotBigint:v.toString()}:v);
  storage.setItem('peridot:mock:v1:mainnet',initial);
- for(const key of storage.values.keys())if(key.startsWith('peridot:control-add:'))storage.removeItem(key);
+ for(const key of storage.values.keys())if(key.startsWith('peridot:control-add:')||key.startsWith('peridot:pair-sync:'))storage.removeItem(key);
 });
 
 test('risk cap changes are immediate while CF waits a full 60 seconds and cannot apply twice',async()=>{
@@ -86,8 +86,9 @@ test('pool permission and binding are separate actions and binding requires perm
  assert.equal(extras.poolBindings?.[poolId],undefined);
  await c.setPoolBinding(1,pool,poolId,true,signer);
  assert.equal((mocks.readMockState().pending['control:1'] as typeof extras).poolBindings![poolId],pool);
- await c.setPoolAllowed(1,pool,false,signer);
- assert.deepEqual((await c.loadControl(1)).margin!.pools,[]);
+ await assert.rejects(c.setPoolAllowed(1,pool,false,signer),/Only Peridot admin/);
+ await assert.rejects(c.setPoolBinding(1,pool,poolId,false,signer),/Only Peridot admin/);
+ assert.deepEqual((await c.loadControl(1)).margin!.pools,[pool]);
 });
 
 test('rewards start unfunded and control funding uses the shared launch state',async()=>{
@@ -139,7 +140,7 @@ async function additionFixture(route:'None'|'Defindex'='None') {
  const ctx=await load();const {factory,mocks}=ctx;
  const cfg=await factory.getMarketConfig(1,(await factory.getGroup(1)).markets[0]);
  const token=Object.entries(mocks.readMockState().tokens).find(([,v])=>v.symbol==='EURC')!;
- return {...ctx,cfg:{...cfg,token:token[0],supply_reward_per_sec:0n,borrow_reward_per_sec:0n,yield_route:route==='None'?{tag:'None' as const,values:undefined}:{tag:'Defindex' as const,values:[{vault:mocks.MOCK_USDC}] as const}},token:{address:token[0],...token[1]}};
+ return {...ctx,cfg:{...cfg,token:token[0],price:{tag:'ReflectorOnly' as const,values:[{oracle:mocks.MOCK_ORACLE,asset:{tag:'Other' as const,values:['EURC'] as const}}] as const},supply_reward_per_sec:0n,borrow_reward_per_sec:0n,yield_route:route==='None'?{tag:'None' as const,values:undefined}:{tag:'Defindex' as const,values:[{vault:mocks.MOCK_USDC}] as const}},token:{address:token[0],...token[1]}};
 }
 
 test('interrupted additions resume deployment, activation and attachment without duplicate markets',async()=>{
@@ -171,7 +172,7 @@ test('interrupted additions resume deployment, activation and attachment without
 test('market address recovery reads activation state after browser addition storage is lost',async()=>{
  const {c,factory,signer,cfg,token}=await additionFixture();
  const {value:market}=await c.addControlMarket(1,cfg,token,signer);
- for(const key of storage.values.keys())if(key.startsWith('peridot:control-add:'))storage.removeItem(key);
+ for(const key of storage.values.keys())if(key.startsWith('peridot:control-add:')||key.startsWith('peridot:pair-sync:'))storage.removeItem(key);
  const recovered=await c.recoverMarketAddition(1,signer.address,market);
  assert.equal(recovered!.market,market);assert.equal(recovered!.active,false);assert.equal(recovered!.attached,true);
  await c.activateControlMarket(1,market,signer);
@@ -242,4 +243,60 @@ test('market recovery storage separates factories and clears only a matching pro
  assert.equal(c.clearRejectedMarketAddition(1,signer.address,{...addition,market:'confirmed-market'},new TransactionRejectedError(transaction.hash,'rejected')),false);
  assert.equal(c.clearRejectedMarketAddition(1,signer.address,addition,new TransactionRejectedError(transaction.hash,'rejected')),true);
  assert.equal(c.readMarketAddition(1,signer.address),null);
+});
+
+for(const outcome of ['wallet rejected','unknown confirmation'] as const)test(`collateral receipt survives ${outcome} at sync and retry cannot apply collateral again`,async()=>{
+ const {c,signer}=await load();const {UnknownTransactionError}=await import('./rpc');let applyCalls=0;
+ const apply=async()=>{applyCalls++;return {hash:'confirmed-collateral-receipt'};};
+ const sync=async()=>{throw outcome==='wallet rejected'?new Error('Wallet signature rejected'):new UnknownTransactionError('sync-receipt');};
+ await assert.rejects(c.applyCollateralAndSync(1,apply,sync),error=>error instanceof c.CollateralSyncError&&error.receipt.hash==='confirmed-collateral-receipt');
+ assert.equal(c.readPairSync(1)!.applyConfirmed,true);assert.equal(c.readPairSync(1)!.applyHash,'confirmed-collateral-receipt');
+ await assert.rejects(c.applyCollateralAndSync(1,apply,sync),/previous leverage synchronization/);
+ assert.equal(applyCalls,1);
+ await c.syncLeverageLimits(1,signer);assert.equal(c.readPairSync(1),null);assert.equal(applyCalls,1);
+});
+
+test('companion CF apply persists sync recovery and removes the proposal even if second step fails',async()=>{
+ const {c,factory,mocks,signer}=await load();const oldNow=Date.now;let now=1800000000000;Date.now=()=>now;
+ try{
+  const market=(await factory.getGroup(1)).markets[0],cfg=await factory.getMarketConfig(1,market);
+  await c.updateRisk(1,market,{...cfg,collateral_factor:650000n},signer);
+  await c.updatePrice(1,market,{tag:'ReflectorOnly',values:[{oracle:mocks.MOCK_ORACLE,asset:{tag:'Other',values:['USDC']}}]},signer);
+  const proposal=(await c.loadControl(1)).pending.find(p=>p.kind==='price')!;now+=60000;
+  await assert.rejects(c.applyPending(1,proposal,signer,p=>{if(p.message?.startsWith('Syncing leverage limits'))throw new Error('Rejected second-step signature');}),/Collateral changes were applied/);
+  assert.equal((await factory.getMarketConfig(1,market)).collateral_factor,650000n);
+  assert.equal((await c.loadControl(1)).pending.length,0);assert.equal((await c.loadControl(1)).pairSync!.applyConfirmed,true);
+  await assert.rejects(c.applyPending(1,proposal,signer),/previous leverage synchronization/);
+  await c.syncLeverageLimits(1,signer);
+  assert.equal((await c.loadControl(1)).pairSync,null);
+  assert.equal((mocks.readMockState().pending['pair-caps:1'] as Record<string,bigint>)[market],650000n);
+  assert.equal(mocks.readMockState().history['1'].filter(h=>h.method==='apply_pending').length,1);
+ }finally{Date.now=oldNow;}
+});
+
+test('control progress never adopts an unrelated global pending transaction',async()=>{
+ const {c}=await load();const old={hash:'other-hash',method:'apply_pending',contractId:'factory'};
+ assert.equal(c.captureControlTransaction({status:'unknown',hash:old.hash},false,'apply_pending','factory',old),undefined);
+ assert.equal(c.captureControlTransaction({status:'unknown',hash:old.hash},true,'sync_pairs','margin-factory',old),undefined);
+ const own={hash:'own-hash',method:'sync_pairs',contractId:'margin-factory',maxTime:123,submissionLedger:10};
+ assert.deepEqual(c.captureControlTransaction({status:'submitting',hash:own.hash},true,'sync_pairs','margin-factory',own),own);
+ assert.deepEqual(c.captureControlTransaction({status:'success',hash:own.hash},true,'sync_pairs','margin-factory',null,own),own);
+});
+
+test('control create and price updates reject unapproved exact feed tuples',async()=>{
+ const {c,factory,mocks,signer,cfg,token}=await additionFixture();
+ const wrongAsset={tag:'ReflectorOnly' as const,values:[{oracle:mocks.MOCK_ORACLE,asset:{tag:'Other' as const,values:['USDC'] as const}}] as const};
+ await assert.rejects(c.addControlMarket(1,{...cfg,price:wrongAsset},token,signer),/price feed tuple is not approved/);
+ const market=(await factory.getGroup(1)).markets[0];
+ const wrongOracle={tag:'ReflectorOnly' as const,values:[{oracle:mocks.MOCK_USDC,asset:{tag:'Other' as const,values:['USDC'] as const}}] as const};
+ await assert.rejects(c.updatePrice(1,market,wrongOracle,signer),/not bound/);
+ assert.equal((await c.loadControl(1)).pending.length,0);
+});
+
+test('manual leverage synchronization is permissionless without changing group settings',async()=>{
+ const {c,factory,mocks,signer}=await load();const before=await factory.getGroup(1);
+ await c.syncLeverageLimits(1,{...signer,address:'another-connected-wallet'});
+ assert.deepEqual(await factory.getGroup(1),before);
+ assert.ok(mocks.readMockState().pending['pair-caps:1']);
+ assert.equal(c.readPairSync(1),null);
 });

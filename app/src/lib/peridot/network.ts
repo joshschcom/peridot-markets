@@ -12,6 +12,7 @@ export const network = {
     ? (process.env.NEXT_PUBLIC_MAINNET_RPC_URL || '')
     : (process.env.NEXT_PUBLIC_TESTNET_RPC_URL || 'https://soroban-testnet.stellar.org'),
   useMocks: process.env.NEXT_PUBLIC_USE_MOCKS === 'true',
+  readOnly: process.env.NEXT_PUBLIC_READ_ONLY === 'true',
   explorerUrl: `https://stellar.expert/explorer/${selected === 'mainnet' ? 'public' : 'testnet'}`,
 } as const;
 export function getDeployments(): Deployments {

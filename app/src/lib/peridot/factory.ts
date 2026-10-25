@@ -55,24 +55,43 @@ export async function getTokenMetadata(token:string):Promise<{symbol:string;deci
 }
 export async function writeFactory<T>(method:string,args:xdr.ScVal[],signer:Signer,onProgress?:(p:TxProgress)=>void){return submitContract<T>({contractId:getDeployments().factory,method,args,signer,onProgress});}
 export async function findReflectorFeed(token:string,symbol:string):Promise<PriceConfig>{
- if(network.useMocks){const {MOCK_ORACLE}=await import('./mock');return {tag:'ReflectorOnly',values:[{oracle:MOCK_ORACLE,asset:{tag:'Other',values:[symbol]}}]};}
+ if(network.useMocks){const {MOCK_ORACLE}=await import('./mock');const price:PriceConfig={tag:'ReflectorOnly',values:[{oracle:MOCK_ORACLE,asset:{tag:'Other',values:[symbol]}}]};if(!await isPriceFeedAllowed(token,price))throw new Error('This token and price feed mapping is not approved by the factory.');return price;}
  const d=getDeployments();
  for(const [key,tag,asset] of [['reflector_stellar','Stellar',token],['reflector_external','Other',symbol]] as const){
   const oracle=d.external[key];if(typeof oracle!=='string'||!oracle)continue;
-  // A self-reported symbol is not proof of asset identity.
-  if(tag==='Other' && d.external[symbol.toLowerCase()]!==token)continue;
+  // A self-reported symbol is only a candidate; the central tuple allowlist proves the mapping.
   if(!await isOracleAllowed(oracle))continue;
   const assets=normalizeContract<Array<{tag:string;values:readonly[string]}>>(await readContract(oracle,'assets'));
-  if(assets.some(a=>a.tag===tag&&a.values[0]===asset))return {tag:'ReflectorOnly',values:[{oracle,asset:{tag,values:[asset]}}]};
+  if(assets.some(a=>a.tag===tag&&a.values[0]===asset)){
+   const price:PriceConfig={tag:'ReflectorOnly',values:[{oracle,asset:{tag,values:[asset]}}]};
+   if(await isPriceFeedAllowed(token,price))return price;
+  }
  }
  throw new Error('This token is not covered by the configured Reflector feeds.');
 }
 
 export async function isOracleAllowed(oracle:string):Promise<boolean>{
  if(!StrKey.isValidContract(oracle))return false;
- return network.useMocks?true:readContract<boolean>(getDeployments().factory,'is_oracle_allowed',[scAddress(oracle)]);
+ if(network.useMocks){const {MOCK_ORACLE}=await import('./mock');return oracle===MOCK_ORACLE;}
+ return readContract<boolean>(getDeployments().factory,'is_oracle_allowed',[scAddress(oracle)]);
 }
 export async function isYieldVaultAllowed(vault:string):Promise<boolean>{
  if(!StrKey.isValidContract(vault))return false;
  return network.useMocks?true:readContract<boolean>(getDeployments().factory,'is_yield_vault_allowed',[scAddress(vault)]);
+}
+
+
+/** Oracle approval alone never proves that its asset key prices this token. */
+export async function isPriceFeedAllowed(token:string,price:PriceConfig):Promise<boolean> {
+ if(!StrKey.isValidContract(token)||price.tag!=='ReflectorOnly')return false;
+ const {oracle,asset}=price.values[0];
+ if(!await isOracleAllowed(oracle))return false;
+ if(network.useMocks){
+  const {MOCK_USDC,MOCK_XLM,MOCK_EURC}=await import('./mock');
+  const symbols:Record<string,string>={[MOCK_USDC]:'USDC',[MOCK_XLM]:'XLM',[MOCK_EURC]:'EURC'};
+  if(!symbols[token])return false;
+  return asset.tag==='Stellar'?asset.values[0]===token:asset.tag==='Other'&&asset.values[0]===symbols[token];
+ }
+ const encodedAsset=scEnum(asset.tag,asset.tag==='Stellar'?scAddress(asset.values[0]):scSymbol(asset.values[0]));
+ return readContract<boolean>(getDeployments().factory,'is_price_feed_allowed',[scAddress(token),scAddress(oracle),encodedAsset]);
 }

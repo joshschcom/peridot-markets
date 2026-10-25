@@ -3,7 +3,7 @@ import { network, getDeployments } from './network';
 import { readContract, submitContract, getPendingTransaction, isDefinitivelyExpired, reconcilePendingTransaction, TransactionRejectedError, type PendingTransaction } from './rpc';
 import type { Group, MarketConfig, RateModel, PriceConfig, GroupMarginConfig, MarginInfo } from './types';
 import { tokenInfo, readRewards, type TokenInfo, type Signer, type Progress } from './group-client';
-import { getGroup, getMarketConfig, normalizeContract, isOracleAllowed, isYieldVaultAllowed } from './factory';
+import { getGroup, getMarketConfig, normalizeContract, isPriceFeedAllowed, isYieldVaultAllowed } from './factory';
 
 export type { Signer, Progress };
 export interface MarketProposalSnapshot {cf?:{cf:bigint;execute_after:bigint};price?:{config:PriceConfig;execute_after:bigint};}
@@ -11,7 +11,7 @@ export interface PendingChange { id: string; market?: string; kind: 'risk'|'pric
 export interface HistoryItem { id: string; label: string; at: number; hash?: string; market?: string; }
 export interface ControlMarket { address: string; config: MarketConfig; token: TokenInfo; depositPaused: boolean; borrowPaused: boolean; }
 export interface ControlMargin extends MarginInfo { applied_liquidation_incentive?:bigint; applied_liquidation_fee?:bigint; incentive_applied?:boolean; incentive_apply_after?:bigint; pools?:string[]; }
-export interface ControlState { group: Group; markets: ControlMarket[]; pending: PendingChange[]; pendingAvailable: boolean; history: HistoryItem[]; historyError?: string; margin: ControlMargin|null; rewards: Awaited<ReturnType<typeof readRewards>>; }
+export interface ControlState { pairSync:PairSyncState|null; group: Group; markets: ControlMarket[]; pending: PendingChange[]; pendingAvailable: boolean; history: HistoryItem[]; historyError?: string; margin: ControlMargin|null; rewards: Awaited<ReturnType<typeof readRewards>>; }
 export const addr = (v:string) => new Address(v).toScVal();
 const u = (v:bigint|number,type:'u32'|'u128'|'u64'='u128') => nativeToScVal(v,{type});
 const sym = (v:string) => xdr.ScVal.scvSymbol(v);
@@ -108,7 +108,7 @@ export async function loadControl(id:number):Promise<ControlState> {
     return {address,config:c,token,depositPaused:pause.deposit,borrowPaused:pause.borrow};
   }));
   const rewards=await readRewards(group,null);
-  if(network.useMocks){const state=readMockState(),ex=extras(state,id);if(rewards&&ex.rewardBalance!==undefined)rewards.available=ex.rewardBalance;return {group,markets,rewards,pending:ex.changes.map(change=>change.market?{...change,marketProposals:mockMarketProposals(ex.changes,change.market)}:change),pendingAvailable:true,history:(state.history[String(id)]||[]).map((h,i)=>({id:`${i}:${h.hash}`,label:h.detail||h.method,at:h.timestamp})).reverse(),margin:mockMargin(state,id,ex)};}
+  if(network.useMocks){const state=readMockState(),ex=extras(state,id);if(rewards&&ex.rewardBalance!==undefined)rewards.available=ex.rewardBalance;return {pairSync:readPairSync(id),group,markets,rewards,pending:ex.changes.map(change=>change.market?{...change,marketProposals:mockMarketProposals(ex.changes,change.market)}:change),pendingAvailable:true,history:(state.history[String(id)]||[]).map((h,i)=>({id:`${i}:${h.hash}`,label:h.detail||h.method,at:h.timestamp})).reverse(),margin:mockMargin(state,id,ex)};}
   let history:HistoryItem[]=[],historyError:string|undefined,margin:ControlMargin|null=null;
   try{history=await eventHistory(id);}catch(e){historyError=`Recent event history unavailable: ${e instanceof Error?e.message:String(e)}`;}
   if(group.margin_controller) {try{margin=normalizeContract<ControlMargin|undefined>(await readContract(getDeployments().margin_factory,'get_margin_status',[u(id,'u32')]))||null;}catch{historyError=(historyError?historyError+' ':'')+'Margin settings could not be loaded.';}}
@@ -120,7 +120,7 @@ export async function loadControl(id:number):Promise<ControlState> {
     if(record.pending_cf?.[0]) pending.push({id:`risk:${m.address}:${record.pending_cf[0].execute_after}`,market:m.address,kind:'risk',marketProposals,executeAfter:Number(record.pending_cf[0].execute_after),proposed:{...m.config,collateral_factor:record.pending_cf[0].cf}});
     if(record.pending_price?.[0]) pending.push({id:`price:${m.address}:${record.pending_price[0].execute_after}`,market:m.address,kind:'price',marketProposals,executeAfter:Number(record.pending_price[0].execute_after),proposed:record.pending_price[0].config});
   }
-  return {group,markets,rewards,pending,pendingAvailable:true,history,historyError,margin};
+  return {pairSync:readPairSync(id),group,markets,rewards,pending,pendingAvailable:true,history,historyError,margin};
 }
 export async function updateRisk(id:number,market:string,next:MarketConfig,signer:Signer,onProgress?:(p:Progress)=>void) {
   validateRisk(next);
@@ -140,15 +140,7 @@ export async function updateBuffer(id:number,market:string,bps:number,signer:Sig
 export async function updatePrice(id:number,market:string,price:PriceConfig,signer:Signer,onProgress?:(p:Progress)=>void) {
   const encoded=encodePrice(price);
   const current=await getMarketConfig(id,market);
-  if(price.tag==='ReflectorOnly') {
-    const {oracle,asset}=price.values[0];
-    if(asset.tag==='Stellar'&&asset.values[0]!==current.token)throw new Error('The price feed asset must match this market token address.');
-    if(asset.tag==='Other') {
-      const symbol=asset.values[0];
-      if(network.useMocks) {if(readMockState().tokens[current.token]?.symbol!==symbol)throw new Error('The external feed symbol is not bound to this market token.');}
-      else {const external=getDeployments().external;if(external[symbol.toLowerCase()]!==current.token||external.reflector_external!==oracle)throw new Error('The deployment does not verify this external feed symbol for this token address.');}
-    }
-  }
+  if(!await isPriceFeedAllowed(current.token,price))throw new Error('The price feed tuple is not bound to this token or is not approved by the factory.');
   if(network.useMocks)return mockWrite(id,'update_price',signer,(_state,ex)=>stage(ex,'price',market,price),onProgress);
   return factoryWrite('update_price',[...ownerArgs(id,signer),addr(market),encoded],signer,onProgress);
 }
@@ -161,7 +153,101 @@ export async function pauseMarket(id:number,market:string,deposit:boolean,borrow
   if(network.useMocks)return mockWrite(id,'pause_market',signer,(_state,ex)=>{ex.pauses[market]={deposit,borrow};},onProgress);
   return factoryWrite('pause_market',[...ownerArgs(id,signer),addr(market),nativeToScVal(deposit),nativeToScVal(borrow)],signer,onProgress);
 }
+export interface PairSyncState { applyConfirmed:boolean; applyHash?:string; applyTransaction?:PendingTransaction; syncTransaction?:PendingTransaction; }
+const pairSyncKey=(id:number)=>`peridot:pair-sync:${network.name}:${network.useMocks?'demo':getDeployments().margin_factory}:${id}`;
+export function readPairSync(id:number):PairSyncState|null {
+  if(typeof window==='undefined')return null;
+  return JSON.parse(window.localStorage.getItem(pairSyncKey(id))||'null');
+}
+function savePairSync(id:number,state:PairSyncState|null) {
+  if(typeof window==='undefined')throw new Error('Browser storage is required to recover leverage synchronization.');
+  if(state)window.localStorage.setItem(pairSyncKey(id),JSON.stringify(state));else window.localStorage.removeItem(pairSyncKey(id));
+}
+export class CollateralSyncError extends Error {
+  constructor(public readonly receipt:{hash:string},public readonly syncError:unknown){super(`Collateral changes were applied${receipt.hash?` in transaction ${receipt.hash}`:''}. Leverage synchronization is still required. Use Sync leverage limits to continue. ${syncError instanceof Error?syncError.message:String(syncError)}`);this.name='CollateralSyncError';}
+}
+/** Ignore a global pending transaction reported before this invocation started simulation. */
+export function captureControlTransaction(progress:Progress,started:boolean,method:string,contractId:string,shared:PendingTransaction|null,previous?:PendingTransaction):PendingTransaction|undefined {
+  if(!started||!progress.hash)return previous;
+  if(shared)return shared.hash===progress.hash&&shared.method===method&&shared.contractId===contractId?shared:previous;
+  if(previous?.hash===progress.hash)return previous;
+  return ['submitting','confirming','success'].includes(progress.status)?{hash:progress.hash,method,contractId}:previous;
+}
+/** Keep the first receipt even if the independent second transaction is rejected or unconfirmed. */
+export async function applyCollateralAndSync<T extends {hash:string}>(id:number,apply:(progress:(p:Progress)=>void)=>Promise<T>,sync:()=>Promise<unknown>,onProgress?:(p:Progress)=>void,owner?:string):Promise<T> {
+  if(readPairSync(id))throw new Error('Resolve the previous leverage synchronization with Sync leverage limits before applying another collateral change.');
+  const state:PairSyncState={applyConfirmed:false};savePairSync(id,state);
+  let receipt:T,started=false;
+  try{
+    receipt=await apply(progress=>{
+      if(progress.status==='simulating')started=true;
+      const tx=captureControlTransaction(progress,started,'apply_pending',network.useMocks?'demo-market-factory':getDeployments().factory,owner?getPendingTransaction(owner):null,state.applyTransaction);
+      if(tx){state.applyHash=tx.hash;state.applyTransaction=tx;savePairSync(id,state);}
+      onProgress?.(progress);
+    });
+  }catch(error){
+    if(!state.applyHash||(error instanceof TransactionRejectedError&&error.hash===state.applyHash))savePairSync(id,null);
+    throw error;
+  }
+  state.applyHash=receipt.hash;state.applyConfirmed=true;savePairSync(id,state);
+  try{await sync();}catch(error){throw new CollateralSyncError(receipt,error);}
+  return receipt;
+}
+export async function syncLeverageLimits(id:number,signer:Signer,onProgress?:(p:Progress)=>void) {
+  if(!(await getGroup(id)).margin_controller)throw new Error('Margin is not enabled for this group.');
+  let state=readPairSync(id);
+  if(state&&!state.applyConfirmed&&!network.useMocks){
+    if(!state.applyHash){savePairSync(id,null);state=null;}
+    else{
+      const result=await getRpc().getTransaction(state.applyHash);
+      if(result.status==='SUCCESS'){
+        if(getPendingTransaction(signer.address)?.hash===state.applyHash)await reconcilePendingTransaction(signer.address);
+        state.applyConfirmed=true;savePairSync(id,state);
+      }else if(result.status==='FAILED'||!!state.applyTransaction&&isDefinitivelyExpired(state.applyTransaction,result)){
+        if(getPendingTransaction(signer.address)?.hash===state.applyHash)await reconcilePendingTransaction(signer.address);
+        savePairSync(id,null);throw new Error('The collateral transaction did not succeed. Refresh and review its pending proposal.');
+      }else throw new Error('The collateral transaction remains unconfirmed. Do not repeat it; check again before synchronizing leverage.');
+    }
+  }
+  if(state?.syncTransaction&&!network.useMocks){
+    const transaction=state.syncTransaction,result=await getRpc().getTransaction(transaction.hash);
+    if(result.status==='SUCCESS'){
+      if(getPendingTransaction(signer.address)?.hash===transaction.hash)await reconcilePendingTransaction(signer.address);
+      savePairSync(id,null);onProgress?.({status:'success',hash:transaction.hash,message:'Leverage limits synchronized.'});return {hash:transaction.hash,value:undefined};
+    }
+    if(result.status==='FAILED'||isDefinitivelyExpired(transaction,result)){
+      if(getPendingTransaction(signer.address)?.hash===transaction.hash)await reconcilePendingTransaction(signer.address);
+      delete state.syncTransaction;savePairSync(id,state);
+    }else throw new Error('The leverage synchronization transaction remains unconfirmed. Check again before signing another.');
+  }
+  state??={applyConfirmed:true};savePairSync(id,state);
+  const syncState=state;let started=false;
+  const progress=(p:Progress)=>{
+    if(p.status==='simulating')started=true;
+    const tx=captureControlTransaction(p,started,'sync_pairs',getDeployments().margin_factory,getPendingTransaction(signer.address),syncState.syncTransaction);
+    if(tx){syncState.syncTransaction=tx;savePairSync(id,syncState);}
+    onProgress?.({...p,message:p.message||'Syncing leverage limits. This is a separate transaction.'});
+  };
+  try{
+    onProgress?.({status:'simulating',message:'Syncing leverage limits. This is a separate transaction.'});
+    let result:{hash:string;value:unknown};
+    if(network.useMocks){
+      mutateMockState(mock=>{mock.pending[`pair-caps:${id}`]=Object.fromEntries(mock.groups.find(g=>g.id===id)!.markets.map(m=>[m,config(mock,id,m).collateral_factor]));writeMockEvent(mock,id,'sync_pairs','sync leverage limits');});
+      onProgress?.({status:'success',message:'Demo leverage limits synchronized. No onchain transaction.'});result={hash:'',value:undefined};
+    }else result=await factoryWrite('sync_pairs',[u(id,'u32')],signer,progress,true);
+    savePairSync(id,null);return result;
+  }catch(error){
+    if(error instanceof TransactionRejectedError&&syncState.syncTransaction?.hash===error.hash){delete syncState.syncTransaction;savePairSync(id,syncState);}
+    throw error;
+  }
+}
 export async function applyPending(id:number,pending:PendingChange|undefined,signer:Signer,onProgress?:(p:Progress)=>void) {
+  const group=await getGroup(id);
+  const hasCollateral=pending?.kind==='risk'||!!pending?.marketProposals?.cf||!pending;
+  if(group.margin_controller&&hasCollateral)return applyCollateralAndSync(id,p=>applyPendingTransaction(id,pending,signer,p),()=>syncLeverageLimits(id,signer,onProgress),onProgress,signer.address);
+  return applyPendingTransaction(id,pending,signer,onProgress);
+}
+async function applyPendingTransaction(id:number,pending:PendingChange|undefined,signer:Signer,onProgress?:(p:Progress)=>void) {
   if(network.useMocks)return mockWrite(id,'apply_pending',signer,(state,ex)=>{
     if(pending&&!ex.changes.some(p=>p.id===pending.id))throw new Error('This proposal is no longer pending. Refresh the settings.');
     if(pending?.market)assertMarketProposalsUnchanged(pending.marketProposals,mockMarketProposals(ex.changes,pending.market));
@@ -229,11 +315,13 @@ export async function setMarketMargin(id:number,market:string,enabled:boolean,si
 }
 function validatePool(pool:string) { if(!StrKey.isValidContract(pool))throw new Error('Enter a valid pool contract address.'); }
 export async function setPoolAllowed(id:number,pool:string,allowed:boolean,signer:Signer,onProgress?:(p:Progress)=>void) {
+  if(!allowed)throw new Error('Only Peridot admin can revoke an exit pool or binding.');
   validatePool(pool);
   if(network.useMocks)return mockWrite(id,'set_pool_allowed',signer,(state,ex)=>{const margin=mockMargin(state,id,ex);if(!margin)throw new Error('Margin is not enabled.');margin.pools=allowed?Array.from(new Set([...(margin.pools||[]),pool])):(margin.pools||[]).filter(p=>p!==pool);},onProgress);
   return factoryWrite('set_pool_allowed',[...ownerArgs(id,signer),addr(pool),nativeToScVal(allowed)],signer,onProgress,true);
 }
 export async function setPoolBinding(id:number,pool:string,poolId:string,allowed:boolean,signer:Signer,onProgress?:(p:Progress)=>void) {
+  if(!allowed)throw new Error('Only Peridot admin can revoke an exit pool or binding.');
   validatePool(pool);if(!/^[a-fA-F0-9]{64}$/.test(poolId)||/^0+$/.test(poolId))throw new Error('Pool ID must be a nonzero 32-byte hex value.');
   if(network.useMocks)return mockWrite(id,'set_pool_binding',signer,(state,ex)=>{const margin=mockMargin(state,id,ex);if(!margin)throw new Error('Margin is not enabled.');if(allowed&&!margin.pools?.includes(pool))throw new Error('Allow this pool before adding its binding.');ex.poolBindings??={};if(allowed)ex.poolBindings[poolId.toLowerCase()]=pool;else delete ex.poolBindings[poolId.toLowerCase()];},onProgress);
   const bytes=Uint8Array.from(poolId.match(/../g)!,byte=>parseInt(byte,16));
@@ -302,7 +390,7 @@ async function validateNewMarket(id:number,cfg:MarketConfig,signer:Signer) {
   if(group.owner!==signer.address)throw new Error('Only the current group owner can change these settings.');
   if(group.reward_distributor)throw new Error('Markets cannot be added after group rewards are enabled.');
   if(cfg.supply_reward_per_sec!==0n||cfg.borrow_reward_per_sec!==0n)throw new Error('Creation reward speeds must be zero. Set emissions after activation and enabling rewards.');
-  if(cfg.price.tag!=='ReflectorOnly'||!await isOracleAllowed(cfg.price.values[0].oracle))throw new Error('The price oracle is not approved by this factory.');
+  if(!await isPriceFeedAllowed(cfg.token,cfg.price))throw new Error('The price feed tuple is not approved for this token by the factory.');
   const route=cfg.yield_route;
   if(route.tag!=='None'){
     const vault=route.tag==='Defindex'?route.values[0].vault:route.tag==='Blend'?route.values[0].fee_vault:'';

@@ -120,3 +120,36 @@ test('an older global transaction cannot become a new launch step receipt before
  assert.equal(submitting.hash,own.hash);
  assert.deepEqual(submitting.transaction,own);
 });
+
+
+test('exact feed mapping is required before group creation and rechecked before market deployment',async()=>{
+ const storage=new Storage();
+ Object.defineProperty(globalThis,'localStorage',{value:storage,configurable:true});
+ Object.defineProperty(globalThis,'window',{value:{localStorage:storage},configurable:true});
+ const {newMarketDraft}=await import('./market-config');
+ const {MOCK_USDC,MOCK_XLM,MOCK_ORACLE,MOCK_OWNER,readMockState}=await import('./mock');
+ const {isOracleAllowed,isPriceFeedAllowed,findReflectorFeed}=await import('./factory');
+ const {newLaunch,runNextLaunchStep,loadLaunch}=await import('./launch');
+ const price=await findReflectorFeed(MOCK_USDC,'USDC');
+ const wrong={tag:'ReflectorOnly' as const,values:[{oracle:MOCK_ORACLE,asset:{tag:'Other' as const,values:['XLM'] as const}}] as const};
+ assert.equal(await isOracleAllowed(MOCK_ORACLE),true);
+ assert.equal(await isPriceFeedAllowed(MOCK_USDC,price),true);
+ assert.equal(await isPriceFeedAllowed(MOCK_USDC,wrong),false,'an approved oracle cannot price USDC using the XLM entry');
+ assert.equal(await isPriceFeedAllowed(MOCK_USDC,{tag:'ReflectorOnly',values:[{oracle:MOCK_ORACLE,asset:{tag:'Stellar',values:[MOCK_XLM]}}]}),false);
+ assert.equal(await isPriceFeedAllowed(MOCK_USDC,{tag:'ReflectorOnly',values:[{oracle:MOCK_XLM,asset:{tag:'Other',values:['USDC']}}]}),false);
+ await assert.rejects(findReflectorFeed(MOCK_USDC,'XLM'),/not approved/);
+ const market={...newMarketDraft(),token:MOCK_USDC,symbol:'USDC',price};
+ const draft={name:'FeedPreflight',description:'',markets:[market],rewardsEnabled:false,rewardToken:'',rewardSymbol:'',rewardDecimals:7,rewardFunding:'0',marginEnabled:false,maxLeverage:'3',slippage:'1',liquidationIncentive:'108',liquidationFee:'0',marginPools:[]};
+ const signer={address:MOCK_OWNER,signTransaction:async()=>{throw new Error('Preflight must never sign');}};
+ const count=readMockState().groups.length;
+ const invalid=newLaunch({...draft,markets:[{...market,price:wrong}]},MOCK_OWNER);
+ await assert.rejects(runNextLaunchStep(invalid,signer),/token, oracle and asset mapping/);
+ assert.equal(readMockState().groups.length,count,'rejection must precede group creation');
+ assert.equal(loadLaunch(invalid.scope)?.pending,undefined);
+ const created=await runNextLaunchStep(newLaunch(draft,MOCK_OWNER),signer);
+ const configs=Object.keys(readMockState().configs).length;
+ const changed={...created,draft:{...created.draft,markets:[{...market,price:wrong}]}};
+ await assert.rejects(runNextLaunchStep(changed,signer),/token, oracle and asset mapping/);
+ assert.equal(Object.keys(readMockState().configs).length,configs,'a saved launch cannot bypass the current tuple preflight');
+ assert.deepEqual(loadLaunch(created.scope)?.receipts,created.receipts);
+});

@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [recovery, setRecovery] = useState('');
   return <>
-    <div className="network-banner"><span className="live-dot" />{network.useMocks ? 'Demo data. No funds move and no wallet signatures are requested.' : 'Beta. New contracts are unaudited. Caps apply.'}</div>
+    <div className="network-banner"><span className="live-dot" />{network.useMocks ? 'Demo data. No funds move and no wallet signatures are requested.' : network.readOnly ? 'Read-only preview. Transactions are not enabled.' : 'Beta. New contracts are unaudited. Caps apply.'}</div>
     <header className="site-header">
       <Link href="/" className="wordmark" aria-label="Peridot Markets home"><img src="/logo-optimized.svg" alt="" width="28" height="32" /> peridot<span>markets</span></Link>
       <nav aria-label="Main navigation"><Link className={path.startsWith('/groups') ? 'active' : ''} href="/groups">Explore</Link><Link className={path === '/launch' ? 'active' : ''} href="/launch">Launch</Link><Link className={path === '/about' ? 'active' : ''} href="/about">How it works</Link></nav>
