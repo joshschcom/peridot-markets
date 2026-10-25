@@ -4,13 +4,21 @@
  * Install WebKit once with: npx playwright install webkit
  */
 import assert from 'node:assert/strict';
-import { chromium, webkit, expect } from '@playwright/test';
+import { chromium, webkit, expect, type BrowserContext } from '@playwright/test';
 
+async function authorizePreview(context:BrowserContext){
+ const token=process.env.VERCEL_OIDC_TOKEN;
+ if(!token)return;
+ const origin=new URL(process.env.WALLET_TEST_URL??'http://127.0.0.1:3021').origin;
+ if(!origin.startsWith('https://')||!new URL(origin).hostname.endsWith('.vercel.app'))throw new Error('Preview authentication requires an explicit HTTPS Vercel deployment.');
+ await context.route(`${origin}/**`,route=>route.continue({headers:{...route.request().headers(),'x-vercel-trusted-oidc-idp-token':token}}));
+}
 async function main(){
  const engine=process.env.WALLET_TEST_BROWSER==='chromium'?chromium:webkit;
  const browser=await engine.launch({headless:true});
  try{
   const context=await browser.newContext();
+  await authorizePreview(context);
   const page=await context.newPage();
   await page.addInitScript(()=>{
    const original=window.open.bind(window);
@@ -51,6 +59,7 @@ async function main(){
   // Isolated protocol fixture: public address only, never a wallet signature.
   // All transaction submission requests are blocked as a second safety boundary.
   const isolated=await browser.newContext();
+  await authorizePreview(isolated);
   let submitAttempts=0;
   await isolated.route('**/*',async route=>{
    let body:unknown;
@@ -58,7 +67,7 @@ async function main(){
    if(body&&typeof body==='object'&&'method' in body&&body.method==='sendTransaction'){
     submitAttempts++;await route.abort('blockedbyclient');return;
    }
-   await route.continue();
+   await route.fallback();
   });
   const account='GBTAM7KI53O5CMJW7QHS2TG7JX65H4Y2TGDXS42ZLJEK6YMGDBBZOOQD';
   await isolated.route('https://albedo.link/confirm',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><title>Albedo protocol fixture</title><p id="state">Public address fixture. No keys.</p><script>

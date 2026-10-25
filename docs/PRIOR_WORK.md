@@ -30,3 +30,7 @@ The pinned reference exposes staged margin V3, not the V2 methods in the initial
 ## Custom margin diff
 
 Phase 3 has not started. No custom-margin diff is claimed.
+
+## Event UI redesign integration
+
+The event's presentation branch `ui-redesign` (`5bc95cd`) was merged as `82fcde0`. Wallet popup lifecycle fixes (`3fb34e8`, `fae674a`, `c827b77`), authoritative Control Panel leverage (`ec734e8`) and Safari signing/read pacing (`b896c82`) are new event work. They preserve the prior-work foundations disclosed above.

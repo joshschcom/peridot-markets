@@ -4,7 +4,7 @@ Launch isolated lending markets on Stellar, configure each market, and route idl
 
 **HackMeridian 2026: Scale + Stellar Composed.** Phase 1 contracts are live on mainnet. The frontend acceptance run, margin open/close and live liquidator coverage are still pending. Beta: unaudited new contracts, capped markets.
 
-Mainnet beta: [Open Peridot Markets](https://peridot-markets-preview-eg1grm094-peridot3.vercel.app) (Vercel login required; Albedo default, Freighter available). [Separate simulated demo](https://peridot-markets-preview-q1q53sbiz-peridot3.vercel.app). Video: pending. Deck: pending.
+Mainnet beta: [Open Peridot Markets](https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app) (Vercel login required; Albedo default, Freighter available). [Separate simulated demo](https://peridot-markets-preview-q1q53sbiz-peridot3.vercel.app). Video: pending. Deck: pending.
 
 [Architecture](docs/ARCHITECTURE.md) · [Specifications](docs/SPECS.md) · [Milestones vs intake](docs/MILESTONES.md) · [Demo evidence](docs/DEMO.md) · [Prior work](docs/PRIOR_WORK.md)
 
@@ -68,7 +68,7 @@ Mainnet is the default. Testnet is selected at build time through `NEXT_PUBLIC_N
 | `NEXT_PUBLIC_READ_ONLY` | Set `true` for a chain-connected preview that disables all transaction submissions |
 | `NEXT_PUBLIC_USE_MOCKS` | Set `true` only for local demo/testing; production must use `false` |
 
-Copy `app/.env.example` to `app/.env.local` and set the required values. The example uses `https://mainnet.sorobanrpc.com`, a public endpoint listed in [Stellar RPC providers](https://developers.stellar.org/docs/data/apis/rpc/providers). Network, health and browser CORS checks passed on 25 October. Browser environment variables are public. Never put a private API key, wallet secret, admin key or signing key in them.
+Copy `app/.env.example` to `app/.env.local` and set the required values. The example and current preview use `https://soroban-rpc.mainnet.stellar.gateway.fm`. Its mainnet passphrase and browser CORS were verified on 25 October. The previous public RPC intermittently timed out; read requests are now paced, have a 30 second timeout, and retry HTTP 429 at most twice. Signed submissions are never automatically retried. Browser environment variables are public. Never put a private API key, wallet secret, admin key or signing key in them.
 
 Lead A's deployment scripts produce `deployments/<network>.json`. After the readiness announcement, run `node scripts/sync-deployments.mjs mainnet` from `app/` with the public RPC environment set. The helper checks the RPC network and registered Wasm pins before copying public fields to the app manifest. Use `testnet` for that network. Placeholder manifests intentionally prevent live transactions. Changing a network or deployment requires a fresh build.
 
@@ -79,11 +79,13 @@ npm test
 npm run build
 ```
 
-Vercel project root: `app/`. A generated canonical interface snapshot is bundled and checked in CI. Build command: `npm run build`. Connected mainnet preview: frontend commit `20099c2`, Vercel deployment `dpl_Hur1ciLxFErhC5QbnquhBUxACZng`. This uses the private preview project; the organization production deployment remains pending. A fresh Albedo account must complete the evidence checklist before a phase is tagged.
+Vercel project root: `app/`. A generated canonical interface snapshot is bundled and checked in CI. Build command: `npm run build`. Connected mainnet preview: frontend commit `b896c82`, Vercel deployment `dpl_6f8m3ncTg9rJKkesW4j17yHiAp47`. This uses the private preview project; the organization production deployment remains pending. A fresh Albedo account must complete the evidence checklist before a phase is tagged.
+
+The redesigned UI is merged as `82fcde0`; Safari signing and paced mainnet reads are in `b896c82`. Albedo opens from an explicit click after simulation. If cancelling, close the old Albedo window before retrying. Validation: 71 unit tests, typecheck, production build, 3 e2e flows, and a WebKit popup/cancellation check with zero submissions. Real fresh-wallet acceptance remains pending.
 
 ## Fresh-wallet preflight
 
-From `app/`, run `NEXT_PUBLIC_MAINNET_RPC_URL=https://mainnet.sorobanrpc.com node --import tsx scripts/fresh-wallet-check.ts --account G...` with the fresh Albedo public address. The script reads account existence, balances, missing trustlines, market entry, liquidity and rewards across the three demo groups. It never signs or submits. Its checklist must still be completed in Albedo; a successful read-only report is not transaction evidence. See the [acceptance runbook](docs/DEMO.md#fresh-albedo-acceptance-runbook).
+From `app/`, run `NEXT_PUBLIC_MAINNET_RPC_URL=https://soroban-rpc.mainnet.stellar.gateway.fm node --import tsx scripts/fresh-wallet-check.ts --account G...` with the fresh Albedo public address. The script reads account existence, balances, missing trustlines, market entry, liquidity and rewards across the three demo groups. It never signs or submits. Its checklist must still be completed in Albedo; a successful read-only report is not transaction evidence. See the [acceptance runbook](docs/DEMO.md#fresh-albedo-acceptance-runbook).
 
 ## Integrations
 

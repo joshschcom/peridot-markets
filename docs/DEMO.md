@@ -23,7 +23,7 @@ Phase 1 contracts are deployed on mainnet. Lead A recorded real deployment, DeFi
 | Liquidator coverage | Running service status and configuration evidence | Pending |
 | Fresh Albedo account | Network, date and completed-flow checklist | Pending |
 | Read-only Claude review | Findings and resolution in COORDINATION.md | Completed for frontend/keeper fixes and Wallets Kit; keeper fee funding and signed acceptance remain pending |
-| Vercel deployment | Live URL and deployed commit | [Connected mainnet beta](https://peridot-markets-preview-eg1grm094-peridot3.vercel.app), source `20099c2`, authenticated preview |
+| Vercel deployment | Live URL and deployed commit | [Connected mainnet beta](https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app), source `b896c82`, authenticated preview |
 
 Group 1 Meridian has no rewards and must remain available for the add-market-after-launch demonstration. Group 2 Rewards holds the funded distributor; group 3 BlendDemo demonstrates Blend. The local phase-1 contract tag reported by Lead A does not mean the frontend acceptance table is complete.
 
@@ -79,7 +79,7 @@ Run this only after the deployment manifest is verified, the required read-only 
 Before signing, run the read-only public-account preflight from `app/`:
 
 ```sh
-NEXT_PUBLIC_MAINNET_RPC_URL=https://mainnet.sorobanrpc.com \
+NEXT_PUBLIC_MAINNET_RPC_URL=https://soroban-rpc.mainnet.stellar.gateway.fm \
   node --import tsx scripts/fresh-wallet-check.ts --account G...
 ```
 
@@ -109,7 +109,7 @@ The dependency audit reports 29 findings in Wallets Kit's transitive dependency 
 
 ## Connected mainnet beta preview
 
-[Open mainnet beta](https://peridot-markets-preview-eg1grm094-peridot3.vercel.app). Source `20099c2`, deployment `dpl_Hur1ciLxFErhC5QbnquhBUxACZng`, private project `peridot3/peridot-markets-preview`. Vercel reports READY and preview target; authentication protection remains enabled. Mainnet is selected, mocks and read-only mode are off, public RPC is configured. Authenticated HTTP verification found the beta banner and both wallet choices, with neither mock nor read-only banner. Wallet signatures are required for real transactions.
+[Open mainnet beta](https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app). Source `b896c82`, deployment `dpl_6f8m3ncTg9rJKkesW4j17yHiAp47`, private project `peridot3/peridot-markets-preview`. Vercel reports READY and preview target; authentication protection remains enabled. Mainnet is selected, mocks and read-only mode are off, public RPC is configured. Authenticated HTTP verification found the beta banner and both wallet choices, with neither mock nor read-only banner. Wallet signatures are required for real transactions.
 
 This proves deployment and network configuration, not fresh-wallet acceptance or a successful margin trade. The fresh Albedo public address and user-approved signatures are still pending. No [B] READY: app on mainnet marker has been posted.
 
@@ -120,3 +120,15 @@ Joshua supplied public address `GBTAM7KI53O5CMJW7QHS2TG7JX65H4Y2TGDXS42ZLJEK6YMG
 Funding confirmed for the fresh Albedo account at ledger 65134450: 5.0001 XLM. Account creation/funding history contains successful transactions [c6b4deef...](https://stellar.expert/explorer/public/tx/c6b4deef31e14b1e381fe2e46d6d37ea551f73ddeb5dff1106b6815bb731175a) and [49f05801...](https://stellar.expert/explorer/public/tx/49f05801e6b12adcf306d895877097b076fc5be2c738b0d5917102901480a94d). No protocol supply, market entry or position existed at this checkpoint.
 
 Unsigned simulations at ledger 65134459 succeeded for group 1 XLM `enter_market` and a 1 XLM `deposit`, with prepared fees 366,625 and 755,741 stroops respectively (0.1122366 XLM combined, subject to resimulation). Joshua was asked to approve those two app transactions in Albedo. Simulations are not confirmation evidence.
+
+## Redesigned UI and Safari verification, 25 October
+
+UI merge `82fcde0`, frontend integration `b896c82`. Current preview source is `b896c82`; deployment `dpl_6f8m3ncTg9rJKkesW4j17yHiAp47` is READY at https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app. It remains a protected private-account preview, with mainnet selected and mocks/read-only off.
+
+Validation passed: 71 unit tests, typecheck, production build, and 3 e2e flows covering launch, lending/rewards, margin and staged owner controls. WebKit opened the real Albedo popup with an active user gesture and recovered from cancellation and a simulated blocked popup. A separate public-address protocol fixture reached the live unsigned `enter_market` simulation, showed the prepared-sign dialog, opened a second popup from its button, and cancelled. Every submission was blocked in that fixture; zero were attempted. This is browser integration evidence, not a real wallet signature or completed acceptance.
+
+Required read-only Claude review found a quote-clearing refresh bug, stale-wallet refresh closures and pre-mutation read reuse, plus unbounded Freighter checks. All were fixed; its follow-up reported no remaining blockers. Signed-envelope verification and pending-transaction safety remain in place. The upstream popup cannot be closed through a supported SDK method; close it manually after cancellation.
+
+The original mainnet RPC intermittently timed out. The preview now uses `https://soroban-rpc.mainnet.stellar.gateway.fm`, whose mainnet passphrase and CORS were verified. A connected WebKit test then exposed HTTP 429 from burst reads; paced reads and lightweight overview cards fixed that test. Cross-endpoint automatic failover and keeper provider updates are not claimed.
+
+At ledger 65135742 the fresh address `GBTAM7KI53O5CMJW7QHS2TG7JX65H4Y2TGDXS42ZLJEK6YMGDBBZOOQD` still held 5.0001 XLM, with no entered markets, receipt balances or debt. Lead A seeded group 1 with 30 XLM ([supply transaction](https://stellar.expert/explorer/public/tx/50a27e85dd9b978ffa44bbeefb8d2b6e04ba44d4b7caa6e34654a05c290e0e85)). The intended tiny test is a 2x long using XLM margin and USDC as base; shorts still lack USDC borrowing liquidity. Fresh-wallet signed entry/supply and the real open/close hashes remain pending. For each prepared transaction, click **Open Albedo to sign** and review it in Albedo.
