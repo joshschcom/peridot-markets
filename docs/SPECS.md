@@ -57,6 +57,46 @@ Price router, reward distributor, adapters are deployed by MF with `deploy_v2(ha
 `price router __constructor(admin, quote_decimals, resolution)`, `reward distributor __constructor(admin, controller,
 reward_token)`, `blend adapter __constructor(admin, market, underlying, cfg)`.
 
+### Factory: final behaviour (phase 1)
+
+Owner flow, one transaction per step (Soroban resource limits; measured per step: create_group 8.5M cpu, add_market 25M,
+activate_market 24M with 82 ledger entries, update_risk 14M, against 400M cpu and 200 entries on mainnet):
+
+1. `create_group(owner, name)`: deploys the group controller and price router, first oracle set applies immediately.
+2. `add_market(owner, group, cfg)`: validates guardrails, deploys the receipt-vault and its own jump-rate model, initializes both.
+3. `activate_market(owner, group, market)`: registers the price source, lists the market on the controller, sets the collateral factor
+   (first set applies immediately), caps, reserve factor, idle buffer.
+4. `attach_yield(owner, group, market)`: DeFindex (vault attached directly) or Blend (adapter deployed per market). Both need
+   the vault on the Peridot allowlist (`set_yield_vault_allowed`).
+5. Last: `set_rewards(owner, group, token)` once per group, then `set_reward_speeds`. Audited-core limitation: once a reward token
+   is set no market can be added (`MarketsLockedByRewards`), because `receipt-vault.set_peridottroller` makes the controller call
+   `accrue_user_market`, which calls back into the vault (re-entry). Add every market first.
+6. Margin: the margin-factory (see "Margin") calls `wire_margin` / `link_margin_market` / `update_margin_params` on this contract.
+
+Guardrails (constants in `contracts/market-factory/src/guardrails.rs`, mirrored in `GUARDRAILS` in the TS interfaces):
+
+| Param | Rule | Error |
+|---|---|---|
+| Collateral factor | 1% to 75% (Reflector), 50% (AquariusOnly, phase 3) | CollateralFactorTooLow / TooHigh |
+| Supply and borrow cap | both > 0 | CapRequired |
+| Idle buffer | 10% to 100% | IdleBufferOutOfRange |
+| Reserve factor | 0 to 50% | ReserveFactorTooHigh |
+| Rates | within core limits, all zeros allowed | RatesOutOfRange |
+| Price | phase 1: `ReflectorOnly` with an allowlisted oracle | PriceModeNotAllowed / OracleNotAllowed |
+| Yield vault | allowlisted, single asset equal to the underlying, one unpaused strategy (DeFindex) | YieldVaultNotAllowed / InvalidYieldVault |
+| Rewards | speed at most the core maximum | RewardSpeedTooHigh |
+| Markets | one market per token per group, at most 16 | MarketAlreadyExists / TooManyMarkets |
+| Fallback prices | never set | n/a |
+
+Control panel: `update_risk` (caps and reserve factor immediate, collateral factor staged), `update_rates` (`jump-rate-model.set_params`,
+immediate), `update_idle_buffer`, `update_price` (staged 60s by the factory), `pause_market` (the core auto-expires a pause after 72h),
+`transfer_ownership` (new owner signs), `apply_pending(owner, group, market|None)` applies staged collateral factors and prices after 60s.
+Admin: `set_wasm`, `set_oracle_allowed`, `set_yield_vault_allowed`, `set_allowlist_mode`, `set_creator_allowed`, `set_margin_factory`,
+`upgrade` (immediate), `upgrade_group_contract` (new contracts, immediate), `propose_core_upgrade` / `execute_core_upgrade` (core, 60s).
+
+TTL policy: new contracts bump instance TTL only below 100,000 ledgers (to 400,000), so creation never triggers a bump on testnet
+(default TTL 120,960) or mainnet (2,073,600). The audited core bumps to 1,000,000 as imported.
+
 ## Rewards
 
 `contracts/reward-distributor`. One per group, deployed by the market-factory (admin = MF) with
