@@ -65,6 +65,13 @@ pub trait RewardDistributor {
     fn balance_available(env: Env) -> i128;
     fn total_paid(env: Env) -> i128;
     fn upgrade(env: Env, admin: Address, new_wasm_hash: BytesN<32>);
+    // What the audited controller actually calls in `claim`: `balance(controller)` to size the payout,
+    // then `transfer(controller, user, payable)` (not `mint`). `mint` above is an alias with the same effect.
+    fn balance(env: Env, id: Address) -> i128;
+    fn transfer(env: Env, from: Address, to: Address, amount: i128);
+    fn admin(env: Env) -> Address;
+    fn total_funded(env: Env) -> i128;
+    fn total_withdrawn(env: Env) -> i128;
     // SEP-41 read compatibility, forwarded to the reward token.
     fn decimals(env: Env) -> u32;
     fn symbol(env: Env) -> soroban_sdk::String;

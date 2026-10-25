@@ -31,6 +31,7 @@ pub enum FactoryError {
     // flows
     RewardsAlreadySet = 40,
     RewardsNotSet = 41,
+    MarketsLockedByRewards = 50,
     YieldAlreadyAttached = 42,
     NothingPending = 43,
     NotYetApplicable = 44,

@@ -320,6 +320,11 @@ impl MarketFactory {
     /// `attach_yield`.
     pub fn add_market(env: Env, owner: Address, group_id: u32, cfg: MarketConfig) -> Result<Address, FactoryError> {
         let g = require_owner(&env, &owner, group_id)?;
+        // Audited-core limitation: once a reward token is set, `receipt-vault.set_peridottroller` calls
+        // `accrue_user_market`, which calls back into the vault (re-entry trap). List every market first.
+        if g.reward_distributor.is_some() {
+            return Err(FactoryError::MarketsLockedByRewards);
+        }
         guardrails::check_market_config(&cfg)?;
         check_oracle_allowed(&env, &cfg.price)?;
         if g.markets.len() + storage::pending_count(&env, group_id) >= guardrails::MAX_MARKETS_PER_GROUP {
@@ -381,6 +386,9 @@ impl MarketFactory {
     /// collateral factor (the first CF for a market applies immediately), reward speeds and idle buffer.
     pub fn activate_market(env: Env, owner: Address, group_id: u32, market: Address) -> Result<(), FactoryError> {
         let mut g = require_owner(&env, &owner, group_id)?;
+        if g.reward_distributor.is_some() {
+            return Err(FactoryError::MarketsLockedByRewards);
+        }
         let mut rec = storage::get_market(&env, group_id, &market)?;
         if rec.active {
             return Err(FactoryError::MarketAlreadyActive);
@@ -452,6 +460,9 @@ impl MarketFactory {
         let mut g = require_owner(&env, &owner, group_id)?;
         if g.reward_distributor.is_some() {
             return Err(FactoryError::RewardsAlreadySet);
+        }
+        if storage::pending_count(&env, group_id) > 0 {
+            return Err(FactoryError::MarketNotActive); // activate pending markets before enabling rewards
         }
         if TokenReadClient::new(&env, &reward_token).try_decimals().is_err() {
             return Err(FactoryError::InvalidToken);

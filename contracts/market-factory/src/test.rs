@@ -39,6 +39,7 @@ mod vault {
 const CONTROLLER: &[u8] = include_bytes!("../../../build/test/simple_peridottroller.wasm");
 const VAULT: &[u8] = include_bytes!("../../../build/test/receipt_vault.wasm");
 const JRM: &[u8] = include_bytes!("../../../build/test/jump_rate_model.wasm");
+const DISTRIBUTOR: &[u8] = include_bytes!("../../../build/test/reward_distributor.wasm");
 const ROUTER: &[u8] = include_bytes!("../../../build/test/mock_price_router.wasm");
 
 // Mainnet per-transaction limits (CPU instructions, memory bytes).
@@ -87,8 +88,7 @@ fn setup<'a>() -> F<'a> {
         receipt_vault: env.deployer().upload_contract_wasm(VAULT),
         jump_rate: env.deployer().upload_contract_wasm(JRM),
         price_router: env.deployer().upload_contract_wasm(ROUTER),
-        // replaced in the rewards test with the real distributor Wasm
-        reward_distributor: env.deployer().upload_contract_wasm(ROUTER),
+        reward_distributor: env.deployer().upload_contract_wasm(DISTRIBUTOR),
         blend_adapter: None,
         aquarius_vault: None,
         aquarius_reserve: None,
@@ -480,4 +480,65 @@ fn transactions_fit_network_limits() {
     report(&f, "activate_market #2");
     f.mf.update_risk(&f.owner, &id, &m, &600_000, &1_000_000u128, &1_000_000u128, &0);
     report(&f, "update_risk");
+}
+
+#[test]
+fn rewards_distributor_pays_claims_through_the_real_controller() {
+    let f = setup();
+    let id = f.mf.create_group(&f.owner, &symbol_short!("Rew"));
+    let reward = token(&f.env, "RWD");
+    // speeds cannot be set at market creation: the distributor does not exist yet
+    let mut c = cfg(&f, &f.usdc, "USDC");
+    c.supply_reward_per_sec = 10;
+    assert_eq!(f.mf.try_add_market(&f.owner, &id, &c).err().unwrap().unwrap(), FactoryError::RewardsNotSet);
+    c.supply_reward_per_sec = 0;
+    let m = add_active(&f, id, &c);
+    set_price(&f, id, &f.usdc, PRICE_1_USD);
+    assert_eq!(
+        f.mf.try_set_rewards(&f.owner, &id, &Address::generate(&f.env)).err().unwrap().unwrap(),
+        FactoryError::InvalidToken
+    );
+    let dist = f.mf.set_rewards(&f.owner, &id, &reward);
+    assert_eq!(f.mf.get_group(&id).reward_distributor, Some(dist.clone()));
+    assert_eq!(f.mf.try_set_rewards(&f.owner, &id, &reward).err().unwrap().unwrap(), FactoryError::RewardsAlreadySet);
+    // audited-core limitation: no new markets once rewards are on
+    assert_eq!(
+        f.mf.try_add_market(&f.owner, &id, &cfg(&f, &f.xlm, "XLM")).err().unwrap().unwrap(),
+        FactoryError::MarketsLockedByRewards
+    );
+
+    f.mf.set_reward_speeds(&f.owner, &id, &m, &10, &0);
+    // fund the distributor (anyone can)
+    let reward_c = mock_token::MockTokenClient::new(&f.env, &reward);
+    reward_c.mint(&f.owner, &(1_000 * ONE));
+    let dist_c = peridot_interfaces::RewardDistributorClient::new(&f.env, &dist);
+    dist_c.fund(&f.owner, &(1_000 * ONE));
+    assert_eq!(dist_c.balance_available(), 1_000 * ONE);
+
+    let usdc = mock_token::MockTokenClient::new(&f.env, &f.usdc);
+    let alice = Address::generate(&f.env);
+    usdc.mint(&alice, &(100 * ONE));
+    let g = f.mf.get_group(&id);
+    let ctrl = ctrl::Client::new(&f.env, &g.controller);
+    ctrl.enter_market(&alice, &m);
+    vault::Client::new(&f.env, &m).deposit(&alice, &((100 * ONE) as u128));
+    f.env.ledger().set_timestamp(1_000_000 + 100);
+    ctrl.claim(&alice);
+    assert_eq!(reward_c.balance(&alice), 1_000, "10 per second for 100 seconds");
+
+    // speeds change through the factory
+    f.mf.set_reward_speeds(&f.owner, &id, &m, &20, &0);
+    f.env.ledger().set_timestamp(1_000_000 + 200);
+    ctrl.claim(&alice);
+    assert_eq!(reward_c.balance(&alice), 3_000);
+
+    // too-fast speeds are rejected
+    assert_eq!(
+        f.mf.try_set_reward_speeds(&f.owner, &id, &m, &2_000_000_000_000, &0).err().unwrap().unwrap(),
+        FactoryError::RewardSpeedTooHigh
+    );
+    let mallory = Address::generate(&f.env);
+    assert_eq!(f.mf.try_withdraw_unallocated(&mallory, &id, &mallory, &1).err().unwrap().unwrap(), FactoryError::NotOwner);
+    f.mf.withdraw_unallocated(&f.owner, &id, &f.owner, &500);
+    assert_eq!(reward_c.balance(&f.owner), 500);
 }
