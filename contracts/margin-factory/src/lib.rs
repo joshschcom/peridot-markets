@@ -51,6 +51,7 @@ pub enum MarginError {
     PoolNotInGroup = 19,
     PoolNotTrusted = 20,
     PoolRevocationAdminOnly = 90,
+    PoolDenied = 91,
     PoolNotAllowed = 21,
     IncentivePending = 22,
     UnknownMarket = 23,
@@ -65,6 +66,8 @@ enum Key {
     Router,
     RegistryEnforced,
     TrustedPool(Address),
+    /// Pools revoked by the admin; owners cannot re-allow them until the admin clears the flag.
+    DeniedPool(Address),
     Margin(u32),
     Pools(u32),
 }
@@ -268,6 +271,8 @@ impl MarginFactory {
         if trusted {
             env.storage().persistent().set(&key, &true);
             extend_persistent(&env, &key);
+            // explicitly trusting a pool again lifts an earlier incident-response denial
+            env.storage().persistent().remove(&Key::DeniedPool(pool.clone()));
         } else {
             env.storage().persistent().remove(&key);
         }
@@ -492,7 +497,7 @@ impl MarginFactory {
             );
         }
         let applied = refresh_staging(&env, &mut rec, &group.controller, incentive_changed);
-        if leverage_changed || incentive_changed {
+        if leverage_changed || incentive_changed || slippage_changed {
             apply_all_pairs(&env, &rec);
         }
         save_record(&env, group_id, &rec);
@@ -619,6 +624,9 @@ impl MarginFactory {
         let mut pools = load_pools(&env, group_id);
         let sa = SwapAdapterClient::new(&env, &rec.swap_adapter);
         if allowed {
+            if env.storage().persistent().get::<_, bool>(&Key::DeniedPool(pool.clone())).unwrap_or(false) {
+                return Err(MarginError::PoolDenied);
+            }
             if env
                 .storage()
                 .instance()
@@ -773,6 +781,9 @@ impl MarginFactory {
         }
         env.storage().persistent().set(&Key::Pools(group_id), &pools);
         extend_persistent(&env, &Key::Pools(group_id));
+        // persistent deny flag: the owner cannot undo an incident-response revocation
+        env.storage().persistent().set(&Key::DeniedPool(pool.clone()), &true);
+        extend_persistent(&env, &Key::DeniedPool(pool.clone()));
         PoolAllowed { group_id, pool, allowed: false }.publish(&env);
         Ok(())
     }

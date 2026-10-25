@@ -1077,3 +1077,28 @@ fn pairs_enforce_group_slippage_and_the_collateral_factor_leverage_cap() {
     // anyone can re-sync the caps after a collateral factor change
     w.x().sync_pairs(&GROUP);
 }
+
+#[test]
+fn revoked_pool_stays_denied_and_slippage_updates_reach_existing_pairs() {
+    let w = world(800_000);
+    let mc = w.enable_all(3);
+    // admin revocation sticks: the owner cannot re-allow the pool
+    w.x().admin_revoke_pool(&w.xf_admin, &GROUP, &w.pool, &Some(w.pool_id.clone()));
+    assert_eq!(
+        err(w.x().try_set_pool_allowed(&w.owner, &GROUP, &w.pool, &true)),
+        MarginError::PoolDenied
+    );
+    // trusting it again lifts the denial
+    w.x().set_pool_trusted(&w.xf_admin, &w.pool, &true);
+    w.x().set_pool_allowed(&w.owner, &GROUP, &w.pool, &true);
+
+    // lowering only the slippage limit re-applies the per-pair execution limits
+    let mut next = w.x().get_margin(&GROUP).unwrap().cfg;
+    next.max_slippage = 10_000;
+    w.x().update_margin(&w.owner, &GROUP, &next);
+    let exec = w
+        .mcc(&mc)
+        .get_perps_pair_execution_config(&w.usdt, &w.xlm, &mcw::PositionSide::Long);
+    assert_eq!(exec.open_slippage_scaled, 10_000);
+    assert_eq!(exec.close_slippage_scaled, 10_000);
+}
