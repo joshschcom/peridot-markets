@@ -66,7 +66,7 @@ step_factories() {
   mf=$(deploy_one "$OUT/market_factory.wasm" --admin "$ADMIN" --treasury "$TREASURY")
   $DEPPY set factory "\"$mf\""
   echo "market-factory $mf"
-  if [[ -f "$OUT/margin_factory.wasm" ]] && grep -q "__constructor" <(stellar contract info interface --wasm "$OUT/margin_factory.wasm" 2>/dev/null); then
+  if [[ -z "${SKIP_XF:-}" && -f "$OUT/margin_factory.wasm" ]] && grep -q "__constructor" <(stellar contract info interface --wasm "$OUT/margin_factory.wasm" 2>/dev/null); then
     local xf
     xf=$(deploy_one "$OUT/margin_factory.wasm" --admin "$ADMIN" --market_factory "$mf")
     $DEPPY set margin_factory "\"$xf\""
@@ -92,6 +92,7 @@ step_upload() {
               margin_controller:margin price_router_ext:price_router reward_distributor:reward_distributor \
               blend_vault_adapter:blend_adapter; do
     f=${pair%%:*}; key=${pair##*:}
+    if [[ -n "${UPLOAD_ONLY:-}" && " $UPLOAD_ONLY " != *" $f "* ]]; then continue; fi
     file="$OUT/$f.wasm"; [[ -f "$file" ]] || { echo "skip $f (not built)"; continue; }
     h=$(upload_wasm "$file")
     $DEPPY set "wasm.$key" "\"$h\""
