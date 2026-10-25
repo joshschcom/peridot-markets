@@ -1,0 +1,17 @@
+[package]
+name = "peridot-token"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+soroban-sdk = { workspace = true }
+stellar-tokens = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+test-default-admin = []

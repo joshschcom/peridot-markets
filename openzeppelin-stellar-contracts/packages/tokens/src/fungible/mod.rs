@@ -1,0 +1,450 @@
+//! # Fungible Token Contract Module.
+//!
+//! Implements utilities for handling fungible tokens in a Soroban contract.
+//!
+//! This module provides essential storage functionalities required for managing
+//! balances, allowances, and total supply of fungible tokens.
+//!
+//! ## Design Overview
+//!
+//! This module is structured to provide flexibility by splitting
+//! functionalities into higher-level and lower-level operations:
+//!
+//! - **High-Level Functions**: These include all necessary checks,
+//!   verifications, authorizations, state-changing logic, and event emissions.
+//!   They simplify usage by handling core logic securely. These functions can
+//!   be called directly for typical token operations without exposing
+//!   implementation details.
+//!
+//! - **Low-Level Functions**: These offer granular control when custom
+//!   workflows must be composed. Such functions expose internal mechanisms and
+//!   require the caller to handle verifications and authorizations manually.
+//!
+//! This dual-layered approach provides a choice between convenience and
+//! customization, depending on project requirements.
+//!
+//! ## Structure
+//!
+//! The base module includes:
+//!
+//! - Total supply management
+//! - Transfers and allowances
+//!
+//! The following optional extensions are available:
+//!
+//! - Metadata: Provides additional information about the token, such as name,
+//!   symbol, and decimals.
+//! - Burnable: Enables token holders to destroy their tokens, reducing the
+//!   total supply.
+//! - Capped: Enables the contract to set a maximum limit on the total supply.
+//!
+//! ## Compatibility and Compliance
+//!
+//! The module is designed to ensure full compatibility with SEP-0041. It also
+//! closely mirrors the Ethereum ERC-20 standard, facilitating cross-ecosystem
+//! familiarity and ease of use.
+//!
+//! SEP-41-compliant tokens can be built by leveraging the
+//! `soroban_sdk::token::TokenInterface` trait available in the "soroban-sdk"
+//! crate. By implementing `TokenInterface` using the helper functions provided
+//! in this library, a secure and standardized implementation can be achieved.
+//! Alternatively, the implementation of both the
+//! [`FungibleToken`] and [`burnable::FungibleBurnable`] traits to create tokens
+//! that adhere to SEP-41 while providing greater control and extensibility.
+//!
+//! ## Notes for Developers
+//!
+//! - **Security Considerations**: While high-level functions handle necessary
+//!   checks, users of low-level functions must take extra care to ensure
+//!   correctness and security.
+//! - **Composable Design**: The modular structure encourages developers to
+//!   extend functionality by combining provided primitives or creating custom
+//!   extensions.
+//! - **TTL management**: This library handles the TTL of only `temporary` and
+//!   `persistent` storage entries declared by the library. The `instance` TTL
+//!   management is left to the implementor due to flexibility. The library
+//!   exposes the sane default values for extending the TTL:
+//!   `INSTANCE_TTL_THRESHOLD` and `INSTANCE_EXTEND_AMOUNT`.
+
+mod extensions;
+mod overrides;
+mod storage;
+mod utils;
+
+#[cfg(test)]
+mod test;
+
+pub use extensions::{allowlist, blocklist, burnable, capped, votes};
+pub use overrides::{Base, ContractOverrides};
+use soroban_sdk::{
+    contracterror, contractevent, contracttrait, Address, Env, MuxedAddress, String,
+};
+pub use storage::{AllowanceData, AllowanceKey, FungibleStorageKey};
+pub use utils::{sac_admin_generic, sac_admin_wrapper};
+
+/// Vanilla Fungible Token Trait
+///
+/// The `FungibleToken` trait defines the core functionality for fungible
+/// tokens, adhering to SEP-41. It provides a standard interface for managing
+/// balances, allowances, and metadata associated with fungible tokens.
+/// Additionally, this trait includes the `total_supply()` function, which is
+/// not part of SEP-41 but is commonly used in token contracts.
+///
+/// To fully comply with the SEP-41 specification one has to implement the
+/// `FungibleBurnable` trait in addition to this one. SEP-41 mandates support
+/// for token burning to be considered compliant.
+///
+/// Event for `mint` is defined, but `mint` function itself is not included
+/// as a method in this trait because it is not a part of the SEP-41 standard,
+/// the function signature may change depending on the implementation.
+///
+/// A function, [`crate::fungible::Base::mint`], is provided for minting to
+/// cover the general use case.
+///
+/// This trait is implemented for the following Contract Types:
+/// * [`crate::fungible::Base`] (covering the vanilla case, and compatible with
+///   [`crate::fungible::burnable::FungibleBurnable`]) trait
+/// * [`crate::fungible::allowlist::AllowList`] (enabling the compatibility and
+///   overrides for [`crate::fungible::allowlist::FungibleAllowList`]) trait,
+///   incompatible with [`crate::fungible::blocklist::BlockList`] trait and
+///   [`crate::rwa::RWA`] trait.
+/// * [`crate::fungible::blocklist::BlockList`] (enabling the compatibility and
+///   overrides for [`crate::fungible::blocklist::FungibleBlockList`]) trait,
+///   incompatible with [`crate::fungible::allowlist::AllowList`] trait and
+///   [`crate::rwa::RWA`] trait.
+/// * [`crate::rwa::RWA`] (enabling the compatibility and overrides for
+///   [`crate::rwa::RWAToken`]) trait, incompatible with
+///   [`crate::fungible::allowlist::AllowList`] trait and
+///   [`crate::fungible::blocklist::BlockList`] trait.
+///
+/// The default implementations of this trait for `Base`, `Allowlist`,
+/// `Blocklist` and `RWA` can be found by navigating to:
+/// `ContractType::{method_name}`.
+///
+/// For example, the implementation of [`FungibleToken::transfer`] for the
+/// `Allowlist` contract type can be found at
+/// [`crate::fungible::allowlist::AllowList::transfer`].
+#[contracttrait]
+pub trait FungibleToken {
+    /// Helper type that allows some of the functionality of the base trait to
+    /// be overridden based on the extensions implemented.
+    /// [`crate::fungible::Base`] should be used as the type when
+    /// not using
+    /// [`crate::fungible::allowlist::AllowList`] or
+    /// [`crate::fungible::blocklist::BlockList`] extensions.
+    type ContractType: ContractOverrides;
+
+    /// Returns the total amount of tokens in circulation.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to the Soroban environment.
+    fn total_supply(e: &Env) -> i128 {
+        Self::ContractType::total_supply(e)
+    }
+
+    /// Returns the amount of tokens held by `account`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to the Soroban environment.
+    /// * `account` - The address for which the balance is being queried.
+    fn balance(e: &Env, account: Address) -> i128 {
+        Self::ContractType::balance(e, &account)
+    }
+
+    /// Returns the amount of tokens a `spender` is allowed to spend on behalf
+    /// of an `owner`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    /// * `owner` - The address holding the tokens.
+    /// * `spender` - The address authorized to spend the tokens.
+    fn allowance(e: &Env, owner: Address, spender: Address) -> i128 {
+        Self::ContractType::allowance(e, &owner, &spender)
+    }
+
+    /// Transfers `amount` of tokens from `from` to `to`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    /// * `from` - The address holding the tokens.
+    /// * `to` - The address receiving the transferred tokens.
+    /// * `amount` - The amount of tokens to be transferred.
+    ///
+    /// # Errors
+    ///
+    /// * [`FungibleTokenError::InsufficientBalance`] - When attempting to
+    ///   transfer more tokens than `from` current balance.
+    /// * [`FungibleTokenError::LessThanZero`] - When `amount < 0`.
+    ///
+    /// # Events
+    ///
+    /// * topics - `["transfer", from: Address, to: Address]`
+    /// * data - `[to_muxed_id: Option<u64>, amount: i128]`
+    fn transfer(e: &Env, from: Address, to: MuxedAddress, amount: i128) {
+        Self::ContractType::transfer(e, &from, &to, amount);
+    }
+
+    /// Transfers `amount` of tokens from `from` to `to` using the
+    /// allowance mechanism. `amount` is then deducted from `spender`
+    /// allowance.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    /// * `spender` - The address authorizing the transfer, and having its
+    ///   allowance consumed during the transfer.
+    /// * `from` - The address holding the tokens which will be transferred.
+    /// * `to` - The address receiving the transferred tokens.
+    /// * `amount` - The amount of tokens to be transferred.
+    ///
+    /// # Errors
+    ///
+    /// * [`FungibleTokenError::InsufficientBalance`] - When attempting to
+    ///   transfer more tokens than `from` current balance.
+    /// * [`FungibleTokenError::LessThanZero`] - When `amount < 0`.
+    /// * [`FungibleTokenError::InsufficientAllowance`] - When attempting to
+    ///   transfer more tokens than `spender` current allowance.
+    ///
+    /// # Events
+    ///
+    /// * topics - `["transfer", from: Address, to: Address]`
+    /// * data - `[amount: i128]`
+    fn transfer_from(e: &Env, spender: Address, from: Address, to: Address, amount: i128) {
+        Self::ContractType::transfer_from(e, &spender, &from, &to, amount);
+    }
+
+    /// Sets the amount of tokens a `spender` is allowed to spend on behalf of
+    /// an `owner`. Overrides any existing allowance set between `spender` and
+    /// `owner`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    /// * `owner` - The address holding the tokens.
+    /// * `spender` - The address authorized to spend the tokens.
+    /// * `amount` - The amount of tokens made available to `spender`.
+    /// * `live_until_ledger` - The ledger number at which the allowance
+    ///   expires.
+    ///
+    /// # Errors
+    ///
+    /// * [`FungibleTokenError::InvalidLiveUntilLedger`] - Occurs when
+    ///   attempting to set `live_until_ledger` that is less than the current
+    ///   ledger number and greater than `0`.
+    /// * [`FungibleTokenError::LessThanZero`] - Occurs when `amount < 0`.
+    ///
+    /// # Events
+    ///
+    /// * topics - `["approve", from: Address, spender: Address]`
+    /// * data - `[amount: i128, live_until_ledger: u32]`
+    fn approve(e: &Env, owner: Address, spender: Address, amount: i128, live_until_ledger: u32) {
+        Self::ContractType::approve(e, &owner, &spender, amount, live_until_ledger);
+    }
+
+    /// Returns the number of decimals used to represent amounts of this token.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    fn decimals(e: &Env) -> u32 {
+        Self::ContractType::decimals(e)
+    }
+
+    /// Returns the name for this token.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    fn name(e: &Env) -> String {
+        Self::ContractType::name(e)
+    }
+
+    /// Returns the symbol for this token.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to Soroban environment.
+    fn symbol(e: &Env) -> String {
+        Self::ContractType::symbol(e)
+    }
+}
+
+// ################## ERRORS ##################
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum FungibleTokenError {
+    /// Indicates an error related to the current balance of account from which
+    /// tokens are expected to be transferred.
+    InsufficientBalance = 100,
+    /// Indicates a failure with the allowance mechanism when a given spender
+    /// doesn't have enough allowance.
+    InsufficientAllowance = 101,
+    /// Indicates an invalid value for `live_until_ledger` when setting an
+    /// allowance.
+    InvalidLiveUntilLedger = 102,
+    /// Indicates an error when an input that must be >= 0
+    LessThanZero = 103,
+    /// Indicates overflow when adding two values
+    MathOverflow = 104,
+    /// Indicates access to uninitialized metadata
+    UnsetMetadata = 105,
+    /// Indicates that the operation would have caused `total_supply` to exceed
+    /// the `cap`.
+    ExceededCap = 106,
+    /// Indicates the supplied `cap` is not a valid cap value.
+    InvalidCap = 107,
+    /// Indicates the Cap was not set.
+    CapNotSet = 108,
+    /// Indicates the SAC address was not set.
+    SACNotSet = 109,
+    /// Indicates a SAC address different than expected.
+    SACAddressMismatch = 110,
+    /// Indicates a missing function parameter in the SAC contract context.
+    SACMissingFnParam = 111,
+    /// Indicates an invalid function parameter in the SAC contract context.
+    SACInvalidFnParam = 112,
+    /// The user is not allowed to perform this operation
+    UserNotAllowed = 113,
+    /// The user is blocked and cannot perform this operation
+    UserBlocked = 114,
+}
+
+// ################## CONSTANTS ##################
+
+const DAY_IN_LEDGERS: u32 = 17280;
+pub const BALANCE_EXTEND_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+pub const BALANCE_TTL_THRESHOLD: u32 = BALANCE_EXTEND_AMOUNT - DAY_IN_LEDGERS;
+pub const ALLOW_BLOCK_EXTEND_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+pub const ALLOW_BLOCK_TTL_THRESHOLD: u32 = ALLOW_BLOCK_EXTEND_AMOUNT - DAY_IN_LEDGERS;
+pub const INSTANCE_EXTEND_AMOUNT: u32 = 7 * DAY_IN_LEDGERS;
+pub const INSTANCE_TTL_THRESHOLD: u32 = INSTANCE_EXTEND_AMOUNT - DAY_IN_LEDGERS;
+
+// ################## EVENTS ##################
+
+/// Event emitted when tokens are transferred between addresses without a
+/// muxed destination.
+///
+/// Per SEP-41, the event data is a bare `i128` when no muxed address is
+/// involved. The `data_format = "single-value"` attribute ensures the
+/// `amount` field is serialized as a bare value rather than a map.
+#[contractevent(data_format = "single-value")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Transfer {
+    #[topic]
+    pub from: Address,
+    #[topic]
+    pub to: Address,
+    pub amount: i128,
+}
+
+/// Event emitted when tokens are transferred to a muxed address.
+///
+/// Per SEP-41, when the destination is a [`MuxedAddress`] the event data
+/// carries both the amount and the muxed identifier so that off-chain
+/// consumers can attribute the transfer to the correct sub-account.
+///
+/// Uses `topics = ["transfer"]` so that both [`Transfer`] and
+/// [`MuxedTransfer`] share the same `"transfer"` event symbol, as required
+/// by SEP-41.
+#[contractevent(topics = ["transfer"])]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MuxedTransfer {
+    #[topic]
+    pub from: Address,
+    #[topic]
+    pub to: Address,
+    pub to_muxed_id: Option<u64>,
+    pub amount: i128,
+}
+
+/// Emits an event indicating a transfer of tokens.
+///
+/// When `to_muxed_id` is `Some`, a [`MuxedTransfer`] event is published
+/// whose data field is `{to_muxed_id: Option<u64>, amount: i128}`. When it
+/// is `None`, a [`Transfer`] event is published whose data field is a bare
+/// `i128`, conforming to the SEP-41 standard.
+///
+/// Both variants share the same topic structure:
+/// `["transfer", from: Address, to: Address]`.
+///
+/// # Arguments
+///
+/// * `e` - Access to Soroban environment.
+/// * `from` - The address holding the tokens.
+/// * `to` - The address receiving the transferred tokens.
+/// * `to_muxed_id` - Optional muxed ID to be emitted in the event data.
+/// * `amount` - The amount of tokens to be transferred.
+pub fn emit_transfer(
+    e: &Env,
+    from: &Address,
+    to: &Address,
+    to_muxed_id: Option<u64>,
+    amount: i128,
+) {
+    match to_muxed_id {
+        Some(_) => {
+            MuxedTransfer { from: from.clone(), to: to.clone(), to_muxed_id, amount }.publish(e);
+        }
+        None => {
+            Transfer { from: from.clone(), to: to.clone(), amount }.publish(e);
+        }
+    }
+}
+
+/// Event emitted when an allowance is approved.
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Approve {
+    #[topic]
+    pub owner: Address,
+    #[topic]
+    pub spender: Address,
+    pub amount: i128,
+    pub live_until_ledger: u32,
+}
+
+/// Emits an event indicating an allowance was set.
+///
+/// # Arguments
+///
+/// * `e` - Access to Soroban environment.
+/// * `owner` - The address holding the tokens.
+/// * `spender` - The address authorized to spend the tokens.
+/// * `amount` - The amount of tokens made available to `spender`.
+/// * `live_until_ledger` - The ledger number at which the allowance expires.
+pub fn emit_approve(
+    e: &Env,
+    owner: &Address,
+    spender: &Address,
+    amount: i128,
+    live_until_ledger: u32,
+) {
+    Approve { owner: owner.clone(), spender: spender.clone(), amount, live_until_ledger }
+        .publish(e);
+}
+
+/// Event emitted when tokens are minted.
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Mint {
+    #[topic]
+    pub to: Address,
+    pub amount: i128,
+}
+
+/// Emits an event indicating a mint of tokens.
+///
+/// # Arguments
+///
+/// * `e` - Access to Soroban environment.
+/// * `to` - The address receiving the new tokens.
+/// * `amount` - The amount of tokens to mint.
+pub fn emit_mint(e: &Env, to: &Address, amount: i128) {
+    Mint { to: to.clone(), amount }.publish(e);
+}

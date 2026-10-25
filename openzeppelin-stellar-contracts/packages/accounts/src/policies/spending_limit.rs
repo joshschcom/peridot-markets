@@ -1,0 +1,481 @@
+//! # Spending Limit Policy Module
+//!
+//! This policy implements spending limit functionality where transactions above
+//! the specified amount are blocked. It intersects transfer operations and
+//! enforces spending limits over a configurable rolling time window.
+//!
+//! ## Rolling window semantics
+//!
+//! The rolling window keeps only the last `period_ledgers` worth of ledger
+//! entries. Entries whose ledger sequence is **less than or equal to**
+//! `current_ledger - period_ledgers` are evicted before new transfers are
+//! evaluated, ensuring the cached totals match the live window.
+//!
+//! Example where `P` = `period_ledgers`, `C` = `current_ledger`:
+//!
+//! ```text
+//!   ...  C-P-2   C-P-1   C-P   C-P+1   ...   C-1   C
+//!         [evicted] [evicted]   |<------ kept ----->|
+//!                         ^ cutoff (exclusive window start)
+//!
+//!   ...    78      79      80      81   ...    99   100
+//!             [<=80 evicted]    |<------- kept ------>|
+//!                          ^ cutoff when `C = 100`, `P = 20`
+//! ```
+//!
+//! ## Example Usage
+//!
+//! ```rust,ignore
+//! // Set a spending limit of 10,000,000 stroops (10 XLM) over 1 day (17280 ledgers)
+//! SpendingLimitAccountParams {
+//!     spending_limit: 10_000_000, // 10 XLM in stroops
+//!     period_ledgers: 17280,      // ~1 day in ledgers
+//! }
+//! ```
+use soroban_sdk::{
+    auth::{Context, ContractContext},
+    contracterror, contractevent, contracttype, panic_with_error, symbol_short, Address, Env,
+    TryFromVal, Vec,
+};
+
+use crate::smart_account::{ContextRule, ContextRuleType, Signer};
+
+/// Event emitted when a spending limit policy is enforced.
+#[contractevent]
+#[derive(Clone)]
+pub struct SpendingLimitEnforced {
+    #[topic]
+    pub smart_account: Address,
+    pub context: Context,
+    pub context_rule_id: u32,
+    pub amount: i128,
+    pub total_spent_in_period: i128,
+}
+
+/// Event emitted when a spending limit policy is installed.
+#[contractevent]
+#[derive(Clone, Debug)]
+pub struct SpendingLimitInstalled {
+    #[topic]
+    pub smart_account: Address,
+    pub context_rule_id: u32,
+    pub spending_limit: i128,
+    pub period_ledgers: u32,
+}
+
+/// Event emitted when the spending limit value is changed.
+#[contractevent]
+#[derive(Clone, Debug)]
+pub struct SpendingLimitChanged {
+    #[topic]
+    pub smart_account: Address,
+    pub context_rule_id: u32,
+    pub spending_limit: i128,
+}
+
+/// Event emitted when a spending limit policy is uninstalled.
+#[contractevent]
+#[derive(Clone, Debug)]
+pub struct SpendingLimitUninstalled {
+    #[topic]
+    pub smart_account: Address,
+    pub context_rule_id: u32,
+}
+
+/// Installation parameters for the spending limit policy.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct SpendingLimitAccountParams {
+    /// The maximum amount that can be spent within the specified period (in
+    /// stroops).
+    pub spending_limit: i128,
+    /// The period in ledgers over which the spending limit applies.
+    pub period_ledgers: u32,
+}
+
+/// Internal storage structure for spending limit tracking.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct SpendingLimitData {
+    /// The spending limit for the period.
+    pub spending_limit: i128,
+    /// The period in ledgers over which the spending limit applies.
+    pub period_ledgers: u32,
+    /// History of spending transactions with their ledger sequences.
+    pub spending_history: Vec<SpendingEntry>,
+    /// Cached total of all amounts in spending_history.
+    pub cached_total_spent: i128,
+}
+
+/// Individual spending entry for tracking purposes.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct SpendingEntry {
+    /// The amount spent in this transaction.
+    pub amount: i128,
+    /// The ledger sequence when this transaction occurred.
+    pub ledger_sequence: u32,
+}
+
+/// Error codes for spending limit policy operations.
+#[contracterror]
+#[derive(Copy, Clone, Debug, PartialEq)]
+#[repr(u32)]
+pub enum SpendingLimitError {
+    /// The smart account does not have a spending limit policy installed.
+    SmartAccountNotInstalled = 3220,
+    /// The spending limit has been exceeded.
+    SpendingLimitExceeded = 3221,
+    /// The spending limit or period is invalid.
+    InvalidLimitOrPeriod = 3222,
+    /// The transaction is not allowed by this policy.
+    NotAllowed = 3223,
+    /// The spending history has reached maximum capacity.
+    HistoryCapacityExceeded = 3224,
+    /// The context rule for the smart account has been already installed.
+    AlreadyInstalled = 3225,
+    /// The transfer amount is negative.
+    LessThanZero = 3226,
+    /// Only the `CallContract` context rule type is allowed.
+    OnlyCallContractAllowed = 3227,
+}
+
+/// Storage keys for spending limit policy data.
+#[contracttype]
+pub enum SpendingLimitStorageKey {
+    /// Storage key for spending limit data of a smart account context rule.
+    AccountContext(Address, u32),
+}
+
+// ################## CONSTANTS ##################
+
+const DAY_IN_LEDGERS: u32 = 17280;
+pub const SPENDING_LIMIT_EXTEND_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+pub const SPENDING_LIMIT_TTL_THRESHOLD: u32 = SPENDING_LIMIT_EXTEND_AMOUNT - DAY_IN_LEDGERS;
+
+/// Maximum number of spending entries to keep in history.
+/// This prevents storage DoS by capping the vector size.
+pub const MAX_HISTORY_ENTRIES: u32 = 1000;
+
+// ################## QUERY STATE ##################
+
+/// Retrieves the spending limit data for a smart account's spending limit
+/// policy.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `context_rule_id` - The context rule ID for this policy.
+/// * `smart_account` - The address of the smart account.
+///
+/// # Errors
+///
+/// * [`SpendingLimitError::SmartAccountNotInstalled`] - When the smart account
+///   does not have a spending limit policy installed.
+pub fn get_spending_limit_data(
+    e: &Env,
+    context_rule_id: u32,
+    smart_account: &Address,
+) -> SpendingLimitData {
+    let key = SpendingLimitStorageKey::AccountContext(smart_account.clone(), context_rule_id);
+    e.storage()
+        .persistent()
+        .get(&key)
+        .inspect(|_| {
+            e.storage().persistent().extend_ttl(
+                &key,
+                SPENDING_LIMIT_TTL_THRESHOLD,
+                SPENDING_LIMIT_EXTEND_AMOUNT,
+            );
+        })
+        .unwrap_or_else(|| panic_with_error!(e, SpendingLimitError::SmartAccountNotInstalled))
+}
+
+// ################## CHANGE STATE ##################
+
+/// Enforces the spending limit policy and updates the spending history.
+/// Requires authorization from the smart account.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `context` - The authorization context.
+/// * `authenticated_signers` - The list of authenticated signers.
+/// * `context_rule` - The context rule for this policy.
+/// * `smart_account` - The address of the smart account.
+///
+/// # Errors
+///
+/// * [`SpendingLimitError::SpendingLimitExceeded`] - When the transaction
+///   amount is not within the spending limit for the rolling period.
+/// * [`SpendingLimitError::LessThanZero`] - When the transfer amount is
+///   negative.
+/// * [`SpendingLimitError::NotAllowed`] - When there are no authenticated
+///   signers, the context is not a transfer with well-formatted amount.
+/// * refer to [`get_spending_limit_data`] errors.
+///
+/// # Events
+///
+/// * topics - `["spending_limit_enforced", smart_account: Address]`
+/// * data - `[context: Context, context_rule_id: u32, amount: i128,
+///   total_spent_in_period: i128]`
+pub fn enforce(
+    e: &Env,
+    context: &Context,
+    authenticated_signers: &Vec<Signer>,
+    context_rule: &ContextRule,
+    smart_account: &Address,
+) {
+    // Require authorization from the smart_account
+    smart_account.require_auth();
+
+    if authenticated_signers.is_empty() {
+        panic_with_error!(e, SpendingLimitError::NotAllowed)
+    }
+
+    let key = SpendingLimitStorageKey::AccountContext(smart_account.clone(), context_rule.id);
+    let mut data = get_spending_limit_data(e, context_rule.id, smart_account);
+    let current_ledger = e.ledger().sequence();
+
+    match context {
+        Context::Contract(ContractContext { fn_name, args, .. }) => {
+            if fn_name == &symbol_short!("transfer") {
+                if let Some(amount_val) = args.get(2) {
+                    if let Ok(amount) = i128::try_from_val(e, &amount_val) {
+                        if amount < 0 {
+                            panic_with_error!(e, SpendingLimitError::LessThanZero)
+                        }
+
+                        // Clean up old entries outside the rolling window BEFORE checking limit
+                        let removed_amount = cleanup_old_entries(
+                            &mut data.spending_history,
+                            current_ledger,
+                            data.period_ledgers,
+                        );
+                        data.cached_total_spent -= removed_amount;
+
+                        // Now check if the transaction exceeds the spending limit using updated
+                        // cached total
+                        if data.cached_total_spent + amount > data.spending_limit {
+                            panic_with_error!(e, SpendingLimitError::SpendingLimitExceeded)
+                        }
+
+                        if data.spending_history.len() >= MAX_HISTORY_ENTRIES {
+                            panic_with_error!(e, SpendingLimitError::HistoryCapacityExceeded)
+                        }
+
+                        // Add the new spending entry
+                        let new_entry = SpendingEntry { amount, ledger_sequence: current_ledger };
+                        data.spending_history.push_back(new_entry);
+                        data.cached_total_spent += amount;
+
+                        e.storage().persistent().set(&key, &data);
+
+                        SpendingLimitEnforced {
+                            smart_account: smart_account.clone(),
+                            context: context.clone(),
+                            context_rule_id: context_rule.id,
+                            amount,
+                            total_spent_in_period: data.cached_total_spent,
+                        }
+                        .publish(e);
+
+                        return;
+                    }
+                }
+            }
+        }
+        _ => {
+            panic_with_error!(e, SpendingLimitError::NotAllowed)
+        }
+    }
+    panic_with_error!(e, SpendingLimitError::NotAllowed)
+}
+
+/// Sets the spending limit for a smart account's spending limit policy.
+/// Requires authorization from the smart account.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `spending_limit` - The new spending limit.
+/// * `context_rule` - The context rule for this policy.
+/// * `smart_account` - The address of the smart account.
+///
+/// # Errors
+///
+/// * [`SpendingLimitError::InvalidLimitOrPeriod`] - When spending_limit is not
+///   positive.
+///
+/// # Events
+///
+/// * topics - `["spending_limit_changed", smart_account: Address]`
+/// * data - `[context_rule_id: u32, spending_limit: i128]`
+pub fn set_spending_limit(
+    e: &Env,
+    spending_limit: i128,
+    context_rule: &ContextRule,
+    smart_account: &Address,
+) {
+    // Require authorization from the smart_account
+    smart_account.require_auth();
+
+    if spending_limit <= 0 {
+        panic_with_error!(e, SpendingLimitError::InvalidLimitOrPeriod)
+    }
+
+    let key = SpendingLimitStorageKey::AccountContext(smart_account.clone(), context_rule.id);
+    let mut data = get_spending_limit_data(e, context_rule.id, smart_account);
+    data.spending_limit = spending_limit;
+
+    e.storage().persistent().set(&key, &data);
+
+    SpendingLimitChanged {
+        smart_account: smart_account.clone(),
+        context_rule_id: context_rule.id,
+        spending_limit,
+    }
+    .publish(e);
+}
+
+/// Installs the spending limit policy on a smart account. Only `CallContract`
+/// context type is allowed as it pins the policy to a specific token contract,
+/// ensuring all tracked transfers are denominated in the same token.
+/// Requires authorization from the smart account.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `params` - Installation parameters containing the spending limit and
+///   period.
+/// * `context_rule` - The context rule for this policy.
+/// * `smart_account` - The address of the smart account.
+///
+/// # Errors
+///
+/// * [`SpendingLimitError::OnlyCallContractAllowed`] - When the context rule
+///   type is not `CallContract`.
+/// * [`SpendingLimitError::InvalidLimitOrPeriod`] - When spending_limit is not
+///   positive or period_ledgers is zero.
+/// * [`SpendingLimitError::AlreadyInstalled`] - When policy was already
+///   installed for a given smart account and context rule.
+///
+/// # Events
+///
+/// * topics - `["spending_limit_installed", smart_account: Address]`
+/// * data - `[context_rule_id: u32, spending_limit: i128, period_ledgers: u32]`
+pub fn install(
+    e: &Env,
+    params: &SpendingLimitAccountParams,
+    context_rule: &ContextRule,
+    smart_account: &Address,
+) {
+    // Require authorization from the smart_account
+    smart_account.require_auth();
+
+    if !matches!(context_rule.context_type, ContextRuleType::CallContract(_)) {
+        panic_with_error!(e, SpendingLimitError::OnlyCallContractAllowed)
+    }
+
+    if params.spending_limit <= 0 || params.period_ledgers == 0 {
+        panic_with_error!(e, SpendingLimitError::InvalidLimitOrPeriod)
+    }
+    let key = SpendingLimitStorageKey::AccountContext(smart_account.clone(), context_rule.id);
+
+    if e.storage().persistent().has(&key) {
+        panic_with_error!(e, SpendingLimitError::AlreadyInstalled)
+    }
+
+    let data = SpendingLimitData {
+        spending_limit: params.spending_limit,
+        period_ledgers: params.period_ledgers,
+        spending_history: Vec::new(e),
+        cached_total_spent: 0,
+    };
+
+    e.storage().persistent().set(&key, &data);
+
+    SpendingLimitInstalled {
+        smart_account: smart_account.clone(),
+        context_rule_id: context_rule.id,
+        spending_limit: params.spending_limit,
+        period_ledgers: params.period_ledgers,
+    }
+    .publish(e);
+}
+
+/// Uninstalls the spending limit policy from a smart account.
+/// Removes all stored spending limit data for the account and context rule.
+/// Requires authorization from the smart account.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `context_rule` - The context rule for this policy.
+/// * `smart_account` - The address of the smart account.
+///
+/// # Errors
+///
+/// * [`SpendingLimitError::SmartAccountNotInstalled`] - When the policy is not
+///   installed for the given smart account and context rule.
+///
+/// # Events
+///
+/// * topics - `["spending_limit_uninstalled", smart_account: Address]`
+/// * data - `[context_rule_id: u32]`
+pub fn uninstall(e: &Env, context_rule: &ContextRule, smart_account: &Address) {
+    // Require authorization from the smart_account
+    smart_account.require_auth();
+
+    let key = SpendingLimitStorageKey::AccountContext(smart_account.clone(), context_rule.id);
+
+    if !e.storage().persistent().has(&key) {
+        panic_with_error!(e, SpendingLimitError::SmartAccountNotInstalled)
+    }
+
+    e.storage().persistent().remove(&key);
+
+    SpendingLimitUninstalled {
+        smart_account: smart_account.clone(),
+        context_rule_id: context_rule.id,
+    }
+    .publish(e);
+}
+
+// ################## HELPER FUNCTIONS ##################
+
+/// Removes spending entries that are outside the rolling window period.
+/// Returns the total amount removed, which should be subtracted from
+/// cached_total_spent.
+///
+/// # Arguments
+///
+/// * `spending_history` - The mutable history of spending transactions.
+/// * `current_ledger` - The current ledger sequence.
+/// * `period_ledgers` - The period in ledgers for the rolling window.
+///
+/// # Returns
+///
+/// The total amount of all removed entries.
+fn cleanup_old_entries(
+    spending_history: &mut Vec<SpendingEntry>,
+    current_ledger: u32,
+    period_ledgers: u32,
+) -> i128 {
+    let cutoff_ledger = current_ledger.saturating_sub(period_ledgers);
+    let mut removed_total = 0i128;
+
+    // Remove entries older than the cutoff ledger
+    // We iterate from the front and remove old entries since they're at the
+    // beginning
+    while let Some(entry) = spending_history.get(0) {
+        if entry.ledger_sequence <= cutoff_ledger {
+            removed_total += entry.amount;
+            spending_history.pop_front();
+        } else {
+            break;
+        }
+    }
+
+    removed_total
+}

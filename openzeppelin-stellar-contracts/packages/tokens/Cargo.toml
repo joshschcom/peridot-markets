@@ -1,0 +1,28 @@
+[package]
+name = "stellar-tokens"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+version.workspace = true
+description = "Fungible and NonFungible Tokens for the Stellar contracts."
+
+[package.metadata.stellar]
+cargo_inherit = true
+
+[lib]
+crate-type = ["lib", "cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+stellar-contract-utils = { workspace = true }
+stellar-governance = { workspace = true }
+
+[dev-dependencies]
+ed25519-dalek = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils"] }
+soroban-test-helpers = { workspace = true }
+stellar-event-assertion = { workspace = true }
+k256 = { workspace = true, features = ["ecdsa"] }
+p256 = { workspace = true, features = ["ecdsa"] }

@@ -1,0 +1,78 @@
+# Fee Abstraction
+
+Utilities for implementing fee abstraction (fee forwarding) for interacting with Soroban contracts, allowing users to pay transaction fees in tokens (e.g., USDC) instead of native XLM.
+
+This crate is part of the [OpenZeppelin Stellar Contracts](https://github.com/OpenZeppelin/stellar-contracts) library, which is published as separate crates on [crates.io](https://crates.io):
+
+- [stellar-access](https://crates.io/crates/stellar-access): Role-based access controls and ownable
+- [stellar-accounts](https://crates.io/crates/stellar-accounts): Smart accounts with custom authentication and authorization
+- [stellar-contract-utils](https://crates.io/crates/stellar-contract-utils): Utilities for contracts (pausable, upgradeable, cryptography, etc.)
+- **[stellar-fee-abstraction](https://crates.io/crates/stellar-fee-abstraction)**: Fee abstraction utilities
+- [stellar-governance](https://crates.io/crates/stellar-governance): Governance utilities (governor, votes, timelock)
+- [stellar-macros](https://crates.io/crates/stellar-macros): Proc macros (`#[only_owner]`, `#[when_not_paused]`, etc.)
+- [stellar-tokens](https://crates.io/crates/stellar-tokens): Token types (fungible, non-fungible, real-world assets, vaults)
+
+Refer to the [OpenZeppelin for Stellar Contracts](https://docs.openzeppelin.com/stellar-contracts) page for additional information.
+
+## Overview
+
+Fee abstraction enables a better UX by letting users pay for transactions with tokens they already hold. Another actor, called relayer, covers the XLM network fees and is compensated in the user's chosen token. 
+
+The flow involves an off-chain negotiation between the user and a relayer (quote request, fee agreement), but the actual execution happens through an intermediary contract called **FeeForwarder**. This contract enforces that the user is charged at most `max_fee_amount` (the cap they signed). The relayer determines the actual `fee_amount` at submission time based on network conditions, but can never exceed the user's authorized maximum.
+
+```mermaid
+sequenceDiagram
+    actor User
+    actor Relayer
+    participant FeeForwarder
+    participant Token
+    participant Target Contract
+
+    User->>User: 1. Prepare call to Target.target_fn()
+    User->>Relayer: 2. Request quote (fee token, expiration, target)
+    Relayer-->>User: Quote: max_fee_amount
+    
+    User->>User: 3. Sign authorization for FeeForwarder.forward()<br/>including subinvocations for:<br/> Token.approve() and Target.target_fn()
+    User->>Relayer: 4. Hand over signed authorization entry
+    
+    Relayer->>Relayer: 5. Verify params satisfy requirements<br/>(fee amount, token, fee recipient, ...)
+    Relayer->>Relayer: 6. Sign as source_account
+    Relayer->>FeeForwarder: 7. Execute forward():<br/>submit a tx and pay XLM fees
+    
+    FeeForwarder->>FeeForwarder: 8. Validate authorizations
+    FeeForwarder->>Token: 9. Approve max fee amount (optional)
+    FeeForwarder->>Token: 10. Transfer fee amount to fee recipient
+    FeeForwarder->>Target Contract: 11. Invoke target_fn(target_args)
+    Target Contract-->>User: Result
+```
+
+## Features
+
+- Fee Collection Helpers (eager and lazy approval strategies)
+- Invoker Helper handling user-side authorizations
+- Optional Fee Token Allowlist
+- Optional Token Sweeping (fees are collected on the forwarding contract and transferred later on)
+- Validation Utilities
+
+## Getting Started
+
+### Installation
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+# We recommend pinning to a specific version, because rapid iterations are expected as the library is in an active development phase.
+stellar-fee-abstraction = "=0.7.1"
+```
+
+### Examples
+
+- [fee-forwarder-permissioned](../../examples/fee-forwarder-permissioned)
+
+  - Only trusted executors can call `forward`.
+  - The forwarder contract itself collects the fees, which can be swept later.
+
+- [fee-forwarder-permissionless](../../examples/fee-forwarder-permissionless)
+  - Anyone can call `forward`; there is no executor allowlist.
+  - The relayer (transaction submitter) receives the collected fee.

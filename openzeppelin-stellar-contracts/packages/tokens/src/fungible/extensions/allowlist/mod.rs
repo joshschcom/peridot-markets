@@ -1,0 +1,123 @@
+pub mod storage;
+
+#[cfg(test)]
+mod test;
+
+use soroban_sdk::{contractevent, contracttrait, Address, Env};
+pub use storage::AllowList;
+
+use crate::fungible::FungibleToken;
+
+/// AllowList Trait for Fungible Token
+///
+/// The `FungibleAllowList` trait extends the `FungibleToken` trait to
+/// provide an allowlist mechanism that can be managed by an authorized account.
+/// This extension ensures that transfer can only take place if the sender and
+/// the receiver are both allowed. Note that, spender does not have to be
+/// allowed.
+///
+/// This trait is designed to be used in conjunction with the `FungibleToken`
+/// trait.
+///
+/// **NOTE**
+///
+/// All setter functions, exposed in the `FungibleAllowList` trait, include an
+/// additional parameter `operator: Address`. This account is the one
+/// authorizing the invocation. Having it as a parameter grants the flexibility
+/// to introduce simple or complex role-based access controls.
+///
+/// However, this parameter is omitted from the module functions, defined in
+/// "storage.rs", because the authorizations are to be handled in the access
+/// control helpers or directly implemented
+#[contracttrait]
+pub trait FungibleAllowList: FungibleToken<ContractType = AllowList> {
+    /// Returns the allowed status of an account.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to the Soroban environment.
+    /// * `account` - The address to check the allowed status for.
+    fn allowed(e: &Env, account: Address) -> bool {
+        storage::AllowList::allowed(e, &account)
+    }
+
+    /// Allows a user to receive and transfer tokens.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to the Soroban environment.
+    /// * `user` - The address to allow.
+    /// * `operator` - The address authorizing the invocation.
+    ///
+    /// # Events
+    ///
+    /// * topics - `["allow", user: Address]`
+    /// * data - `[]`
+    ///
+    /// # Notes
+    ///
+    /// No default implementation is provided because this is a privileged
+    /// operation that requires custom access control. Access control should be
+    /// enforced on `operator` before calling [`storage::allow_user`] for the
+    /// implementation.
+    fn allow_user(e: &Env, user: Address, operator: Address);
+
+    /// Disallows a user from receiving and transferring tokens.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Access to the Soroban environment.
+    /// * `user` - The address to disallow.
+    /// * `operator` - The address authorizing the invocation.
+    ///
+    /// # Events
+    ///
+    /// * topics - `["disallow", user: Address]`
+    /// * data - `[]`
+    ///
+    /// # Notes
+    ///
+    /// No default implementation is provided because this is a privileged
+    /// operation that requires custom access control. Access control should be
+    /// enforced on `operator` before calling
+    /// [`storage::disallow_user`] for the implementation.
+    fn disallow_user(e: &Env, user: Address, operator: Address);
+}
+
+// ################## EVENTS ##################
+
+/// Event emitted when a user is allowed to transfer tokens.
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UserAllowed {
+    #[topic]
+    pub user: Address,
+}
+
+/// Event emitted when a user is disallowed from transferring tokens.
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UserDisallowed {
+    #[topic]
+    pub user: Address,
+}
+
+/// Emits an event when a user is allowed to transfer tokens.
+///
+/// # Arguments
+///
+/// * `e` - Access to Soroban environment.
+/// * `user` - The address that is allowed to transfer tokens.
+pub fn emit_user_allowed(e: &Env, user: &Address) {
+    UserAllowed { user: user.clone() }.publish(e);
+}
+
+/// Emits an event when a user is disallowed from transferring tokens.
+///
+/// # Arguments
+///
+/// * `e` - Access to Soroban environment.
+/// * `user` - The address that is disallowed from transferring tokens.
+pub fn emit_user_disallowed(e: &Env, user: &Address) {
+    UserDisallowed { user: user.clone() }.publish(e);
+}

@@ -1,0 +1,76 @@
+name: "rust workflow"
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+# If new code is pushed to a PR branch, then cancel in progress workflows for
+# that PR. Ensures that we don't waste CI time, and returns results quicker.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Not needed in CI, should make things a bit faster
+  CARGO_INCREMENTAL: 0
+  CARGO_TERM_COLOR: always
+  # Remove unnecessary WASM build artifacts
+  WASM_BUILD_CLEAN_TARGET: 1
+  # Enable sscache
+  RUSTC_WRAPPER: "sccache"
+  SCCACHE_GHA_ENABLED: "true"
+  SCCACHE_CACHE_SIZE: "50GB"
+
+jobs:
+  clippy-fmt-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v4
+
+      - name: Run sccache
+        uses: mozilla-actions/sccache-action@v0.0.8
+
+      - name: install rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable, nightly
+          components: clippy, rustfmt, llvm-tools-preview
+          target: wasm32v1-none
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov
+
+      - name: Check format
+        run: cargo +nightly fmt --all -- --check
+
+      - name: Check clippy
+        run: cargo clippy --release --locked --all-targets -- -D warnings
+
+      # TODO: re-enable this after we find a stable solution to same name functions across multiple contracts
+      # - name: Check build
+      #   run: cargo build --target wasm32v1-none --release
+
+      - name: Run tests with coverage
+        run: cargo llvm-cov --workspace --lcov --fail-under-lines 90 --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: OpenZeppelin/stellar-contracts
+          verbose: true

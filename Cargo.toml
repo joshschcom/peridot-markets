@@ -1,0 +1,36 @@
+[workspace]
+resolver = "2"
+exclude = ["openzeppelin-stellar-contracts"]
+members = [
+  "core/receipt-vault",
+  "core/simple-peridottroller",
+  "core/jump-rate-model",
+  "core/margin-controller",
+  "core/swap-adapter",
+  "core/aquarius-lp-vault",
+  "core/price-router",
+  "core/peridot-token",
+  "core/lp-receipt-vault",
+  "core/mocks/mock-token",
+  "core/mocks/mock-aquarius-pool",
+  "core/mocks/mock-depth-fixture",
+]
+
+[workspace.dependencies]
+soroban-sdk = { version = "25.3.0", features = ["experimental_spec_shaking_v2"] }
+stellar-tokens = { path = "openzeppelin-stellar-contracts/packages/tokens" }
+stellar-contract-utils = { path = "openzeppelin-stellar-contracts/packages/contract-utils" }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true

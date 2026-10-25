@@ -1,0 +1,84 @@
+//! Non-Fungible Royalties Example Contract.
+//!
+//! Demonstrates an example usage of the Royalties extension, allowing for
+//! setting and querying royalty information for NFTs following the ERC2981
+//! standard.
+
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, String, Symbol, Vec};
+use stellar_access::access_control::{self as access_control, AccessControl};
+use stellar_macros::{only_admin, only_role};
+use stellar_tokens::non_fungible::{royalties::NonFungibleRoyalties, Base, NonFungibleToken};
+
+#[contract]
+pub struct ExampleContract;
+
+#[contractimpl]
+impl ExampleContract {
+    pub fn __constructor(
+        e: &Env,
+        uri: String,
+        name: String,
+        symbol: String,
+        admin: Address,
+        manager: Address,
+    ) {
+        Base::set_metadata(e, uri, name, symbol);
+
+        // Set default royalty for the entire collection (10%)
+        Base::set_default_royalty(e, &admin, 1000);
+
+        access_control::set_admin(e, &admin);
+
+        // create a role "manager" and grant it to `manager`
+        access_control::grant_role_no_auth(e, &manager, &symbol_short!("manager"), &admin);
+    }
+
+    #[only_admin]
+    pub fn mint(e: &Env, to: Address) -> u32 {
+        // Mint token with sequential ID
+        Base::sequential_mint(e, &to)
+    }
+
+    #[only_admin]
+    pub fn mint_with_royalty(e: &Env, to: Address, receiver: Address, basis_points: u32) -> u32 {
+        // Mint token with sequential ID
+        let token_id = Base::sequential_mint(e, &to);
+
+        // Set token-specific royalty
+        Base::set_token_royalty(e, token_id, &receiver, basis_points);
+
+        token_id
+    }
+}
+
+#[contractimpl(contracttrait)]
+impl NonFungibleToken for ExampleContract {
+    type ContractType = Base;
+}
+
+#[contractimpl(contracttrait)]
+impl NonFungibleRoyalties for ExampleContract {
+    #[only_role(operator, "manager")]
+    fn set_default_royalty(e: &Env, receiver: Address, basis_points: u32, operator: Address) {
+        Base::set_default_royalty(e, &receiver, basis_points);
+    }
+
+    #[only_role(operator, "manager")]
+    fn set_token_royalty(
+        e: &Env,
+        token_id: u32,
+        receiver: Address,
+        basis_points: u32,
+        operator: Address,
+    ) {
+        Base::set_token_royalty(e, token_id, &receiver, basis_points);
+    }
+
+    #[only_role(operator, "manager")]
+    fn remove_token_royalty(e: &Env, token_id: u32, operator: Address) {
+        Base::remove_token_royalty(e, token_id);
+    }
+}
+
+#[contractimpl(contracttrait)]
+impl AccessControl for ExampleContract {}
