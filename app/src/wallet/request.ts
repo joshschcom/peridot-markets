@@ -1,6 +1,7 @@
 /** Bound wallet requests whose upstream popup transport never rejects on close/block. */
 export class WalletRequest {
   private cancelPending: (()=>void)|undefined;
+  get isBusy():boolean{return this.cancelPending!==undefined;}
   run<T>(start:()=>Promise<T>, timeoutMs=60_000):Promise<T>{
     if(this.cancelPending)return Promise.reject(new Error('Another wallet request is already open. Cancel it before trying again.'));
     return new Promise<T>((resolve,reject)=>{

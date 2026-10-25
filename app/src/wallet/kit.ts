@@ -38,6 +38,7 @@ export async function connectKit(walletId:WalletId,passphrase:string):Promise<st
   if(walletId!=='albedo'&&walletId!=='freighter')throw new Error('Unsupported wallet.');
   validateNetwork(passphrase);
   if(!isKitReady(passphrase))throw new Error('Wallet is still loading. Wait a moment, then connect again.');
+  if(request.isBusy)throw new Error('Another wallet request is already open. Cancel it before trying again.');
   const attempt=++generation;
   connectedAddress=null;selected=walletId;
   kit!.setWallet(walletId);
@@ -57,7 +58,7 @@ export async function getKitNetwork():Promise<{network:string;networkPassphrase:
   if(!kit||!configuredPassphrase)throw new Error('Connect your wallet first.');
   // Albedo has no network getter. Each request specifies its network and the returned signature is verified against it.
   if(selected==='albedo')return {network:configuredPassphrase===Networks.PUBLIC?'PUBLIC':'TESTNET',networkPassphrase:configuredPassphrase};
-  return kit.getNetwork();
+  return request.run(()=>kit!.getNetwork());
 }
 export function validateWalletSignature(unsignedXdr:string,signedXdr:string,address:string,passphrase:string,signerAddress?:string):string{
   validateNetwork(passphrase);
@@ -77,9 +78,10 @@ export async function signKitTransaction(xdr:string,address:string,passphrase:st
   if(!(original instanceof Transaction)||original.source!==address)throw new Error('Unexpected wallet transaction source or envelope.');
   const attempt=generation;
   if(selected==='freighter'){
-    const current=await kit.fetchAddress();
+    const current=await request.run(()=>kit!.fetchAddress());
+    if(attempt!==generation)throw new Error('Wallet selection changed. Reconnect before signing.');
     if(current.address!==address)throw new Error('The selected wallet account changed. Reconnect before signing.');
-    if((await kit.getNetwork()).networkPassphrase!==passphrase)throw new Error('Switch your wallet to the selected app network before signing.');
+    if((await request.run(()=>kit!.getNetwork())).networkPassphrase!==passphrase)throw new Error('Switch your wallet to the selected app network before signing.');
   }
   if(attempt!==generation)throw new Error('Wallet selection changed. Reconnect before signing.');
   // Sign only: never request implicit permissions or call signAndSubmitTransaction.

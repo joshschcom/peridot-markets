@@ -21,7 +21,10 @@ test('closed or blocked popup cannot leave connecting indefinitely',async()=>{
 });
 test('a concurrent request is rejected without opening another popup',async()=>{
  const request=new WalletRequest();let opened=false;
+ assert.equal(request.isBusy,false);
  const first=request.run(()=>new Promise(()=>{}));
+ assert.equal(request.isBusy,true);
  await assert.rejects(request.run(()=>{opened=true;return Promise.resolve();}),/already open/);
- assert.equal(opened,false);request.cancel();await assert.rejects(first,/cancelled/);
+ assert.equal(opened,false);assert.equal(request.isBusy,true);
+ request.cancel();assert.equal(request.isBusy,false);await assert.rejects(first,/cancelled/);
 });
