@@ -1,0 +1,17 @@
+{
+  "browser": "webkit",
+  "albedoDefault": true,
+  "freighterSelectable": true,
+  "popupOpenedInGesture": true,
+  "cancelRecovered": true,
+  "blockedPopupRecovered": true,
+  "preparedSignatureFixture": true,
+  "signaturePopupInGesture": true,
+  "signatureCancelled": true,
+  "submissions": 0,
+  "realWalletAcceptance": false,
+  "preview": "https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app",
+  "frontendCommit": "b896c82",
+  "testCommit": "229fc72",
+  "verifiedAt": "2026-10-25T21:51:44.882378+00:00"
+}
