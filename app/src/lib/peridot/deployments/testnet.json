@@ -1,1 +1,5 @@
-{"network":"testnet","status":"Awaiting Lead A deployment manifest"}
+{
+  "network": "testnet",
+  "status": "Awaiting Lead A deployment manifest",
+  "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE"
+}

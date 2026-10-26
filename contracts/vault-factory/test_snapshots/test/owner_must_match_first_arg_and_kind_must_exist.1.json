@@ -1,0 +1,208 @@
+{
+  "generators": {
+    "address": 4,
+    "nonce": 0,
+    "mux_id": 0
+  },
+  "auth": [
+    [],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+              "function_name": "set_wasm",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+                },
+                {
+                  "symbol": "mock"
+                },
+                {
+                  "bytes": "81f39152efe95bc52cde241b0eb24540d51cd100567c6e2a593faf205ff5e982"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [],
+    [],
+    [],
+    []
+  ],
+  "ledger": {
+    "protocol_version": 25,
+    "sequence_number": 0,
+    "timestamp": 0,
+    "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
+    "base_reserve": 0,
+    "min_persistent_entry_ttl": 4096,
+    "min_temp_entry_ttl": 16,
+    "max_entry_ttl": 6312000,
+    "ledger_entries": [
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "key": {
+                "ledger_key_nonce": {
+                  "nonce": "801925984706572462"
+                }
+              },
+              "durability": "temporary",
+              "val": "void"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 6311999
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+              "key": "ledger_key_contract_instance",
+              "durability": "persistent",
+              "val": {
+                "contract_instance": {
+                  "executable": {
+                    "wasm": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  "storage": [
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Admin"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Count"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Kinds"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "mock"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Nonce"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Wasm"
+                          },
+                          {
+                            "symbol": "mock"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "bytes": "81f39152efe95bc52cde241b0eb24540d51cd100567c6e2a593faf205ff5e982"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 400000
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_code": {
+              "ext": {
+                "v1": {
+                  "ext": "v0",
+                  "cost_inputs": {
+                    "ext": "v0",
+                    "n_instructions": 92,
+                    "n_functions": 6,
+                    "n_globals": 3,
+                    "n_table_entries": 0,
+                    "n_types": 6,
+                    "n_data_segments": 0,
+                    "n_elem_segments": 0,
+                    "n_imports": 3,
+                    "n_exports": 7,
+                    "n_data_segment_bytes": 0
+                  }
+                }
+              },
+              "hash": "81f39152efe95bc52cde241b0eb24540d51cd100567c6e2a593faf205ff5e982",
+              "code": "0061736d0100000001210660027e7e017e6000017e60037e7e7e017e60027e7e0060017e017f60017e017e021303016c01310000016c01300000016c015f000203070600030104050105030100100619037f00418080c0000b7f00418080c0000b7f00418080c0000b074507066d656d6f727902000d5f5f636f6e7374727563746f720003016e0005056f776e65720008015f03000a5f5f646174615f656e6403010b5f5f686561705f6261736503020abe010647000240200042ff018342cd0052200142ff0183420452724504402001422088a7410b6b41754d0d01420420001004428480808010200142848080807083100442020f0b000b000b0b0020002001420210021a0b3001017e0240428480808010100604404284808080101007220042ff01834204510d01000b000b2000428480808070830b0b002000420210014201510b08002000420210000b2201017e024042041006044042041007220042ff018342cd00510d01000b000b20000b001e11636f6e7472616374656e766d65746176300000000000000019000000000093010e636f6e74726163746d65746176300000000000000005727376657200000000000006312e39362e3000000000000000000008727373646b7665720000002f32352e332e312365353064393561663032396338333139366464313232663031353462616333663133303233393462000000000000000012727373646b5f737065635f7368616b696e670000000000013200000000530e636f6e74726163746d65746176300000000000000006636c6976657200000000002f32362e312e302331323238636666383032326238303436353937353062393462333135393332623065306633663661000093010e636f6e74726163747370656376300000000000000000000000016e0000000000000000000001000000040000000000000000000000056f776e657200000000000000000000010000001300000000000000000000000d5f5f636f6e7374727563746f720000000000000200000000000000056f776e65720000000000001300000000000000016e0000000000000400000000"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_code": {
+              "ext": "v0",
+              "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "code": ""
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 400000
+      }
+    ]
+  },
+  "events": []
+}
