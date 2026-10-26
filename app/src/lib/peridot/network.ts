@@ -3,13 +3,20 @@ import type { Deployments } from './types';
 import mainnet from './deployments/mainnet.json';
 import testnet from './deployments/testnet.json';
 
-const selected = process.env.NEXT_PUBLIC_NETWORK || 'mainnet';
-if (selected !== 'mainnet' && selected !== 'testnet') throw new Error('NEXT_PUBLIC_NETWORK must be mainnet or testnet.');
+import { parseBuildDefault, resolveRuntimeNetwork, type NetworkName } from './network-select';
+
+/** Build-time default (NEXT_PUBLIC_NETWORK, mainnet when unset). The server and the first server render always use it. */
+export const buildDefaultNetwork: NetworkName = parseBuildDefault(process.env.NEXT_PUBLIC_NETWORK);
+/** In the browser the choice is `?network=`, then the stored header switch, then the build default. Changing it reloads the page,
+ * so every module-level singleton (rpc server, scheduler, caches, pending-transaction keys) starts fresh on the new network. */
+const selection = resolveRuntimeNetwork(buildDefaultNetwork);
+const selected: NetworkName = selection.name;
+export const networkSource = selection.source;
 export const network = {
   name: selected as 'mainnet' | 'testnet',
   passphrase: selected === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET,
   rpcUrl: selected === 'mainnet'
-    ? (process.env.NEXT_PUBLIC_MAINNET_RPC_URL || '')
+    ? (process.env.NEXT_PUBLIC_MAINNET_RPC_URL || 'https://soroban-rpc.mainnet.stellar.gateway.fm')
     : (process.env.NEXT_PUBLIC_TESTNET_RPC_URL || 'https://soroban-testnet.stellar.org'),
   fallbackRpcUrl: selected === 'mainnet' ? (process.env.NEXT_PUBLIC_MAINNET_FALLBACK_RPC_URL || 'https://rpc.lightsail.network/') : '',
   useMocks: process.env.NEXT_PUBLIC_USE_MOCKS === 'true',

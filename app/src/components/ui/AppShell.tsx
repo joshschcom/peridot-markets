@@ -8,6 +8,7 @@ import { useWallet } from '@/lib/peridot/wallet';
 import { reconcilePendingTransaction } from '@/lib/peridot/rpc';
 import { ThemeToggle } from './ThemeToggle';
 import { RecentTransactions } from './RecentTransactions';
+import { NetworkSwitch } from './NetworkSwitch';
 
 /* Presentation-only shell. Wallet, network and recovery behaviour are the same calls as
  * components/peridot/AppShell.tsx; only the markup, badges and theme toggle differ. */
@@ -25,7 +26,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [recovery, setRecovery] = useState('');
   const bannerText = network.useMocks ? 'Demo data. No funds move and no wallet signatures are requested.' : network.readOnly ? 'Read-only preview. Transactions are not enabled.' : 'Beta. New contracts are unaudited. Caps apply.';
   const BannerIcon = network.useMocks ? FlaskConical : network.readOnly ? Eye : ShieldAlert;
-  const networkLabel = network.useMocks ? 'Demo' : network.name === 'mainnet' ? 'Mainnet beta' : 'Testnet';
   const nav = links.map(l => <Link key={l.href} className={l.match(path) ? 'active' : ''} href={l.href} aria-current={l.match(path) ? 'page' : undefined}>{l.label}</Link>);
   return <div className="shell">
     <div className={`network-banner${network.useMocks ? ' demo' : ''}`} role="note"><BannerIcon size={14} aria-hidden />{bannerText}</div>
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link href="/" className="wordmark" aria-label="Peridot Markets home"><img src="/logo-optimized.svg" alt="" width="26" height="30" />peridot<span>markets</span></Link>
         <nav className="site-nav" aria-label="Main navigation">{nav}</nav>
         <div className="header-actions">
-          <span className="badge accent" title={`Network: ${network.name}`}><span className="live-dot" aria-hidden />{networkLabel}</span>
+          <NetworkSwitch />
           {!network.useMocks && <select aria-label="Wallet provider" value={wallet.walletId} disabled={wallet.isConnecting || !!wallet.address} onChange={e => wallet.selectWallet(e.target.value as 'albedo' | 'freighter')}><option value="albedo">Albedo</option><option value="freighter">Freighter</option></select>}
           <button className={`button wallet-button${wallet.address ? ' connected' : ''}`} disabled={wallet.isConnecting||(!wallet.isReady&&!wallet.error)} onClick={() => wallet.address ? wallet.disconnect() : void wallet.connect()}>
             <Wallet size={15} aria-hidden />
@@ -47,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
     </header>
-    <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}<span className="badge accent"><span className="live-dot" aria-hidden />{networkLabel}</span></nav>
+    <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}<NetworkSwitch where="mobile-nav" /></nav>
     {(wallet.error || wallet.networkMismatch) && <div className="wallet-alert" role="alert">{wallet.error || `Switch your wallet to ${network.name} before signing, then return to this page. If this message stays, disconnect and connect again.`}</div>}
     <main className="site-main">{children}</main>
     <footer className="site-footer">

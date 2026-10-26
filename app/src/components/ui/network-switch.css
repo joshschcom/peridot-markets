@@ -1,0 +1,22 @@
+.network-switch { position: relative; flex: 0 0 auto; }
+.network-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; cursor: pointer; border: 1px solid transparent; background: var(--accent-soft); color: var(--accent-text); }
+.network-pill.testnet { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.network-pill:hover { filter: brightness(1.1); }
+.network-pill:focus-visible, .network-option:focus-visible { outline: none; box-shadow: var(--focus); }
+.network-pill.testnet .live-dot { background: var(--warn); }
+.network-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; padding: 0 5px; border-radius: 4px; background: var(--warn); color: var(--bg); }
+.network-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; width: 270px; max-width: calc(100vw - 2 * var(--gutter)); display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: var(--r-lg); background: var(--bg-elevated); border: 1px solid var(--border-strong); box-shadow: var(--shadow-2); }
+.network-option { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 9px 10px; border-radius: var(--r-md); border: 1px solid transparent; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.network-option:hover, .network-option[aria-checked="true"] { background: var(--surface-2); }
+.network-option.testnet[aria-checked="true"] { border-color: var(--warn); }
+.network-option.mainnet[aria-checked="true"] { border-color: var(--accent); }
+.network-option-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.network-option-note { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+.network-menu-foot { margin: 2px 4px 2px; font-size: 11px; color: var(--text-3); }
+/* Desktop shows the header pill; phones show the pill in the mobile nav row so the header never overflows at 375px. */
+@media (max-width: 760px) {
+  .header-actions > .network-switch { display: none; }
+  .mobile-nav > .network-switch { display: block; margin-left: auto; position: sticky; right: 0; padding-left: 8px; background: var(--bg); }
+  .network-pill { padding: 4px 9px; }
+  .network-menu { position: fixed; left: var(--gutter); right: var(--gutter); top: var(--nm-top, 100px); width: auto; max-width: none; }
+}
