@@ -134,3 +134,12 @@
 .yield-facts { display: flex; flex-wrap: wrap; gap: 4px 12px; width: 100%; font-size: 11px; color: var(--text-2); }
 .vault-fixed .kv > div > span:first-child { min-width: 92px; }
 .chip.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
+.vault-option-top { flex-wrap: wrap; }
+.vault-fixed .kv > div { flex-wrap: wrap; }
+.vault-fixed .kv > div > span:last-child { min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 8px; }
+.vault-fixed .badge { white-space: normal; text-align: left; }
+@media (max-width: 760px) { .vault-fixed .kv > div > span:last-child { justify-content: flex-start; text-align: left; } }
+/* Hidden tooltip bubbles must not widen the page on phones: hide them fully until hovered or focused. */
+.yield-rate .tip-bubble, .vault-fixed .tip-bubble { display: none; max-width: min(280px, calc(100vw - 32px)); }
+.yield-rate .tip:hover .tip-bubble, .yield-rate .tip:focus-within .tip-bubble, .vault-fixed .tip:hover .tip-bubble, .vault-fixed .tip:focus-within .tip-bubble { display: block; }
+@media (max-width: 760px) { .yield-rate .tip-bubble, .vault-fixed .tip-bubble { left: auto; right: 0; transform: none; } }

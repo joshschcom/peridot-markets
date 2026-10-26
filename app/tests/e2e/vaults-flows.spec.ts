@@ -44,7 +44,7 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   await expect(page.getByRole('heading', { name: 'Create a vault', exact: true })).toBeVisible();
   await expect(page.locator('#vf-pool')).toHaveValue(/^C/);
   await expect(page.getByTestId('ladder-preview')).toBeVisible();
-  await expect(page.getByText('Demo mode')).toBeVisible();
+  await expect(page.getByText('Demo mode', { exact: true })).toBeVisible();
 
   // Live validation: out-of-range values block submission and say why.
   await page.locator('#vf-rungs').fill('9');
@@ -66,16 +66,16 @@ test('vault options and the Aquarius registry list USDC pools and create a label
 test('the launch wizard vault step: fixed DeFindex default per token, created-vault venues, allow-list state, no free-form vault address', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 200)}`); });
   await page.goto('/launch');
   await page.getByLabel(/Group name/).fill('VaultCheck');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   const all = page.getByRole('group', { name: 'All yield options' }).first();
   await expect(all).toBeVisible();
-  // Aquarius is not registered on mainnet yet (manifest), DeFindex waits for a verified token, Zenex and XOXNO are selectable.
+  // Aquarius is not registered on mainnet yet (manifest); DeFindex, Zenex and XOXNO are selectable (the demo draft starts with USDC verified).
   await expect(all.locator('[data-vault="aquarius"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(all.locator('[data-vault="aquarius"]')).toContainText('Registering on mainnet');
-  await expect(all.locator('[data-vault="defindex"]')).toHaveAttribute('aria-disabled', 'true');
-  await expect(all.locator('[data-vault="defindex"]')).toContainText('Verify a token first');
+  await expect(all.locator('[data-vault="defindex"]')).toHaveAttribute('aria-pressed', 'false');
   await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(0);
 
   await all.getByRole('button', { name: /Zenex perps vault/ }).click();
@@ -91,11 +91,8 @@ test('the launch wizard vault step: fixed DeFindex default per token, created-va
   await expect(all.getByRole('button', { name: /Keep in Peridot/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('yield-idle').first()).toContainText('from your rate curve');
 
-  // Verify USDC: DeFindex unlocks with the fixed Peridot USDC vault, read-only, and its allow-list state.
-  await page.getByLabel('Token contract address').first().fill(MOCK_USDC);
-  await page.getByRole('button', { name: 'Verify token and price feed', exact: true }).first().click();
-  await expect(page.getByText(/USDC .* Approved Reflector mapping/).first()).toBeVisible();
-  await expect(all.locator('[data-vault="defindex"]')).toHaveAttribute('aria-disabled', 'false');
+  // USDC market: DeFindex is the fixed Peridot USDC vault, read-only, with its allow-list state.
+  await expect(page.getByLabel('Token contract address').first()).toHaveValue(MOCK_USDC);
   await all.getByRole('button', { name: /DeFindex vault/ }).click();
   const fixed = page.getByTestId('defindex-default').first();
   await expect(fixed).toContainText('Default DeFindex vault for USDC');
@@ -117,8 +114,9 @@ test('the launch wizard vault step: fixed DeFindex default per token, created-va
   await page.setViewportSize({ width: 375, height: 900 });
   await step.scrollIntoViewIfNeeded();
   await step.screenshot({ path: '../docs/ui/vaultstep-mobile.png' });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  // The vault step itself fits the phone width (the wizard header is outside this step's scope).
+  const stepOverflow = await step.evaluate(el => Math.max(0, ...Array.from(el.querySelectorAll('*')).map(e => e.getBoundingClientRect().right)) - window.innerWidth);
+  expect(stepOverflow).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });
 

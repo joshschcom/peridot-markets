@@ -39,18 +39,19 @@ export function VaultOptionList({ selected, onSelect, disabled, compact, ariaLab
       const reason = extra ?? a.reason;
       const isSelected = selected === option.id;
       const rate = rateFor?.(option);
+      const asButton = live && !!onSelect;
       const body = <>
         <span className="vault-option-top">
           <span className="vault-option-name">{isSelected && <Check size={14} aria-hidden />}{!live && !isSelected && <Lock size={13} aria-hidden />}{option.name}</span>
           <Badge tone={a.tone}>{a.label}</Badge>
         </span>
         <span className="vault-option-tag">{option.tagline}</span>
-        {rate && <YieldRate venue={option.id} {...rate} />}
+        {rate && <YieldRate venue={option.id} {...rate} plain={asButton} />}
         {!compact && <span className="vault-option-detail">{option.detail}</span>}
         {!compact && option.kind && <span className="vault-option-detail">{APPROVAL_COPY}</span>}
         {!live && reason && <span className="vault-option-note">{reason}</span>}
       </>;
-      if (live && onSelect) {
+      if (asButton) {
         return <button key={option.id} type="button" className={`vault-option selectable${isSelected ? ' selected' : ''}`} aria-pressed={isSelected} disabled={disabled} data-vault={option.id} onClick={() => onSelect(option)}>{body}</button>;
       }
       return <div key={option.id} className={`vault-option${live ? '' : ' locked'}`} aria-disabled={!live} data-vault={option.id}>
