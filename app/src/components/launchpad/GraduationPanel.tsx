@@ -7,7 +7,7 @@ import type { Signer, TxProgress } from '@/lib/peridot/rpc';
 import { Badge, KeyValue, Notice, Stat, Stepper } from '@/components/ui/primitives';
 import { fmtAmount, fmtCompact } from '@/components/ui/format';
 import { claimGroup, graduate, type GraduationCost, type TokenBalance } from '@/lib/launchpad/client';
-import { AQUARIUS_TESTNET_SWAP_URL, TESTNET_APP_URL, launchpadMode } from '@/lib/launchpad/config';
+import { MAINNET_GRADUATION_AQUA, isLaunchpadMainnet, launchpadMode, launchpadNetworkLabel, launchpadSwapUrl } from '@/lib/launchpad/config';
 import { GRAD_STEPS } from '@/lib/launchpad/math';
 import { GradStep, Phase, type CurveInfo, type CurveParams, type Graduation, type LaunchInfo } from '@/lib/launchpad/types';
 import { LpAddress } from './LpAddress';
@@ -19,6 +19,16 @@ export interface GraduationPanelProps {
   busy: boolean; run: (task: () => Promise<unknown>) => Promise<void>; signer: () => Signer; report: (p: TxProgress) => void;
 }
 
+/** Mainnet: graduation step 1 is paid in AQUA, which most wallets do not hold. Shown before the step is reachable. */
+export function AquaRequirement({ cost }: { cost: GraduationCost | null }) {
+  const amount = cost ? fmtAmount(cost.amount, 7, 0) : fmtAmount(BigInt(MAINNET_GRADUATION_AQUA) * 10_000_000n, 7, 0);
+  const code = cost?.code ?? 'AQUA';
+  return <p>Graduation step 1 is paid in {code}: <strong>{amount} {code}</strong> (read live from the curve), plus the network fee. The payer needs an {code} trustline{cost?.issuer ? <> (issuer <LpAddress value={cost.issuer} label="AQUA issuer" head={6} tail={6} />)</> : ''} and that balance. Buy {code} with XLM on Aquarius: <a className="text-link" href={launchpadSwapUrl()} target="_blank" rel="noreferrer">Get AQUA on Aquarius <ExternalLink size={12} aria-hidden /></a>. Anyone can pay it, not only the creator.</p>;
+}
+/** Mainnet only: a graduated token whose raise is below the price router's 500 USD per pool side floor gets a supply-only market. */
+export const ROUTER_FLOOR_NOTE = 'A 500 XLM raise is below the price router\'s 500 USD per pool side floor, so a token that graduates from the Fast preset gets a supply-only lending market (no borrowing against it) until its Aquarius pool is deeper.';
+export function belowRouterFloor(params: CurveParams): boolean { return params.graduation_target <= 1_000n * 10_000_000n; }
+
 /** What graduation will do, shown while the curve is still trading. */
 export function GraduationPreview({ params, symbol }: { params: CurveParams; symbol: string }) {
   return <section className="card">
@@ -27,18 +37,20 @@ export function GraduationPreview({ params, symbol }: { params: CurveParams; sym
       {GRAD_STEPS.map(s => <li key={s.step}><span className="step-dot" aria-hidden>{s.step}</span><div><strong>{s.title}</strong><span>{s.detail}</span></div></li>)}
     </ol>
     <p className="subtle mt-4" style={{ fontSize: 12 }}>The pool receives all raised XLM plus {fmtCompact(params.lp_supply, 7)} {symbol}; its LP shares are locked for good. Unsold curve tokens are burned.</p>
+    {isLaunchpadMainnet() && <Notice tone="info" role="note" title="Before you graduate this token"><AquaRequirement cost={null} /></Notice>}
+    {isLaunchpadMainnet() && belowRouterFloor(params) && <Notice tone="warn" role="note">{ROUTER_FLOOR_NOTE}</Notice>}
   </section>;
 }
 
 export function GraduationPanel({ launch, state, params, graduation, cost, costError, aqua, groupOwner, busy, run, signer, report }: GraduationPanelProps) {
   const wallet = useWallet();
   const mode = launchpadMode();
-  const signingBlocked = mode === 'remote' ? 'Graduation steps run on the testnet app.' : mode === 'live' && network.readOnly ? 'This preview is read-only. Transactions are not enabled.' : !wallet.address ? 'Connect your wallet to run this step.' : wallet.networkMismatch ? 'Switch your wallet to testnet before signing.' : null;
+  const signingBlocked = mode === 'live' && network.readOnly ? 'This preview is read-only. Transactions are not enabled.' : !wallet.address ? 'Connect your wallet to run this step.' : wallet.networkMismatch ? `Switch your wallet to ${launchpadNetworkLabel()} before signing.` : null;
   if (state.phase === Phase.Trading) return <GraduationPreview params={params} symbol={launch.symbol} />;
 
   if (state.phase === Phase.Graduated && graduation) {
     const claimable = !graduation.claimed && !!wallet.address && wallet.address === launch.creator;
-    const groupHref = mode === 'remote' ? (TESTNET_APP_URL ? `${TESTNET_APP_URL.replace(/\/$/, '')}/groups/${graduation.group_id}` : null) : `/groups/${graduation.group_id}`;
+    const groupHref = `/groups/${graduation.group_id}`;
     return <section className="card grad-panel" aria-label="Graduation">
       <div className="card-header"><div><h2>Graduated</h2><p>The curve seeded an Aquarius pool and created the token&apos;s own lending market.</p></div><Badge tone="success">Complete</Badge></div>
       <div className="stack">
@@ -50,9 +62,9 @@ export function GraduationPanel({ launch, state, params, graduation, cost, costE
           </div>
           <div className="card inset" style={{ padding: 14 }}>
             <h3 className="row" style={{ gap: 8 }}><Landmark size={16} aria-hidden style={{ color: 'var(--accent-text)' }} />Lending market live</h3>
-            <KeyValue rows={[['Group', `#${graduation.group_id} on the testnet market factory`], ['XLM market', graduation.quote_market ? <LpAddress key="qm" value={graduation.quote_market} label="XLM market address" /> : 'n/a'], [`${launch.symbol} market`, graduation.token_market ? <LpAddress key="tm" value={graduation.token_market} label={`${launch.symbol} market address`} /> : 'n/a'], ['Price source', `Aquarius pool, 25% collateral factor`], ['Owner', groupOwner ? (groupOwner === launch.creator ? 'The creator' : groupOwner === launch.curve ? 'The curve, until the creator claims it' : <LpAddress key="owner" value={groupOwner} label="group owner" />) : graduation.claimed ? 'The creator' : 'The curve, until the creator claims it']]} />
+            <KeyValue rows={[['Group', `#${graduation.group_id} on the ${launchpadNetworkLabel()} market factory`], ['XLM market', graduation.quote_market ? <LpAddress key="qm" value={graduation.quote_market} label="XLM market address" /> : 'n/a'], [`${launch.symbol} market`, graduation.token_market ? <LpAddress key="tm" value={graduation.token_market} label={`${launch.symbol} market address`} /> : 'n/a'], ['Price source', `Aquarius pool, 25% collateral factor`], ['Owner', groupOwner ? (groupOwner === launch.creator ? 'The creator' : groupOwner === launch.curve ? 'The curve, until the creator claims it' : <LpAddress key="owner" value={groupOwner} label="group owner" />) : graduation.claimed ? 'The creator' : 'The curve, until the creator claims it']]} />
             <div className="row" style={{ marginTop: 12 }}>
-              {groupHref ? <a className="button" href={groupHref} {...(mode === 'remote' ? { target: '_blank', rel: 'noreferrer' } : {})}>Open lending market {mode === 'remote' ? <ExternalLink size={14} aria-hidden /> : <ArrowRight size={14} aria-hidden />}</a> : <span className="subtle" style={{ fontSize: 12 }}>Group #{graduation.group_id} lives on testnet.</span>}
+              {groupHref ? <Link className="button" href={groupHref}>Open lending market <ArrowRight size={14} aria-hidden /></Link> : <span className="subtle" style={{ fontSize: 12 }}>Group #{graduation.group_id} lives on {launchpadNetworkLabel()}.</span>}
               {claimable && <button type="button" className="button secondary" disabled={busy || !!signingBlocked} onClick={() => void run(() => claimGroup(signer(), launch.curve, report))}>{busy ? 'Working...' : 'Claim your group'}</button>}
             </div>
             {claimable && signingBlocked && <p className="subtle" style={{ fontSize: 12, marginTop: 8 }}>{signingBlocked}</p>}
@@ -60,7 +72,7 @@ export function GraduationPanel({ launch, state, params, graduation, cost, costE
             {graduation.claimed && <p className="subtle" style={{ fontSize: 12, marginTop: 8 }}>The creator claimed the group and can manage it from its Control Panel.</p>}
           </div>
         </div>
-        {mode !== 'mock' && <Notice tone="info" role="note">Group pages read the network-selected market factory. On a testnet build the group link works once the testnet manifest is synced into the app.</Notice>}
+        {mode !== 'mock' && !isLaunchpadMainnet() && <Notice tone="info" role="note">Group pages read the network-selected market factory. On a testnet build the group link works once the testnet manifest is synced into the app.</Notice>}
       </div>
     </section>;
   }
@@ -93,7 +105,9 @@ export function GraduationPanel({ launch, state, params, graduation, cost, costE
         <h3>{next.title}</h3>
         <p className="muted" style={{ margin: 0, fontSize: 13 }}>{next.detail}</p>
         {needsFee && <Notice tone="info" role="note">
-          <p>The payer needs an {cost?.code ?? 'AQUA'} trustline and {feeText ?? 'the fee'} on testnet. Add the trustline in your wallet{cost?.issuer ? <> (issuer <LpAddress value={cost.issuer} label="AQUA issuer" head={6} tail={6} />)</> : ''}, then swap a little XLM to {cost?.code ?? 'AQUA'} on Aquarius testnet: about 50 XLM gave 1,660 AQUA in the demo run. <a className="text-link" href={AQUARIUS_TESTNET_SWAP_URL} target="_blank" rel="noreferrer">Aquarius testnet swap <ExternalLink size={12} aria-hidden /></a></p>
+          {isLaunchpadMainnet()
+            ? <AquaRequirement cost={cost} />
+            : <p>The payer needs an {cost?.code ?? 'AQUA'} trustline and {feeText ?? 'the fee'} on testnet. Add the trustline in your wallet{cost?.issuer ? <> (issuer <LpAddress value={cost.issuer} label="AQUA issuer" head={6} tail={6} />)</> : ''}, then swap a little XLM to {cost?.code ?? 'AQUA'} on Aquarius testnet: about 50 XLM gave 1,660 AQUA in the demo run. <a className="text-link" href={launchpadSwapUrl()} target="_blank" rel="noreferrer">Aquarius testnet swap <ExternalLink size={12} aria-hidden /></a></p>}
           {wallet.address && aqua && !aqua.needsTrustline && <p style={{ margin: 0 }}>Your balance: {fmtAmount(aqua.balance, 7, 2)} {cost?.code ?? 'AQUA'}.</p>}
         </Notice>}
         {blocked && <Notice tone="warn" role="status">{blocked}</Notice>}

@@ -7,7 +7,7 @@ import type { Signer, TxProgress } from '@/lib/peridot/rpc';
 import { KeyValue, Notice, Tabs } from '@/components/ui/primitives';
 import { fmtAmount, fmtPct } from '@/components/ui/format';
 import { buyTokens, quoteBuy, quoteSell, sellTokens, type TokenBalance } from '@/lib/launchpad/client';
-import { launchpadMode } from '@/lib/launchpad/config';
+import { launchpadMode, launchpadNetworkLabel } from '@/lib/launchpad/config';
 import { DEFAULT_SLIPPAGE_BPS, FINE_SCALE, finePrice, fmtPrice, minOut, parsePositiveAmount, parseSlippage, reserves } from '@/lib/launchpad/math';
 import { Phase, type BuyQuote, type CurveInfo, type CurveParams, type LaunchInfo, type SellQuote } from '@/lib/launchpad/types';
 
@@ -53,10 +53,9 @@ export function TradePanel({ launch, state, params, xlm, token, busy, run, signe
   }, [side, amountKey, open, launch.curve, state.real_quote, state.sold]);
 
   const mode = launchpadMode();
-  const reason = mode === 'remote' ? 'Trading is available on the testnet app only.'
-    : mode === 'live' && network.readOnly ? 'This preview is read-only. Transactions are not enabled.'
+  const reason = mode === 'live' && network.readOnly ? 'This preview is read-only. Transactions are not enabled.'
     : !wallet.address ? 'Connect your wallet to trade.'
-    : wallet.networkMismatch ? 'Switch your wallet to testnet before signing.'
+    : wallet.networkMismatch ? `Switch your wallet to ${launchpadNetworkLabel()} before signing.`
     : !open ? (side === 'buy' ? 'Buys are closed: the curve reached its target.' : 'Sells are closed: graduation has started.')
     : null;
   const current = finePrice(reserves(params, state.real_quote, state.sold));
@@ -88,12 +87,12 @@ export function TradePanel({ launch, state, params, xlm, token, busy, run, signe
     <div className="card-header"><div><h2>Trade</h2><p>Buy with XLM or sell back to the curve. {Number(params.trade_fee_bps) / 100}% fee on the XLM side.</p></div></div>
     <Tabs block ariaLabel="Trade side" value={side} onChange={s => { setSide(s); setAmount(''); }} items={[{ value: 'buy', label: 'Buy' }, { value: 'sell', label: 'Sell' }]} />
     {wallet.address && <KeyValue rows={[['Your XLM', xlm ? `${fmtAmount(xlm.balance, 7, 2)} XLM` : 'Loading...'], [`Your ${launch.symbol}`, token ? (token.needsTrustline ? 'No trustline' : `${fmtAmount(token.balance, 7, 2)} ${launch.symbol}`) : 'Loading...']]} />}
-    {!wallet.address && mode !== 'remote' && <button type="button" className="button secondary" onClick={() => void wallet.connect()} disabled={wallet.isConnecting || !wallet.isReady}>{wallet.isConnecting ? 'Connecting...' : 'Connect wallet'}</button>}
+    {!wallet.address && <button type="button" className="button secondary" onClick={() => void wallet.connect()} disabled={wallet.isConnecting || !wallet.isReady}>{wallet.isConnecting ? 'Connecting...' : 'Connect wallet'}</button>}
     <form className="stack" onSubmit={submit}>
       <div className="field">
         <label htmlFor="trade-amount">{side === 'buy' ? 'Spend XLM' : `Sell ${launch.symbol}`}</label>
         <div className="amount-row">
-          <input id="trade-amount" inputMode="decimal" placeholder="0.00" value={amount} disabled={!open || mode === 'remote'} onChange={e => setAmount(e.target.value)} aria-invalid={!!amountError} aria-describedby="trade-amount-hint" />
+          <input id="trade-amount" inputMode="decimal" placeholder="0.00" value={amount} disabled={!open} onChange={e => setAmount(e.target.value)} aria-invalid={!!amountError} aria-describedby="trade-amount-hint" />
           {maxValue !== null && maxValue > 0n && <button type="button" className="button ghost sm" disabled={!open} onClick={() => setAmount(formatAmount(maxValue, 7))}>Max</button>}
         </div>
         <span id="trade-amount-hint" className="field-hint">{amountError || (side === 'buy' ? 'The fee is included in what you spend.' : 'You receive XLM after the fee.')}</span>

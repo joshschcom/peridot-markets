@@ -1,55 +1,55 @@
-/** Launchpad reads and writes. Three modes (see config.ts `launchpadMode`):
+/** Launchpad reads and writes. Two modes (see config.ts `launchpadMode`):
  * - mock: browser-local simulation (lib/launchpad/mock.ts);
- * - live (app on testnet): reads through the shared `readContract`, writes through `submitContract`, so wallet
- *   locks, pending-transaction recovery and read pacing are the same as on the group pages;
- * - remote (app on mainnet): read-only through the dedicated testnet client; writes throw.
- * The launchpad never calls `getDeployments()`: its addresses come from config.ts. */
+ * - live (testnet or mainnet, whichever the network pill says): reads through the shared `readContract`, writes through
+ *   `submitContract`, so wallet locks, pending-transaction recovery and read pacing are the same as on the group pages.
+ * The launchpad never calls `getDeployments()`: its addresses come from config.ts (`launchpadConfig()`). */
 import { StrKey, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { network } from '@/lib/peridot/network';
 import { getRpc, readContract, submitContract, type Signer, type TxProgress } from '@/lib/peridot/rpc';
 import { scAddress, scI128, scMap, scU32 } from '@/lib/peridot/factory';
 import { readWalletTokenBalance } from '@/lib/peridot/group-client';
-import { LAUNCHPAD_TESTNET, TESTNET_XLM, launchpadMode } from './config';
+import { launchpadConfig, launchpadMode, launchpadXlm } from './config';
 import { describeLaunchpadError, type ContractRole } from './errors';
-import { fetchCurveActivity, readTestnet, testnetRpc } from './testnet-rpc';
+import { fetchCurveActivity } from './testnet-rpc';
 import { findMockPlain, mockCreatePlainToken, MOCK_AQUA, MOCK_AQUA_ISSUER, MOCK_GRADUATION_FEE, MOCK_XLM_TOKEN, findMockLaunch, mockActivity, mockBuy, mockClaimGroup, mockCurveInfo, mockFactoryConfig, mockGraduate, mockLaunchCurve, mockPreset, mockQuoteBuy, mockQuoteSell, mockSell, mutateLaunchpadMock, readLaunchpadMock } from './mock';
 import { creatorCap, parsePlainSupply } from './math';
 import type { BuyQuote, CurveActivity, CurveConfig, CurveInfo, CurveParams, FactoryConfig, GradStep, Graduation, LaunchInfo, PlainTokenInfo, Preset, SellQuote } from './types';
 
 export type { Signer, TxProgress };
-export const FACTORY = LAUNCHPAD_TESTNET.launchpad_factory;
-export const MARKET_FACTORY = LAUNCHPAD_TESTNET.market_factory;
+/** Launchpad and market factory of the active network. Functions, not constants: the network is fixed per page load but tests select it. */
+const factoryId = () => launchpadConfig().launchpad_factory;
+const marketFactoryId = () => launchpadConfig().market_factory;
 const scString = (value: string) => nativeToScVal(value, { type: 'string' });
 const MOCK_SAVED = 'Demo action saved. No onchain transaction.';
 
 async function read<T>(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<T> {
-  return launchpadMode() === 'live' ? readContract<T>(contractId, method, args) : readTestnet<T>(contractId, method, args);
+  return readContract<T>(contractId, method, args);
 }
 /** The launchpad factory and the XLM SAC are always known; callers add the curve and the launch token. */
-function roles(extra: Record<string, ContractRole> = {}): Record<string, ContractRole> { return { [FACTORY]: 'factory', [TESTNET_XLM]: 'sac', ...extra }; }
+function roles(extra: Record<string, ContractRole> = {}): Record<string, ContractRole> { return { [factoryId()]: 'factory', [launchpadXlm()]: 'sac', ...extra }; }
 function rethrow(error: unknown, extra: Record<string, ContractRole>, fallback: ContractRole, innerFallback?: ContractRole): never {
   throw new Error(describeLaunchpadError(error, roles(extra), { fallbackRole: fallback, innerFallback }));
 }
 const tradeRoles = (launch: Pick<LaunchInfo, 'curve' | 'token'>): Record<string, ContractRole> => ({ [launch.curve]: 'curve', [launch.token]: 'token' });
-/** Quote token of every testnet preset. */
-export function quoteToken(): string { return launchpadMode() === 'mock' ? MOCK_XLM_TOKEN : TESTNET_XLM; }
+/** Quote token of every preset (native XLM SAC of the active network). */
+export function quoteToken(): string { return launchpadMode() === 'mock' ? MOCK_XLM_TOKEN : launchpadXlm(); }
 
 // ---------------- reads ----------------
 
 export async function listLaunches(): Promise<LaunchInfo[]> {
   if (launchpadMode() === 'mock') return readLaunchpadMock().launches.map(l => l.info);
-  const count = await read<number>(FACTORY, 'launch_count');
+  const count = await read<number>(factoryId(), 'launch_count');
   const pages: Promise<LaunchInfo[]>[] = [];
-  for (let start = 0; start < count; start += 50) pages.push(read<LaunchInfo[]>(FACTORY, 'list_launches', [scU32(start), scU32(50)]));
+  for (let start = 0; start < count; start += 50) pages.push(read<LaunchInfo[]>(factoryId(), 'list_launches', [scU32(start), scU32(50)]));
   return (await Promise.all(pages)).flat();
 }
 /** Simple (no curve) tokens, newest last. Factories upgraded before the simple-token path return an empty list. */
 export async function listPlainTokens(): Promise<PlainTokenInfo[]> {
   if (launchpadMode() === 'mock') return [...(readLaunchpadMock().plainTokens ?? [])];
   try {
-    const count = await read<number>(FACTORY, 'plain_token_count');
+    const count = await read<number>(factoryId(), 'plain_token_count');
     const pages: Promise<PlainTokenInfo[]>[] = [];
-    for (let start = 0; start < count; start += 50) pages.push(read<PlainTokenInfo[]>(FACTORY, 'list_plain_tokens', [scU32(start), scU32(50)]));
+    for (let start = 0; start < count; start += 50) pages.push(read<PlainTokenInfo[]>(factoryId(), 'list_plain_tokens', [scU32(start), scU32(50)]));
     return (await Promise.all(pages)).flat();
   } catch { return []; }
 }
@@ -57,18 +57,18 @@ export async function listPlainTokens(): Promise<PlainTokenInfo[]> {
 export async function getPlainToken(address: string): Promise<PlainTokenInfo | null> {
   if (launchpadMode() === 'mock') return findMockPlain(readLaunchpadMock(), address);
   if (!StrKey.isValidContract(address)) return null;
-  try { return await read<PlainTokenInfo>(FACTORY, 'get_plain_token', [scAddress(address)]); } catch { return null; }
+  try { return await read<PlainTokenInfo>(factoryId(), 'get_plain_token', [scAddress(address)]); } catch { return null; }
 }
 /** Looks a launch up by its token address, or by its curve address through the curve's own config. */
 export async function resolveLaunch(address: string): Promise<LaunchInfo> {
   if (launchpadMode() === 'mock') return findMockLaunch(readLaunchpadMock(), address).info;
   if (!StrKey.isValidContract(address)) throw new Error('Enter a valid token or curve contract address.');
-  try { return await read<LaunchInfo>(FACTORY, 'get_launch', [scAddress(address)]); }
+  try { return await read<LaunchInfo>(factoryId(), 'get_launch', [scAddress(address)]); }
   catch (first) {
     let token: string;
     try { token = (await read<CurveConfig>(address, 'get_config')).token; }
     catch { rethrow(first, {}, 'factory'); }
-    try { return await read<LaunchInfo>(FACTORY, 'get_launch', [scAddress(token)]); }
+    try { return await read<LaunchInfo>(factoryId(), 'get_launch', [scAddress(token)]); }
     catch (error) { rethrow(error, {}, 'factory'); }
   }
 }
@@ -107,11 +107,11 @@ export async function getGraduationCost(curve: string): Promise<GraduationCost> 
 }
 export async function getPreset(preset: Preset): Promise<CurveParams> {
   if (launchpadMode() === 'mock') return mockPreset(preset);
-  return read<CurveParams>(FACTORY, 'get_preset', [scAddress(TESTNET_XLM), scU32(preset)]).catch(e => rethrow(e, {}, 'factory'));
+  return read<CurveParams>(factoryId(), 'get_preset', [scAddress(launchpadXlm()), scU32(preset)]).catch(e => rethrow(e, {}, 'factory'));
 }
 export async function getFactoryConfig(): Promise<FactoryConfig> {
   if (launchpadMode() === 'mock') return mockFactoryConfig(readLaunchpadMock());
-  return read<FactoryConfig>(FACTORY, 'config').catch(e => rethrow(e, {}, 'factory'));
+  return read<FactoryConfig>(factoryId(), 'config').catch(e => rethrow(e, {}, 'factory'));
 }
 export interface TokenBalance { balance: bigint; needsTrustline: boolean }
 /** Wallet balance of a token (launch token, XLM or AQUA). SAC accounts without a trustline report `needsTrustline`. */
@@ -135,22 +135,19 @@ export async function getTokenMeta(token: string): Promise<TokenMeta> {
 /** Current owner of a graduated group on the market factory (the curve until `claim_group`). */
 export async function getGroupOwner(groupId: number): Promise<string> {
   if (launchpadMode() === 'mock') return readLaunchpadMock().groupOwners[String(groupId)] ?? '';
-  const group = await read<{ owner: string }>(MARKET_FACTORY, 'get_group', [scU32(groupId)]);
+  const group = await read<{ owner: string }>(marketFactoryId(), 'get_group', [scU32(groupId)]);
   return group.owner;
 }
 /** Buys, sells and graduation events of a curve from the RPC event stream. */
 export async function getCurveActivity(launch: LaunchInfo): Promise<CurveActivity> {
   if (launchpadMode() === 'mock') return mockActivity(findMockLaunch(readLaunchpadMock(), launch.curve));
-  const server = launchpadMode() === 'live' ? getRpc() : testnetRpc();
-  return fetchCurveActivity(server, launch.curve, Number(launch.created_at));
+  return fetchCurveActivity(getRpc(), launch.curve, Number(launch.created_at));
 }
 
-// ---------------- writes (testnet live mode, or the demo) ----------------
+// ---------------- writes (live mode on the active network, or the demo) ----------------
 
 function assertSigning(): void {
-  const mode = launchpadMode();
-  if (mode === 'remote') throw new Error('The launchpad signs transactions on testnet only. Open the testnet app to trade.');
-  if (mode === 'live' && network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
+  if (launchpadMode() === 'live' && network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
 }
 function demoDone(onProgress: ((p: TxProgress) => void) | undefined, hash: string) { onProgress?.({ status: 'success', hash, message: MOCK_SAVED }); }
 
@@ -162,9 +159,9 @@ export async function launchCurve(signer: Signer, input: LaunchInput, onProgress
     demoDone(onProgress, result.hash);
     return result;
   }
-  const params = scMap({ quote_token: scAddress(TESTNET_XLM), preset: scU32(input.preset), metadata_uri: scString(input.metadataUri), creator_buy: scI128(input.creatorBuy), min_tokens_out: scI128(input.minTokensOut) });
+  const params = scMap({ quote_token: scAddress(launchpadXlm()), preset: scU32(input.preset), metadata_uri: scString(input.metadataUri), creator_buy: scI128(input.creatorBuy), min_tokens_out: scI128(input.minTokensOut) });
   try {
-    const result = await submitContract<[string, string]>({ contractId: FACTORY, method: 'launch_curve', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), params], signer, onProgress });
+    const result = await submitContract<[string, string]>({ contractId: factoryId(), method: 'launch_curve', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), params], signer, onProgress });
     const [token, curve] = result.value;
     return { token, curve, hash: result.hash };
   } catch (error) {
@@ -184,7 +181,7 @@ export async function createPlainToken(signer: Signer, input: PlainTokenInput, o
     return result;
   }
   try {
-    const result = await submitContract<string>({ contractId: FACTORY, method: 'create_plain_token', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), scI128(supply), scString(input.metadataUri)], signer, onProgress });
+    const result = await submitContract<string>({ contractId: factoryId(), method: 'create_plain_token', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), scI128(supply), scString(input.metadataUri)], signer, onProgress });
     return { token: result.value, hash: result.hash };
   } catch (error) { rethrow(error, {}, 'factory', 'token'); }
 }

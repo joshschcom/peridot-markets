@@ -1,32 +1,45 @@
 'use client';
-import { ExternalLink, FlaskConical } from 'lucide-react';
+import { AlertTriangle, FlaskConical } from 'lucide-react';
 import { network } from '@/lib/peridot/network';
 import type { TxProgress } from '@/lib/peridot/rpc';
 import { Badge, Notice } from '@/components/ui/primitives';
-import { TESTNET_APP_URL, launchpadMode } from '@/lib/launchpad/config';
+import { MAINNET_LAUNCH_FEE_ESTIMATE_XLM, MAINNET_PLAIN_FEE_ESTIMATE_XLM, isLaunchpadMainnet, launchpadMode } from '@/lib/launchpad/config';
+import { fmtAmount } from '@/components/ui/format';
 import { phaseLabel } from '@/lib/launchpad/math';
 import type { Phase } from '@/lib/launchpad/types';
 import { LpTxLink } from './LpAddress';
 import './launchpad.css';
 
-/** Testnet badge on every launchpad page, plus the demo and read-only states. */
+/** Network badge on every launchpad page, plus the demo and read-only states. */
 export function LaunchpadBadges() {
   const mode = launchpadMode();
   return <>
-    <Badge tone="accent" icon={FlaskConical}>Testnet</Badge>
+    {isLaunchpadMainnet() ? <Badge tone="warn" icon={AlertTriangle}>Mainnet beta</Badge> : <Badge tone="accent" icon={FlaskConical}>Testnet</Badge>}
     {mode === 'mock' && <Badge tone="info">Demo</Badge>}
     {mode === 'live' && network.readOnly && <Badge>Read-only</Badge>}
   </>;
 }
 
-/** Shown when the app itself runs on mainnet: the launchpad data below is testnet data, read-only here. */
-export function MainnetNotice() {
-  if (launchpadMode() !== 'remote') return null;
-  return <Notice tone="warn" role="note" title="The launchpad runs on testnet during the beta">
-    <p>Mainnet launches need a legal review first. This page reads the Stellar testnet directly and cannot sign transactions. Use the testnet app to launch and trade test tokens.</p>
-    {TESTNET_APP_URL
-      ? <a className="button secondary sm" href={TESTNET_APP_URL} target="_blank" rel="noreferrer">Open the testnet app <ExternalLink size={13} aria-hidden /></a>
-      : <><button type="button" className="button secondary sm" disabled>Open the testnet app</button><span className="subtle" style={{ display: 'block', marginTop: 6 }}>Set NEXT_PUBLIC_TESTNET_APP_URL to link the testnet deployment.</span></>}
+/** Mainnet only: the launchpad spends real XLM and runs new, unaudited contracts. Renders nothing on testnet or in demo mode. */
+export function MainnetNotice({ compact = false }: { compact?: boolean }) {
+  if (!isLaunchpadMainnet()) return null;
+  return <Notice tone="warn" role="note" title="Mainnet beta: real XLM, unaudited contracts">
+    <p>{compact ? 'The launchpad contracts are new and unaudited. Trades and launches here use real XLM.' : 'The launchpad contracts are new and unaudited beta software. Every launch, buy and sell on this page spends real XLM and can lose all of it. Never commit more than you can afford to lose.'}</p>
+  </Notice>;
+}
+
+/** Mainnet only: the XLM this signature costs, before the wallet opens. `buy` is the creator buy in stroops (0n for none). */
+export function MainnetCost({ buy, kind }: { buy: bigint; kind: 'curve' | 'plain' }) {
+  if (!isLaunchpadMainnet()) return null;
+  const fee = kind === 'curve' ? MAINNET_LAUNCH_FEE_ESTIMATE_XLM : MAINNET_PLAIN_FEE_ESTIMATE_XLM;
+  const feeStroops = BigInt(Math.round(fee * 10_000_000));
+  return <Notice tone="warn" role="status" title="What this costs in real XLM">
+    <ul className="muted" style={{ paddingLeft: 16, display: 'grid', gap: 2 }}>
+      {kind === 'curve' && <li>Creator buy: <strong>{fmtAmount(buy, 7, 2)} XLM</strong>{buy === 0n ? ' (none)' : ' (paid into the curve in the same transaction)'}</li>}
+      <li>Network fee and Soroban rent: about <strong>{fee} XLM</strong> (the exact fee shows in your wallet)</li>
+      <li>Launch fee: none (the factory charges no launch fee)</li>
+      <li>Total: about <strong>{fmtAmount(buy + feeStroops, 7, 2)} XLM</strong>. Keep a little extra XLM for your account reserve.</li>
+    </ul>
   </Notice>;
 }
 
@@ -39,7 +52,10 @@ export function TypeBadge({ type }: { type: TokenType }) {
 }
 
 export const RISK_COPY = 'New tokens are highly risky. Prices can go to zero. Peridot does not vet projects. Testnet only.';
-export function RiskNotice() { return <Notice tone="danger" role="note">{RISK_COPY}</Notice>; }
+export const RISK_COPY_MAINNET = 'New tokens are highly risky. Prices can go to zero. Peridot does not vet projects. This is mainnet: you can lose real funds.';
+/** Risk line for the active network. */
+export function riskCopy(): string { return isLaunchpadMainnet() ? RISK_COPY_MAINNET : RISK_COPY; }
+export function RiskNotice() { return <Notice tone="danger" role="note">{riskCopy()}</Notice>; }
 
 export const progressCopy: Record<TxProgress['status'], string> = {
   simulating: 'Checking the transaction...',

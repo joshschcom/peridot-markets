@@ -50,5 +50,23 @@
     "blend_group_id": 3,
     "blend_market": "CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM",
     "blend_adapter": "CDLLNAM63H5BVYH4BCNIWY6AULTDO6H455M4NF3HIYUW4XBXW6TPOPIX"
+  },
+  "launchpad_factory": "CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J",
+  "launchpad_demo": {
+    "symbol": "PDEMO",
+    "name": "Peridot Demo",
+    "token": "CDKHQPYSBULW3T2FNLPKKKXVKREDYZTI37KRURBNVNEUIZ5YDT4O4DYT",
+    "curve": "CDWJL4YJ4H546FFXNXSNREW27PFQFNMBQPXDIUHTN765Z52MRDUJH43A",
+    "launch_id": 0,
+    "preset": "Fast",
+    "quote_token": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+    "graduation_target_xlm": 500,
+    "creator": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+    "creator_buy_xlm": 5,
+    "creator_tokens": "292764457038619",
+    "launch_tx": "fce3e87f87ade9af25b5eb7785f80ea2b19b28901773a0f19d61b2ef4acf4030",
+    "ledger": 65144136,
+    "at_utc": "2026-10-26T09:21:03Z",
+    "at_lisbon": "2026-10-26T09:21:03+00:00"
   }
 }
