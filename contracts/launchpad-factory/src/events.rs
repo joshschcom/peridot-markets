@@ -1,5 +1,5 @@
 use peridot_interfaces::PriceConfig;
-use soroban_sdk::{contractevent, Address, BytesN};
+use soroban_sdk::{contractevent, Address, BytesN, String};
 
 use crate::types::Preset;
 
@@ -73,4 +73,15 @@ pub struct QuotePriceSet {
     #[topic]
     pub quote_token: Address,
     pub price: PriceConfig,
+}
+
+#[contractevent(topics = ["plain_token_created"])]
+pub struct PlainTokenCreated {
+    #[topic]
+    pub id: u32,
+    #[topic]
+    pub creator: Address,
+    pub token: Address,
+    pub symbol: String,
+    pub supply: i128,
 }

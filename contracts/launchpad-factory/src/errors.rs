@@ -25,4 +25,6 @@ pub enum FactoryError {
     QuotePriceNotSet = 15,
     /// The quote price must be a `ReflectorOnly` mapping.
     InvalidQuotePrice = 16,
+    /// Plain token supply must be 1..=1e12 whole tokens.
+    InvalidSupply = 17,
 }

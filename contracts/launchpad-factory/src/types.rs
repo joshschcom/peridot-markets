@@ -81,3 +81,17 @@ pub struct GraduationTargets {
     pub router: Address,
     pub market_factory: Address,
 }
+
+/// A simple token created with `create_plain_token`: no curve, the whole supply went to the creator.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PlainTokenInfo {
+    pub id: u32,
+    pub token: Address,
+    pub creator: Address,
+    pub name: String,
+    pub symbol: String,
+    /// Total supply in base units (7 decimals).
+    pub supply: i128,
+    pub created_at: u64,
+}
