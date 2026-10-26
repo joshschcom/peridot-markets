@@ -473,7 +473,7 @@ fn create_redeem(
     if gross <= 0 {
         return Err(Error::NothingToDo);
     }
-    let need = (target - buffer).max(1);
+    let need = (target - buffer).max(0).saturating_add(exec_fee).max(1);
     let need_gross = mul_div_ceil(env, need, BPS, BPS - cfg.slippage_bps as i128).ok_or(Error::Overflow)?;
     let mut shares = mul_div_ceil(env, need_gross, held, gross).ok_or(Error::Overflow)?;
     if shares > held {
