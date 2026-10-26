@@ -13,7 +13,8 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   // Every venue is listed; XOXNO and Zenex are honest about not being active.
   const venues = page.getByRole('group', { name: 'Yield venues' });
   for (const name of ['Keep in Peridot', 'Blend fee vault', 'DeFindex vault', 'Aquarius LP vault', 'XOXNO Lending', 'Zenex perps vault']) await expect(venues.getByText(name, { exact: true })).toBeVisible();
-  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(2);
+  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
+  await expect(venues.getByText('Testnet, customizable')).toBeVisible();
   await expect(venues.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(venues.locator('button')).toHaveCount(0);
 
@@ -51,7 +52,7 @@ test('the launch wizard shows locked XOXNO and Zenex options and still lets live
   await expect(all).toBeVisible();
   await expect(all.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(all.locator('[data-vault="zenex"]')).toHaveAttribute('aria-disabled', 'true');
-  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(2);
+  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
   await all.getByRole('button', { name: /Blend fee vault/ }).click();
   await expect(all.getByRole('button', { name: /Blend fee vault/ })).toHaveAttribute('aria-pressed', 'true');
   await all.getByRole('button', { name: /Keep in Peridot/ }).click();
@@ -102,5 +103,34 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   await registry.fill('pdemo');
   await page.getByRole('group', { name: 'Registry tokens' }).first().getByRole('button', { name: /PDEMO/ }).click();
   await expect(page.getByTestId('token-intake').first().getByText('Priced by Reflector')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('create a customizable XOXNO vault: validation bounds, preview, and a labelled demo result', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/vaults');
+  const form = page.locator('#create-xoxno');
+  await expect(form.getByRole('heading', { name: /Create a XOXNO Lending vault/ })).toBeVisible();
+  await expect(form.getByText('Testnet, customizable')).toBeVisible();
+
+  // The fee is bounded at 2000 bps and the cap must cover the minimum deposit.
+  await form.getByLabel('Performance fee (bps)').fill('2500');
+  await expect(form.getByText('A whole number from 0 to 2000.')).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Create demo XOXNO vault' })).toBeDisabled();
+  await form.getByLabel('Performance fee (bps)').fill('500');
+  await form.getByLabel('Minimum deposit').fill('5000');
+  await expect(form.getByText('Cannot exceed the deposit cap.')).toBeVisible();
+  await form.getByLabel('Minimum deposit').fill('2');
+  await form.getByLabel('Deposit cap').fill('250');
+  await expect(form.getByLabel('Vault preview')).toContainText('5.00% of yield');
+  await expect(form.getByLabel('Vault preview')).toContainText('250 tokens');
+  await expect(form.getByLabel('Vault preview')).toContainText('upgrade');
+
+  await form.screenshot({ path: '../docs/ui/xoxno-create-vault.png' });
+  await page.getByRole('group', { name: 'Yield venues' }).screenshot({ path: '../docs/ui/xoxno-venue-list.png' });
+  await form.getByRole('button', { name: 'Create demo XOXNO vault' }).click();
+  await expect(form.getByText('Demo vault recorded')).toBeVisible({ timeout: 30_000 });
+  await form.screenshot({ path: '../docs/ui/xoxno-create-vault-result.png' });
   expect(errors).toEqual([]);
 });

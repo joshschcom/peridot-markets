@@ -75,7 +75,7 @@ export default function XoxnoVaultForm() {
         {progress && <Notice tone={progress.status === 'error' ? 'danger' : 'info'} role="status" live="polite">{progress.message || progress.status}</Notice>}
         {blocked && <Notice tone="warn" role="status">{blocked}</Notice>}
         <div className="row">{!wallet.address && mode !== 'unavailable' && mode !== 'mock' ? <button type="button" className="button" onClick={() => void wallet.connect()} disabled={wallet.isConnecting || !wallet.isReady}>Connect wallet to create</button>
-          : <button type="button" className="button large" disabled={busy || hasErrors || (mode !== 'mock' && !!blocked)} onClick={create}>{busy ? `${progress?.status || 'Preparing'}...` : mode === 'mock' ? 'Create demo vault' : 'Create vault'}<ArrowRight size={17} aria-hidden /></button>}</div>
+          : <button type="button" className="button large" disabled={busy || hasErrors || (mode !== 'mock' && !!blocked)} onClick={create}>{busy ? `${progress?.status || 'Preparing'}...` : mode === 'mock' ? 'Create demo XOXNO vault' : 'Create vault'}<ArrowRight size={17} aria-hidden /></button>}</div>
       </div>}
   </section>;
 }
