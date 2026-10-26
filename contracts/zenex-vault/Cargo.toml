@@ -16,3 +16,4 @@ peridot-interfaces = { path = "../peridot-interfaces" }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 mock-token = { path = "../../core/mocks/mock-token" }
 mock-zenex = { path = "../mocks/mock-zenex" }
+mock-reflector = { path = "../mocks/mock-reflector" }

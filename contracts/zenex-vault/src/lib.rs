@@ -135,7 +135,7 @@ pub struct ZenexState {
     pub bound: bool,
 }
 
-#[contractclient(name = "ZenexMarketClient")]
+#[contractclient(name = "ZxMarketClient")]
 pub trait ZenexMarketApi {
     fn create_vault_order(env: Env, user: Address, kind: u32, amount: i128, min_out: i128) -> u32;
     fn cancel_vault_order(env: Env, user: Address, id: u32) -> i128;
@@ -146,7 +146,7 @@ pub trait ZenexMarketApi {
     fn get_config(env: Env) -> Map<Symbol, Val>;
 }
 
-#[contractclient(name = "ZenexVaultClient")]
+#[contractclient(name = "ZxVaultClient")]
 pub trait ZenexVaultApi {
     fn balance(env: Env, account: Address) -> i128;
     fn total_assets(env: Env) -> i128;
@@ -352,7 +352,7 @@ fn map_i128(env: &Env, m: &Map<Symbol, Val>, name: &str) -> Option<i128> {
 /// Live Zenex limits: (exec_fee, min_deposit, max_vault_balance). Decoded as a map so a Zenex upgrade that
 /// adds Config fields does not break the adapter.
 fn zenex_limits(env: &Env, market: &Address) -> Option<(i128, i128, i128)> {
-    match ZenexMarketClient::new(env, market).try_get_config() {
+    match ZxMarketClient::new(env, market).try_get_config() {
         Ok(Ok(m)) => Some((
             map_i128(env, &m, "exec_fee")?,
             map_i128(env, &m, "min_deposit")?,
@@ -372,7 +372,7 @@ fn order_state(env: &Env, cfg: &ZenexConfig, id: u32) -> OrderState {
     if id == 0 {
         return OrderState::Gone;
     }
-    match ZenexMarketClient::new(env, &cfg.zenex_market)
+    match ZxMarketClient::new(env, &cfg.zenex_market)
         .try_get_vault_order(&env.current_contract_address(), &id)
     {
         Ok(Ok(o)) => OrderState::Open(o),
@@ -386,7 +386,7 @@ fn order_state(env: &Env, cfg: &ZenexConfig, id: u32) -> OrderState {
 fn exposure(env: &Env, cfg: &ZenexConfig) -> Option<(i128, i128)> {
     let this = env.current_contract_address();
     let mut dep = 0i128;
-    let mut shares = match ZenexVaultClient::new(env, &cfg.zenex_vault).try_balance(&this) {
+    let mut shares = match ZxVaultClient::new(env, &cfg.zenex_vault).try_balance(&this) {
         Ok(Ok(b)) if b >= 0 => b,
         _ => return None,
     };
@@ -403,11 +403,20 @@ fn exposure(env: &Env, cfg: &ZenexConfig) -> Option<(i128, i128)> {
     Some((dep, shares))
 }
 
+/// The tracked order id if that order is still open on Zenex, else 0.
+fn open_id(env: &Env, cfg: &ZenexConfig, key: &DataKey) -> u32 {
+    let id = pending(env, key);
+    match order_state(env, cfg, id) {
+        OrderState::Gone => 0,
+        _ => id,
+    }
+}
+
 fn zenex_gross_value(env: &Env, cfg: &ZenexConfig, shares: i128) -> Option<i128> {
     if shares == 0 {
         return Some(0);
     }
-    match ZenexVaultClient::new(env, &cfg.zenex_vault).try_preview_redeem(&shares, &0) {
+    match ZxVaultClient::new(env, &cfg.zenex_vault).try_preview_redeem(&shares, &0) {
         Ok(Ok(v)) if v >= 0 => Some(v),
         _ => None,
     }
@@ -447,7 +456,7 @@ impl ZenexVault {
     ) -> Result<(), Error> {
         validate_params(cfg.target_buffer_bps, cfg.min_buffer_bps, cfg.slippage_bps, cfg.haircut_bps)?;
         // live integrity checks: this is Zenex's market for exactly this vault and token
-        let zm = ZenexMarketClient::new(&env, &cfg.zenex_market);
+        let zm = ZxMarketClient::new(&env, &cfg.zenex_market);
         match zm.try_get_vault() {
             Ok(Ok(v)) if v == cfg.zenex_vault => {}
             _ => return Err(Error::InvalidConfig),
@@ -456,7 +465,7 @@ impl ZenexVault {
             Ok(Ok(t)) if t == underlying => {}
             _ => return Err(Error::InvalidConfig),
         }
-        match ZenexVaultClient::new(&env, &cfg.zenex_vault).try_query_asset() {
+        match ZxVaultClient::new(&env, &cfg.zenex_vault).try_query_asset() {
             Ok(Ok(a)) if a == underlying => {}
             _ => return Err(Error::InvalidConfig),
         }
@@ -650,8 +659,8 @@ impl ZenexVault {
         let tok = token::Client::new(&env, &underlying);
         let buffer = tok.balance(&this);
         let value = total_value(&env, &cfg, &underlying).ok_or(Error::ZenexUnavailable)?;
-        let market = ZenexMarketClient::new(&env, &cfg.zenex_market);
-        let zvault = ZenexVaultClient::new(&env, &cfg.zenex_vault);
+        let market = ZxMarketClient::new(&env, &cfg.zenex_market);
+        let zvault = ZxVaultClient::new(&env, &cfg.zenex_vault);
         let target = bps(&env, value, cfg.target_buffer_bps);
         let floor = bps(&env, value, cfg.min_buffer_bps);
 
@@ -740,7 +749,7 @@ impl ZenexVault {
             }
             OrderState::Unknown => return Err(Error::ZenexUnavailable),
         }
-        let amount = ZenexMarketClient::new(&env, &cfg.zenex_market)
+        let amount = ZxMarketClient::new(&env, &cfg.zenex_market)
             .cancel_vault_order(&env.current_contract_address(), &id);
         env.storage().instance().set(&key, &0u32);
         CancelEvent { id, amount }.publish(&env);
@@ -777,13 +786,13 @@ impl ZenexVault {
         let this = env.current_contract_address();
         ZenexState {
             buffer: token::Client::new(&env, &u).balance(&this),
-            zenex_shares: ZenexVaultClient::new(&env, &cfg.zenex_vault)
+            zenex_shares: ZxVaultClient::new(&env, &cfg.zenex_vault)
                 .try_balance(&this)
                 .ok()
                 .and_then(|r| r.ok())
                 .unwrap_or(0),
-            pending_deposit_id: pending(&env, &DataKey::PendingDeposit),
-            pending_redeem_id: pending(&env, &DataKey::PendingRedeem),
+            pending_deposit_id: open_id(&env, &cfg, &DataKey::PendingDeposit),
+            pending_redeem_id: open_id(&env, &cfg, &DataKey::PendingRedeem),
             next_sync_after: env.storage().instance().get(&DataKey::NextSync).unwrap_or(0),
             bound: env.storage().instance().get(&DataKey::Bound).unwrap_or(false),
         }
