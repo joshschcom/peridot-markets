@@ -327,6 +327,9 @@ fn drift_and_cooldown_gate_rebalances() {
     pool.set_tick(&(17_487 + 4 * 60));
     c.env.ledger().set_timestamp(1_000_000 + 3_601);
     assert!(c.vault.needs_rebalance());
+    // while the ladder is being rebuilt deposits wait (the other token sits idle, valued at spot)
+    c.vault.rebalance(&c.keeper);
+    assert_eq!(c.vault.try_deposit_underlying(&c.alice, &(10 * E7), &0).unwrap_err().unwrap(), Error::OutOfRange);
     // five rungs: 2 unwind transactions (3 + 2 withdrawals), then 3 funding transactions (2 + 2 + 1 deposits)
     let steps = settle(&c, &c.keeper);
     assert!(steps >= 4, "staged over several transactions: {steps}");

@@ -420,6 +420,13 @@ fn deposit_inner(env: &Env, from: &Address, amount: i128, min_shares: i128) -> R
     bump(env);
     let (sqrt, tick) = spot(env, &c)?;
     let live = rungs(env);
+    // Between rebalance steps part of the funds sit in the other token, valued at spot: deposits wait until the ladder is whole.
+    let staged = env.storage().instance().get::<_, bool>(&DataKey::Unwinding).unwrap_or(false)
+        || !env.storage().instance().get::<_, Vec<PlanRung>>(&DataKey::Plan).unwrap_or(Vec::new(env)).is_empty()
+        || (live.is_empty() && other_to_u(env, &c, get_i128(env, &DataKey::IdleO), &sqrt)? >= MIN_DEPLOY_VALUE);
+    if staged {
+        return Err(Error::OutOfRange);
+    }
     if !live.is_empty() {
         // Deposits are priced at the pool's spot, so refuse them while the price sits outside every rung: a manipulated
         // price inside the ladder moves NAV only slightly, one beyond it moves NAV a lot.
