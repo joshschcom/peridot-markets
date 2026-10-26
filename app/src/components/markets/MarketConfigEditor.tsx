@@ -5,12 +5,12 @@ import { findReflectorFeed, getTokenMetadata, isYieldVaultAllowed } from '@/lib/
 import { borrowApr, RATE_PRESETS, ratesFromDraft, type MarketDraft } from '@/lib/peridot/market-config';
 import { getDeployments, network } from '@/lib/peridot/network';
 import { GUARDRAILS } from '@/lib/peridot/types';
-import { MOCK_EURC, MOCK_USDC, MOCK_XLM } from '@/lib/peridot/mock';
 import { Badge, Notice } from '@/components/ui/primitives';
 import { Address } from '@/components/ui/Address';
 import { RateCurveChart } from '@/components/charts/RateCurveChart';
 import { fmtPct } from '@/components/ui/format';
-import { TokenRegistryPicker } from '@/components/vaults/TokenRegistryPicker';
+import { TokenCombobox } from '@/components/vaults/TokenCombobox';
+import { useAssetCatalog } from '@/components/vaults/useAssetCatalog';
 import { TokenIntakePanel } from '@/components/vaults/TokenIntakePanel';
 import { inspectToken, type Inspection } from '@/lib/vaults/token-intake-client';
 import { VaultOptionList } from '@/components/vaults/VaultOptionList';
@@ -21,7 +21,7 @@ export default function MarketConfigEditor({value,onChange,rewardsEnabled=false,
  const external=deployment?.external||{};
  const defindex=external.defindex_vaults;
  const blend=external.blend_fee_vault;
- const tokenChoices=network.useMocks?[['USDC',MOCK_USDC],['XLM',MOCK_XLM],['EURC',MOCK_EURC]]:[['USDC',external.usdc],['XLM',external.xlm],['EURC',external.eurc]].filter((entry):entry is [string,string]=>typeof entry[1]==='string'&&!!entry[1]);
+ const catalog=useAssetCatalog();
  const configuredVaults:string[]=value.route==='Defindex'
   ? (defindex&&typeof defindex==='object'?[defindex[value.token],defindex[value.symbol]].filter((v):v is string=>typeof v==='string'&&!!v):[])
   : value.route==='Blend'?(typeof blend==='string'&&blend?[blend]:blend&&typeof blend==='object'?[blend[value.token],blend[value.symbol]].filter((v):v is string=>typeof v==='string'&&!!v):[]):[];
@@ -45,9 +45,9 @@ export default function MarketConfigEditor({value,onChange,rewardsEnabled=false,
  return <div className="market-config-editor editor">
   <section className="editor-step">
    <Step n={1} title="Token and price" summary="Verify the token and its approved Reflector mapping. Reflector is the price source. No fallback price is set."/>
-   <TokenRegistryPicker id={id} disabled={disabled||checking} onPick={address=>{onChange({...value,token:address,symbol:'',price:undefined,routeAddress:''});setInspection(null);void verify(address);}}/>
-   <div className="field"><label htmlFor={`${id}-token`}>Token contract address</label><input id={`${id}-token`} value={value.token} placeholder="C... or CODE:ISSUER" disabled={disabled} onChange={e=>{setInspection(null);onChange({...value,token:e.target.value.trim(),symbol:'',price:undefined,routeAddress:''});}}/><span className="field-hint">Paste your own token (for example one from the launchpad) or any Soroban token contract. A classic asset like USDC:G... is converted to its contract. Total supply is shown only when the token reports it.</span></div>
-   <div className="row">{tokenChoices.map(([symbol,token])=><button type="button" className="button secondary sm" disabled={disabled} key={token} onClick={()=>{setInspection(null);onChange({...value,token,symbol:'',price:undefined,routeAddress:''});}}>Use {symbol}</button>)}<button type="button" className="button sm" disabled={disabled||checking||!value.token} onClick={()=>void verify()}>{checking?'Checking token...':'Verify token and price feed'}</button></div>
+   <TokenCombobox id={id} label="Token" assets={catalog.assets} value={value.token} disabled={disabled||checking} note={catalog.note||`${catalog.assets.length} assets: known ${network.name} tokens, Aquarius pool tokens and launchpad tokens, each listed once.`} onPick={asset=>{setInspection(null);onChange({...value,token:asset.address,symbol:'',price:undefined,routeAddress:''});void verify(asset.address);}} onCustom={()=>document.getElementById(`${id}-token`)?.focus()}/>
+   <div className="field"><label htmlFor={`${id}-token`}>Token contract address</label><input id={`${id}-token`} value={value.token} placeholder="C... or CODE:ISSUER" disabled={disabled} onChange={e=>{setInspection(null);onChange({...value,token:e.target.value.trim(),symbol:'',price:undefined,routeAddress:''});}}/><span className="field-hint">Pick a token above, or paste your own (for example one from the launchpad) or any Soroban token contract. A classic asset like USDC:G... is converted to its contract. Total supply is shown only when the token reports it.</span></div>
+   <div className="row"><button type="button" className="button sm" disabled={disabled||checking||!value.token} onClick={()=>void verify()}>{checking?'Checking token...':'Verify token and price feed'}</button></div>
    {value.symbol&&value.price&&<div className="status success"><CheckCircle2 size={16} aria-hidden/><div style={{minWidth:0,flex:1}}><p>{value.symbol} {'·'} {value.decimals} decimals {'·'} Approved Reflector mapping{network.useMocks?' (demo)':''}</p>{value.price.tag==='ReflectorOnly'&&<details><summary className="text-link" style={{fontSize:12}}>View token price mapping</summary><div className="kv mt-2" style={{fontSize:12}}><div><span>Feed asset</span><span>{value.price.values[0].asset.tag} {'·'} {value.price.values[0].asset.values[0].length>20?<Address value={value.price.values[0].asset.values[0]} label="feed asset"/>:value.price.values[0].asset.values[0]}</span></div><div><span>Oracle</span><span><Address value={value.price.values[0].oracle} label="oracle address"/></span></div></div><p className="subtle" style={{fontSize:12,marginTop:6}}>The factory must approve this exact token, oracle and asset combination before launch.</p></details>}</div></div>}
    {error&&<p role="alert" className="status danger">{error}</p>}
    {inspection&&inspection.info.address===value.token&&<TokenIntakePanel inspection={inspection} vaultHint={vaultHint(inspection.info.symbol,inspection.info.address)}/>}

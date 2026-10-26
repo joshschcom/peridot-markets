@@ -71,7 +71,9 @@ test('launch, lend, claim, margin and owner staged changes work together in expl
 test('owner can deploy, recover and activate a new market before enabling rewards',async({page})=>{
  await page.goto('/groups/1/control');
  await page.getByText('Configure another market',{exact:true}).click();
- await page.getByRole('button',{name:'Use EURC',exact:true}).click();
+ await page.getByRole('button',{name:/^Token/}).first().click();
+ await page.getByRole('combobox',{name:'Search token'}).fill('eurc');
+ await page.getByRole('option',{name:/EURC/}).first().click();
  await page.getByRole('button',{name:'Verify token and price feed',exact:true}).click();
  await expect(page.getByText('EURC · 7 decimals · Approved Reflector mapping (demo)')).toBeVisible();
  await page.getByRole('button',{name:'Deploy market',exact:true}).click();
