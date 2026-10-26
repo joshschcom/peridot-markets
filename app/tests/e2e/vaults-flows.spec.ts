@@ -13,7 +13,8 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   // Every venue is listed; XOXNO and Zenex are honest about not being active.
   const venues = page.getByRole('group', { name: 'Yield venues' });
   for (const name of ['Keep in Peridot', 'Blend fee vault', 'DeFindex vault', 'Aquarius LP vault', 'XOXNO Lending', 'Zenex perps vault']) await expect(venues.getByText(name, { exact: true })).toBeVisible();
-  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(2);
+  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
+  await expect(venues.getByText('Testnet, customizable')).toBeVisible();
   await expect(venues.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(venues.locator('button')).toHaveCount(0);
 
@@ -59,7 +60,7 @@ test('the launch wizard shows locked XOXNO and Zenex options and still lets live
   await expect(all).toBeVisible();
   await expect(all.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(all.locator('[data-vault="zenex"]')).toHaveAttribute('aria-disabled', 'true');
-  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(2);
+  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
   await all.getByRole('button', { name: /Blend fee vault/ }).click();
   await expect(all.getByRole('button', { name: /Blend fee vault/ })).toHaveAttribute('aria-pressed', 'true');
   await all.getByRole('button', { name: /Keep in Peridot/ }).click();
@@ -110,5 +111,40 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   await registry.fill('pdemo');
   await page.getByRole('group', { name: 'Registry tokens' }).first().getByRole('button', { name: /PDEMO/ }).click();
   await expect(page.getByTestId('token-intake').first().getByText('Priced by Reflector')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('zenex vault kind: customizable form, bounds, preview, demo creation and honest labelling', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/vaults');
+  const venues = page.getByRole('group', { name: 'Yield venues' });
+  await expect(venues.locator('[data-vault="zenex"]').getByText('Testnet, customizable')).toBeVisible();
+  await page.screenshot({ path: '../docs/ui/zenex-venues.png', fullPage: true });
+
+  await page.locator('[data-kind="zenex"]').click();
+  await expect(page.getByText('Zenex strategy vault', { exact: true })).toBeVisible();
+  await expect(page.locator('#vf-targetBuffer')).toHaveValue('30');
+  await expect(page.getByText('How a deposit is split')).toBeVisible();
+  await expect(page.locator('#vf-zenexMarket')).toHaveValue(/^C/);
+
+  // Bounds mirror the contract: buffer below 20% and a cap above Zenex's own limit are refused with a reason.
+  await page.locator('#vf-targetBuffer').fill('10');
+  await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
+  await expect(page.getByText(/Liquid buffer must be at least 20/).first()).toBeVisible();
+  await page.locator('#vf-targetBuffer').fill('40');
+  await page.locator('#vf-cap').fill('200000');
+  await expect(page.getByText(/Deposit cap must be at most 100000/).first()).toBeVisible();
+  await page.locator('#vf-cap').fill('500');
+  await page.locator('#vf-haircut').fill('3');
+  await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeEnabled();
+  await page.screenshot({ path: '../docs/ui/zenex-create.png', fullPage: true });
+  await page.getByRole('button', { name: 'Create demo vault' }).click();
+  await expect(page.getByText('Demo vault saved').first()).toBeVisible({ timeout: 30_000 });
+  await page.screenshot({ path: '../docs/ui/zenex-created.png', fullPage: true });
+
+  await page.setViewportSize({ width: 375, height: 800 });
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });
