@@ -1,4 +1,8 @@
 import {test,expect} from '@playwright/test';
+import {disclaimerPreAcceptScript} from '../../src/lib/ui/risk-disclaimer';
+
+// Setup only: pre-accept the one-time risk disclaimer (localStorage 'peridot:risk-ack') so the modal never covers the page under test.
+test.beforeEach(async({page})=>{await page.addInitScript(disclaimerPreAcceptScript);});
 
 test('launch, lend, claim, margin and owner staged changes work together in explicit demo mode',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
