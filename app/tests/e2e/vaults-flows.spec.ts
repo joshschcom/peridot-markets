@@ -57,3 +57,50 @@ test('the launch wizard shows locked XOXNO and Zenex options and still lets live
   await all.getByRole('button', { name: /Keep in Peridot/ }).click();
   await expect(all.getByRole('button', { name: /Keep in Peridot/ })).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('the vaults page fits a 375px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/vaults');
+  await expect(page.getByTestId('pool-row').first()).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('add market: paste a custom token, see its facts and pricing, and get blocked with a reason when it has no price', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/launch');
+  await page.getByLabel(/Group name/).fill('CustomTok');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  const token = page.getByLabel('Token contract address').first();
+
+  // A priced custom token (demo PDEMO has a mock Reflector feed).
+  await token.fill('CADQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQP5KR');
+  await page.getByRole('button', { name: 'Verify token and price feed', exact: true }).first().click();
+  const panel = page.getByTestId('token-intake').first();
+  await expect(panel.getByText('Peridot Demo Token (PDEMO)')).toBeVisible();
+  await expect(panel.getByText('1,000,000')).toBeVisible();
+  await expect(panel.getByText('Priced by Reflector')).toBeVisible();
+  await expect(panel).toContainText('Any token with a Reflector price and seven decimals');
+
+  // An unpriced token: blocked with plain copy.
+  await token.fill('CAEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQTD2L');
+  await page.getByRole('button', { name: 'Verify token and price feed', exact: true }).first().click();
+  await expect(panel.getByText('No price source available, market blocked')).toBeVisible();
+  await expect(panel.getByText(/can only be selected by markets that the launchpad creates/)).toBeVisible();
+
+  // Not a token / not a contract: clear errors.
+  await token.fill('CACQKBIFAUCQKBIFAUCQKBIFAUCQKBIFAUCQKBIFAUCQKBIFAUCQLC2U');
+  await page.getByRole('button', { name: 'Verify token and price feed', exact: true }).first().click();
+  await expect(page.getByText(/not a Soroban token contract/).first()).toBeVisible();
+  await token.fill('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF');
+  await page.getByRole('button', { name: 'Verify token and price feed', exact: true }).first().click();
+  await expect(page.getByText(/account address/).first()).toBeVisible();
+
+  // Registry picker: search and pick a token, which verifies it.
+  const registry = page.getByLabel('Pick from the Aquarius registry').first();
+  await registry.fill('pdemo');
+  await page.getByRole('group', { name: 'Registry tokens' }).first().getByRole('button', { name: /PDEMO/ }).click();
+  await expect(page.getByTestId('token-intake').first().getByText('Priced by Reflector')).toBeVisible();
+  expect(errors).toEqual([]);
+});

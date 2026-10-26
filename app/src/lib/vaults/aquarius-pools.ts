@@ -7,6 +7,9 @@
  *   4. demo data when the app runs with NEXT_PUBLIC_USE_MOCKS=true.
  * Everything here is pure or takes an injected reader so it is unit-testable in node. */
 
+/** Minimum depth in whole USD of each pool side that price-router-ext requires before it serves an AquariusOnly price. */
+export const MIN_DEPTH_USD = 500;
+
 export type PoolType = 'constant_product' | 'stable' | 'concentrated' | 'unknown';
 export type PoolSource = 'chain' | 'api' | 'registry' | 'demo';
 export type Net = 'mainnet' | 'testnet';

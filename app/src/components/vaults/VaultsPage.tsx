@@ -1,15 +1,14 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Droplets, RefreshCw, Search, Vault } from 'lucide-react';
 import { network } from '@/lib/peridot/network';
 import { emitTx } from '@/lib/ui-events';
 import { Badge, EmptyState, Notice, Skeleton, Tabs } from '@/components/ui/primitives';
 import { Address } from '@/components/ui/Address';
 import { VaultOptionList } from './VaultOptionList';
-import { chainReader } from '@/lib/vaults/aquarius-chain';
+import { useAquariusPools } from './useAquariusPools';
 import {
-  applyPoolFilter, formatFee, formatUsd, isStablePair, isVaultEligible, loadAquariusPools, pairLabel, registryPools, sortPools,
-  vaultIneligibleReason, type AquariusPool, type LoadResult, type PoolFilter, type PoolSource,
+  applyPoolFilter, formatFee, formatUsd, isStablePair, isVaultEligible, pairLabel, vaultIneligibleReason, type AquariusPool, type PoolFilter, type PoolSource,
 } from '@/lib/vaults/aquarius-pools';
 import {
   FACTORY_SUPPORTS_AQUARIUS_ROUTE, MIN_IDLE_BUFFER_PCT, buildVaultPlan, defaultRange, demoVaultFromPlan, describeRange, loadDemoVaults, missingSteps, runDemoPlan, saveDemoVault,
@@ -18,31 +17,7 @@ import {
 import './vaults.css';
 
 const SOURCE_LABEL: Record<PoolSource, string> = { chain: 'Aquarius router (on chain)', api: 'Aquarius API', registry: 'Verified pool list shipped with the app', demo: 'Demo data' };
-const LOAD_TIMEOUT_MS = 15_000;
-
 function store(): KeyValueStore | null { try { return window.localStorage; } catch { return null; } }
-
-function useAquariusPools() {
-  const [state, setState] = useState<{ loading: boolean; result: LoadResult | null }>({ loading: true, result: null });
-  const run = useRef(0);
-  const load = useCallback(() => {
-    const id = ++run.current;
-    setState(s => ({ loading: true, result: s.result }));
-    const net = network.name;
-    const canRead = network.useMocks || !(net === 'mainnet' && !network.rpcUrl);
-    const real = loadAquariusPools({
-      net, demo: network.useMocks,
-      chain: !network.useMocks && canRead ? chainReader(net) : null,
-      fetchFn: !network.useMocks && typeof fetch === 'function' ? (url, init) => fetch(url, init) : null,
-    });
-    // The page must never hang on a slow source: after the timeout the verified list is shown with a warning.
-    const timeout = new Promise<LoadResult>(resolve => setTimeout(() => resolve({ pools: sortPools(registryPools(net)), sources: { chain: 'error', api: 'error' }, primary: 'registry', warnings: ['Aquarius sources were too slow. Showing the verified pool list shipped with this app.'] }), LOAD_TIMEOUT_MS));
-    Promise.race([real, timeout]).catch((): LoadResult => ({ pools: sortPools(registryPools(net)), sources: { chain: 'error', api: 'error' }, primary: 'registry', warnings: ['Pools could not be loaded. Showing the verified pool list shipped with this app.'] }))
-      .then(result => { if (id === run.current) setState({ loading: false, result }); });
-  }, []);
-  useEffect(() => { load(); }, [load]);
-  return { ...state, reload: load };
-}
 
 export default function VaultsPage() {
   const { loading, result, reload } = useAquariusPools();

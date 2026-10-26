@@ -45,3 +45,10 @@
   .plan-list li { grid-template-columns: 28px minmax(0, 1fr); }
   .plan-list li .badge { grid-column: 2; justify-self: start; }
 }
+
+/* Token picker and intake panel (add market) */
+.token-picker input[type="search"] { flex: 1; min-width: 0; }
+.token-chips .button { gap: 6px; }
+.intake-panel { display: grid; gap: 10px; }
+.intake-panel .kv { font-size: 12px; }
+.intake-panel ul { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 4px; }

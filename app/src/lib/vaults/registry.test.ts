@@ -42,5 +42,5 @@ test('groupByStatus partitions the registry', () => {
 });
 
 test('copy has no em dashes', () => {
-  for (const o of VAULT_OPTIONS) for (const s of [o.name, o.tagline, o.detail]) assert.ok(!s.includes('—'), s);
+  for (const o of VAULT_OPTIONS) for (const s of [o.name, o.tagline, o.detail]) assert.ok(!s.includes(String.fromCharCode(0x2014)), s);
 });
