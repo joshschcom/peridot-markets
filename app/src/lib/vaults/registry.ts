@@ -19,6 +19,8 @@ export interface VaultOption {
   risk: 'Lowest' | 'Low' | 'Medium' | 'Higher';
   /** Where the user can learn more or try the venue. */
   href?: string;
+  /** Extra qualifier for the status badge, for example "customizable". */
+  statusNote?: string;
 }
 
 export const STATUS_LABEL: Record<VaultStatus, string> = {
@@ -40,7 +42,7 @@ export const VAULT_OPTIONS: readonly VaultOption[] = [
   { id: 'blend', name: 'Blend fee vault', tagline: 'Boosted lending yield', detail: 'Idle liquidity is lent in a Blend pool through an allowlisted fee vault. Blend pool risk applies.', status: 'live-mainnet', factoryRoute: 'Blend', risk: 'Low', href: 'https://blend.capital' },
   { id: 'defindex', name: 'DeFindex vault', tagline: 'Managed strategy vault', detail: 'Idle liquidity goes to an allowlisted DeFindex vault that runs Blend autocompound strategies.', status: 'live-mainnet', factoryRoute: 'Defindex', risk: 'Low', href: 'https://defindex.io' },
   { id: 'aquarius', name: 'Aquarius LP vault', tagline: 'Concentrated liquidity plus AQUA rewards', detail: 'Idle liquidity becomes a concentrated Aquarius position that earns swap fees and AQUA. Impermanent loss is possible. The factory cannot deploy this route yet: the creation flow here is a demo.', status: 'demo', factoryRoute: null, risk: 'Medium', href: '/vaults' },
-  { id: 'xoxno', name: 'XOXNO Lending', tagline: 'Hub and spoke lending', detail: 'Idle liquidity would be supplied to XOXNO Lending through an adapter that is not deployed yet.', status: 'coming-soon', factoryRoute: null, risk: 'Medium', href: 'https://github.com/XOXNO/rs-lending-xlm' },
+  { id: 'xoxno', name: 'XOXNO Lending', tagline: 'Hub and spoke lending', detail: 'A per-owner vault that supplies one asset to XOXNO Lending (real XOXNO controller, supply only) with its own cap, minimum deposit and performance fee. Created from the Create vault form on /vaults; Peridot markets cannot route to it yet. Testnet only: nothing on mainnet.', status: 'testnet', statusNote: 'customizable', factoryRoute: null, risk: 'Medium', href: 'https://github.com/XOXNO/rs-lending-xlm' },
   { id: 'zenex', name: 'Zenex perps vault', tagline: 'Earn perpetual futures fees', detail: 'Idle liquidity would back Zenex traders and earn their fees. Vault shares can lose value and withdrawals wait at least one hour. The adapter is not deployed yet.', status: 'coming-soon', factoryRoute: null, risk: 'Higher', href: 'https://docs.zenex.trade' },
 ];
 
@@ -63,7 +65,8 @@ export function statusOn(option: VaultOption, net: AppNetwork): VaultStatus {
 
 export function statusLabel(option: VaultOption, net: AppNetwork): string {
   const s = statusOn(option, net);
-  return s === 'coming-soon' ? 'Coming soon' : STATUS_LABEL[s];
+  const base = s === 'coming-soon' ? 'Coming soon' : STATUS_LABEL[s];
+  return option.statusNote && s === option.status ? `${base}, ${option.statusNote}` : base;
 }
 
 /** Options that are not selectable, for the "also planned" lists. */

@@ -8,8 +8,8 @@ test('registry ids are unique and cover every venue', () => {
   for (const id of ['idle', 'blend', 'defindex', 'aquarius', 'xoxno', 'zenex']) assert.ok(ids.includes(id as never), id);
 });
 
-test('XOXNO and Zenex are listed but never submittable', () => {
-  for (const id of ['xoxno', 'zenex'] as const) {
+test('Zenex is listed but never submittable', () => {
+  for (const id of ['zenex'] as const) {
     const o = getVaultOption(id);
     assert.equal(o.status, 'coming-soon');
     assert.equal(o.factoryRoute, null);
@@ -38,9 +38,17 @@ test('status labels follow the network', () => {
 test('groupByStatus partitions the registry', () => {
   const g = groupByStatus();
   assert.equal(Object.values(g).flat().length, VAULT_OPTIONS.length);
-  assert.deepEqual(g['coming-soon'].map(o => o.id).sort(), ['xoxno', 'zenex']);
+  assert.deepEqual(g['coming-soon'].map(o => o.id).sort(), ['zenex']);
 });
 
 test('copy has no em dashes', () => {
   for (const o of VAULT_OPTIONS) for (const s of [o.name, o.tagline, o.detail]) assert.ok(!s.includes(String.fromCharCode(0x2014)), s);
+});
+
+test('XOXNO is a testnet, customizable vault that the market wizard cannot route to yet', () => {
+  const x = getVaultOption('xoxno');
+  assert.equal(x.status, 'testnet');
+  assert.equal(statusLabel(x, 'testnet'), 'Testnet, customizable');
+  assert.equal(x.factoryRoute, null);
+  assert.equal(isSubmittable(x), false);
 });

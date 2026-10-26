@@ -6,6 +6,7 @@ import { emitTx } from '@/lib/ui-events';
 import { Badge, EmptyState, Notice, Skeleton, Tabs } from '@/components/ui/primitives';
 import { Address } from '@/components/ui/Address';
 import { VaultOptionList } from './VaultOptionList';
+import XoxnoVaultForm from './XoxnoVaultForm';
 import { useAquariusPools } from './useAquariusPools';
 import {
   applyPoolFilter, formatFee, formatUsd, isStablePair, isVaultEligible, pairLabel, vaultIneligibleReason, type AquariusPool, type PoolFilter, type PoolSource,
@@ -35,7 +36,7 @@ export default function VaultsPage() {
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow">Vaults</p>
         <h1 className="vault-title">Where a market earns yield <Badge tone={network.name === 'mainnet' && !network.useMocks ? 'success' : 'info'}>{netLabel}</Badge></h1>
-        <p className="lead">Every yield venue Peridot knows about, and the Aquarius pools you could build a vault on. Blend and DeFindex are live. Aquarius has a guided demo. XOXNO and Zenex are listed so you can see what is planned.</p>
+        <p className="lead">Every yield venue Peridot knows about, and the Aquarius pools you could build a vault on. Blend and DeFindex are live. Aquarius has a guided demo. XOXNO has a customizable testnet vault you can create below. Zenex is listed so you can see what is planned.</p>
       </div>
     </div>
 
@@ -43,6 +44,8 @@ export default function VaultsPage() {
       <div className="card-header"><div><h2 id="venues-h">Yield venues</h2><p>Pick one per market when you launch a group. Locked venues cannot be submitted.</p></div></div>
       <VaultOptionList ariaLabel="Yield venues" />
     </section>
+
+    <XoxnoVaultForm />
 
     <section className="card" aria-labelledby="pools-h" aria-busy={loading}>
       <div className="card-header">
