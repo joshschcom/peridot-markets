@@ -30,6 +30,14 @@ export function MainnetNotice() {
   </Notice>;
 }
 
+export type TokenType = 'simple' | 'curve' | 'ico';
+const TYPE_LABEL: Record<TokenType, string> = { simple: 'Simple', curve: 'Curve', ico: 'ICO' };
+const TYPE_HINT: Record<TokenType, string> = { simple: 'Simple token: no sale, whole supply went to the creator', curve: 'Bonding curve token: price rises as people buy', ico: 'ICO token: fixed price sale' };
+/** Small badge that says how a token was launched, shown on every token card and token page. */
+export function TypeBadge({ type }: { type: TokenType }) {
+  return <span title={TYPE_HINT[type]} data-token-type={type}><Badge tone={type === 'curve' ? 'accent' : type === 'ico' ? 'warn' : 'info'}>{TYPE_LABEL[type]}</Badge></span>;
+}
+
 export const RISK_COPY = 'New tokens are highly risky. Prices can go to zero. Peridot does not vet projects. Testnet only.';
 export function RiskNotice() { return <Notice tone="danger" role="note">{RISK_COPY}</Notice>; }
 

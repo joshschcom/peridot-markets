@@ -1,0 +1,27 @@
+[Unit]
+Description=Peridot Markets web app (mainnet build, port 3000)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=web
+Group=web
+WorkingDirectory=/opt/peridot-web/app
+EnvironmentFile=/etc/peridot-web/mainnet.env
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/opt/peridot-web/app
+LimitNOFILE=4096
+MemoryMax=700M
+
+[Install]
+WantedBy=multi-user.target

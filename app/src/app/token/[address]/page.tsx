@@ -1,6 +1,6 @@
-import TokenPage from '@/components/launchpad/TokenPage';
+import TokenRoute from '@/components/launchpad/TokenRoute';
 
-export default async function TokenRoute({ params }: { params: Promise<{ address: string }> }) {
+export default async function TokenRoutePage({ params }: { params: Promise<{ address: string }> }) {
   const { address } = await params;
-  return <TokenPage address={address} />;
+  return <TokenRoute address={address} />;
 }

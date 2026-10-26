@@ -1,0 +1,54 @@
+/* Vault options and Aquarius registry. Uses the global tokens only, so dark and light follow the theme. */
+.vault-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.vault-options.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.vault-option { display: grid; gap: 6px; align-content: start; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font: inherit; min-width: 0; }
+.vault-option.selectable { cursor: pointer; transition: border-color .15s, background .15s; }
+.vault-option.selectable:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); }
+.vault-option.selectable.selected { border-color: var(--accent); background: var(--accent-soft); }
+.vault-option.selectable:disabled { opacity: .55; cursor: not-allowed; }
+.vault-option.locked { background: var(--surface-2); border-style: dashed; }
+.vault-option-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.vault-option-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; min-width: 0; }
+.vault-option-tag { font-size: 12px; color: var(--text-2); }
+.vault-option-detail { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+.vault-option-note { font-size: 12px; color: var(--warn); font-weight: 500; }
+.vault-option.locked .vault-option-note { color: var(--text-2); }
+.vault-option-link { font-size: 12px; margin-top: 2px; }
+
+.vault-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vault-title .badge { font-size: 12px; }
+
+/* Aquarius registry */
+.vault-toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; }
+.vault-toolbar input[type="search"] { min-width: 220px; }
+.pool-table td { vertical-align: middle; }
+.pool-table tr.selected-row td { background: var(--accent-soft); }
+.pool-pair { display: grid; gap: 2px; }
+.pool-addr { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); }
+.vault-source { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--text-3); }
+
+/* Create panel */
+.vault-create { display: grid; gap: 14px; border-color: var(--accent); }
+.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: plan; }
+.plan-list li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 12px; background: var(--surface-2); border-radius: var(--r-md); counter-increment: plan; }
+.plan-list li::before { content: counter(plan); width: 24px; height: 24px; border-radius: 999px; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); font-size: 12px; font-weight: 600; }
+.plan-list li.done::before { content: "\2713"; background: var(--accent-soft); color: var(--accent-text); }
+.plan-list li.active::before { background: var(--info-soft); color: var(--info); }
+.plan-title { font-weight: 600; font-size: 13px; }
+.plan-detail { display: block; font-size: 12px; color: var(--text-3); overflow-wrap: anywhere; }
+.demo-vault-list { display: grid; gap: 10px; }
+
+@media (max-width: 1000px) { .vault-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .vault-options, .vault-options.compact { grid-template-columns: 1fr; }
+  .vault-toolbar input[type="search"] { min-width: 0; width: 100%; }
+  .plan-list li { grid-template-columns: 28px minmax(0, 1fr); }
+  .plan-list li .badge { grid-column: 2; justify-self: start; }
+}
+
+/* Token picker and intake panel (add market) */
+.token-picker input[type="search"] { flex: 1; min-width: 0; }
+.token-chips .button { gap: 6px; }
+.intake-panel { display: grid; gap: 10px; }
+.intake-panel .kv { font-size: 12px; }
+.intake-panel ul { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 4px; }

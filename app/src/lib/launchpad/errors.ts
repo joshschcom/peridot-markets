@@ -54,6 +54,7 @@ const FACTORY_ERRORS: Record<number, string> = {
   14: 'Graduation targets are not configured on the factory.',
   15: 'No quote price is configured for this quote token.',
   16: 'The quote price must be a Reflector mapping.',
+  17: 'Supply must be a whole number between 1 and 1,000,000,000,000 tokens.',
 };
 
 /** Stellar Asset Contract (XLM, AQUA) errors that a trade or graduation step can surface. */

@@ -17,7 +17,7 @@ const stages = ['Token', 'Curve', 'Review'];
 const readable = (e: unknown) => e instanceof Error ? e.message : String(e);
 const initialDraft = (): LaunchDraft => ({ name: '', symbol: '', metadataUri: '', preset: 1, creatorBuy: '', slippage: '1' });
 
-export default function LaunchTokenForm() {
+export default function LaunchTokenForm({ onBack }: { onBack?: () => void } = {}) {
   const wallet = useWallet();
   const [stage, setStage] = useState(0);
   const [draft, setDraft] = useState<LaunchDraft>(initialDraft);
@@ -80,7 +80,7 @@ export default function LaunchTokenForm() {
   const startPrice = params ? fmtPrice(finePrice(reserves(params, 0n, 0n))) : null;
   return <div className="page launch-page">
     <div className="page-heading">
-      <div style={{ minWidth: 0 }}><p className="eyebrow"><Link href="/tokens" className="row" style={{ gap: 6 }}><ArrowLeft size={12} aria-hidden />Launchpad</Link></p><h1 className="lp-title">Launch a test token <LaunchpadBadges /></h1><p className="lead">Launch your own test token. Public token offerings may require legal review. One transaction deploys a fixed-supply token and its bonding curve; graduation into an Aquarius pool and a lending market comes later, permissionlessly.</p></div>
+      <div style={{ minWidth: 0 }}><p className="eyebrow">{onBack ? <button type="button" className="text-link row" style={{ gap: 6, background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={onBack} disabled={busy}><ArrowLeft size={12} aria-hidden />All launch options</button> : <Link href="/tokens" className="row" style={{ gap: 6 }}><ArrowLeft size={12} aria-hidden />Launchpad</Link>}</p><h1 className="lp-title">Launch a test token <LaunchpadBadges /></h1><p className="lead">Launch your own test token. Public token offerings may require legal review. One transaction deploys a fixed-supply token and its bonding curve; graduation into an Aquarius pool and a lending market comes later, permissionlessly.</p></div>
       <div className="page-actions"><Badge tone="accent">1 transaction</Badge></div>
     </div>
     <Stepper ariaLabel="Launch steps" steps={stages} current={stage} onSelect={setStage} disabled={busy} />

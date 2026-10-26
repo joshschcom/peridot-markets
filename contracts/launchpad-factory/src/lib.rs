@@ -34,7 +34,8 @@ use soroban_sdk::{
 pub use errors::FactoryError;
 pub use params::CurveParams;
 pub use types::{
-    FactoryConfig, GraduationConfig, GraduationTargets, GraduationVenue, LaunchInfo, LaunchParams, Preset,
+    FactoryConfig, GraduationConfig, GraduationTargets, GraduationVenue, LaunchInfo, LaunchParams, PlainTokenInfo,
+    Preset,
 };
 
 const TTL_THRESHOLD: u32 = 100_000; // below testnet's 120_960 default so creation never bumps
@@ -42,12 +43,17 @@ const TTL_EXTEND_TO: u32 = 400_000;
 
 const KIND_TOKEN: u32 = 1;
 const KIND_CURVE: u32 = 2;
+const KIND_PLAIN: u32 = 3;
 
 pub const MAX_LIST_LIMIT: u32 = 50;
 pub const MAX_LAUNCHES_PER_CREATOR: u32 = 100;
 pub const MAX_NAME_LEN: u32 = 32;
 pub const MAX_SYMBOL_LEN: u32 = 12;
 pub const MAX_URI_LEN: u32 = 256;
+/// Plain tokens always have 7 decimals (the launchpad token template, and the Peridot market guardrails).
+pub const PLAIN_DECIMALS: u32 = 7;
+/// Largest plain supply in WHOLE tokens (1e12 * 1e7 = 1e19 base units, inside the i128 and curve bounds).
+pub const MAX_PLAIN_SUPPLY: i128 = 1_000_000_000_000;
 
 // ---- default presets, denominated in a 7-decimal quote with XLM-like value (admin may override) ----
 const X7: i128 = 10_000_000;
@@ -105,6 +111,12 @@ enum DataKey {
     QuotePrice(Address),
     /// Curve address -> true, for every curve this factory deployed (`is_curve`).
     CurveIndex(Address),
+    /// Plain (no curve) tokens: counter, record by id, id by token, ids by creator. Appended after the curve
+    /// keys so the encoding of every existing key is unchanged by the upgrade.
+    PlainCount,
+    PlainToken(u32),
+    PlainIndex(Address),
+    PlainCreator(Address),
 }
 
 fn inst_bump(env: &Env) {
@@ -456,6 +468,73 @@ impl LaunchFactory {
         Ok((token_addr, curve_addr))
     }
 
+    /// Simple token: deploys ONE fixed-supply token (no curve, no ICO, no fee beyond network fees) and mints
+    /// the whole supply to `creator`. `supply` is in WHOLE tokens (1..=1e12); decimals are fixed at 7 so the
+    /// token can later be listed in a Peridot market. The token is the immutable launchpad template: no mint,
+    /// no admin, no freeze. Recorded in the plain-token registry. Returns the token address.
+    pub fn create_plain_token(
+        env: Env,
+        creator: Address,
+        name: String,
+        symbol: String,
+        supply: i128,
+        metadata_uri: String,
+    ) -> Result<Address, FactoryError> {
+        creator.require_auth();
+        if env.storage().instance().get(&DataKey::Paused).unwrap_or(false) {
+            return Err(FactoryError::Paused);
+        }
+        if !check_text(&name, 1, MAX_NAME_LEN, false) {
+            return Err(FactoryError::InvalidName);
+        }
+        if !check_text(&symbol, 2, MAX_SYMBOL_LEN, true) {
+            return Err(FactoryError::InvalidSymbol);
+        }
+        if metadata_uri.len() > MAX_URI_LEN {
+            return Err(FactoryError::InvalidMetadataUri);
+        }
+        if supply < 1 || supply > MAX_PLAIN_SUPPLY {
+            return Err(FactoryError::InvalidSupply);
+        }
+        let token_hash: BytesN<32> =
+            env.storage().instance().get(&DataKey::TokenWasm).ok_or(FactoryError::WasmNotSet)?;
+        let creator_key = DataKey::PlainCreator(creator.clone());
+        let mut mine: Vec<u32> = env.storage().persistent().get(&creator_key).unwrap_or(Vec::new(&env));
+        if mine.len() >= MAX_LAUNCHES_PER_CREATOR {
+            return Err(FactoryError::TooManyLaunches);
+        }
+        let id: u32 = env.storage().instance().get(&DataKey::PlainCount).unwrap_or(0);
+        let base_supply = supply.checked_mul(10_000_000).ok_or(FactoryError::Overflow)?;
+        let token_addr = env.deployer().with_current_contract(deploy_salt(&env, id, KIND_PLAIN)).deploy_v2(
+            token_hash,
+            (creator.clone(), name.clone(), symbol.clone(), base_supply, metadata_uri),
+        );
+
+        let info = PlainTokenInfo {
+            id,
+            token: token_addr.clone(),
+            creator: creator.clone(),
+            name,
+            symbol: symbol.clone(),
+            supply: base_supply,
+            created_at: env.ledger().timestamp(),
+        };
+        let key = DataKey::PlainToken(id);
+        env.storage().persistent().set(&key, &info);
+        pbump(&env, &key);
+        let idx_key = DataKey::PlainIndex(token_addr.clone());
+        env.storage().persistent().set(&idx_key, &id);
+        pbump(&env, &idx_key);
+        mine.push_back(id);
+        env.storage().persistent().set(&creator_key, &mine);
+        pbump(&env, &creator_key);
+        env.storage().instance().set(&DataKey::PlainCount, &(id + 1));
+        inst_bump(&env);
+
+        events::PlainTokenCreated { id, creator, token: token_addr.clone(), symbol, supply: base_supply }.publish(&env);
+        Ok(token_addr)
+    }
+
     /// Permissionless: extends the TTL of one launch record and its indexes.
     pub fn extend_launch(env: Env, id: u32) -> Result<(), FactoryError> {
         let info = get_launch_by_id(&env, id)?;
@@ -497,6 +576,47 @@ impl LaunchFactory {
             }
         }
         out
+    }
+
+    pub fn plain_token_count(env: Env) -> u32 {
+        env.storage().instance().get(&DataKey::PlainCount).unwrap_or(0)
+    }
+
+    /// Plain tokens with ids in `[start, start + limit)`, oldest first. `limit` is capped at 50.
+    pub fn list_plain_tokens(env: Env, start: u32, limit: u32) -> Vec<PlainTokenInfo> {
+        let n: u32 = env.storage().instance().get(&DataKey::PlainCount).unwrap_or(0);
+        let end = start.saturating_add(limit.min(MAX_LIST_LIMIT)).min(n);
+        let mut out = Vec::new(&env);
+        let mut i = start;
+        while i < end {
+            if let Some(info) = env.storage().persistent().get::<_, PlainTokenInfo>(&DataKey::PlainToken(i)) {
+                out.push_back(info);
+            }
+            i += 1;
+        }
+        out
+    }
+
+    pub fn plain_tokens_of(env: Env, creator: Address) -> Vec<PlainTokenInfo> {
+        let ids: Vec<u32> =
+            env.storage().persistent().get(&DataKey::PlainCreator(creator)).unwrap_or(Vec::new(&env));
+        let mut out = Vec::new(&env);
+        for id in ids.iter() {
+            if let Some(info) = env.storage().persistent().get::<_, PlainTokenInfo>(&DataKey::PlainToken(id)) {
+                out.push_back(info);
+            }
+        }
+        out
+    }
+
+    /// Looks a plain token up by its address.
+    pub fn get_plain_token(env: Env, token: Address) -> Result<PlainTokenInfo, FactoryError> {
+        let id: u32 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::PlainIndex(token))
+            .ok_or(FactoryError::LaunchNotFound)?;
+        env.storage().persistent().get(&DataKey::PlainToken(id)).ok_or(FactoryError::LaunchNotFound)
     }
 
     /// Looks a launch up by its token address.

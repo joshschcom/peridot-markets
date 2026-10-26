@@ -38,6 +38,17 @@ export interface LaunchInfo {
   created_at: bigint;
 }
 
+/** A simple token from `create_plain_token`: no curve, the whole supply went to the creator. `supply` is in base units. */
+export interface PlainTokenInfo {
+  id: number;
+  token: string;
+  creator: string;
+  name: string;
+  symbol: string;
+  supply: bigint;
+  created_at: bigint;
+}
+
 /** `get_state`. Price is quote base units per token base unit, scaled by 1e7 (so 7-decimal XLM per token). */
 export interface CurveInfo {
   phase: Phase;
