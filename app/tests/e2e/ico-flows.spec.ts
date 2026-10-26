@@ -61,19 +61,19 @@ test('ICO form rejects impossible supply, caps and duration', async ({ page }) =
 
 test('ICO screenshots and 375px layout in both themes', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1080 });
-  await page.goto('/token/mock-token-orbit');
+  await page.goto('/token/mock-token-orbit?network=testnet');
   await expect(page.getByRole('heading', { level: 1, name: /Orbit Collective/ })).toBeVisible();
   await page.addStyleTag({ content: 'nextjs-portal { display: none; }' });
   for (const theme of ['dark', 'light']) {
     await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
-    await page.screenshot({ path: `../docs/ui/ico-desktop-${theme}.png`, fullPage: true });
+    await page.screenshot({ path: `../docs/ui/ico-desktop-${theme}.png`, fullPage: true, style: 'nextjs-portal { display: none !important; }' });
   }
   await page.setViewportSize({ width: 375, height: 812 });
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-  await page.screenshot({ path: '../docs/ui/ico-mobile-dark.png', fullPage: true });
+  await page.screenshot({ path: '../docs/ui/ico-mobile-dark.png', fullPage: true, style: 'nextjs-portal { display: none !important; }' });
   await page.goto('/launch-token'); await page.getByRole('button', { name: 'ICO fixed price sale' }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: '../docs/ui/ico-create-mobile.png', fullPage: true });
+  await page.screenshot({ path: '../docs/ui/ico-create-mobile.png', fullPage: true, style: 'nextjs-portal { display: none !important; }' });
 });

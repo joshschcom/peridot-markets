@@ -91,7 +91,6 @@ Both sales used 1,000 tokens, price 1 XLM per token, hard cap 100 XLM, wallet ca
 
 | Contract | Testnet ID |
 | --- | --- |
-
 | Existing launchpad factory | `CBYQC54BS5HIWEO6KQNVGZ6XRNOTG3OMT6UZYBUD2NESGHBQMALGSBWC` |
 | Success token | `CBCRTZ4KF7XXLUR3ZUWO5DAZ6SSC733KIOGHOXU4Y47LKNCKIXXC6RTO` |
 | Success ico | `CBFXZCYSLPZMWOC5QTEW2TPJWGCWJOIO2KCNENRRTAYO4SKKIAPITP3J` |
@@ -129,8 +128,8 @@ The second creation initially timed out (`82031ea0f01f9a057806ed9e384eb502d4101a
 
 - Workspace `cargo test`: 923 passed, zero failures, five existing ignored tests. An expanded ICO-only run additionally covers three new cases (11 ICO tests total), including failed transfers rolling back, refund authorization, permanent upgrade locking after refunds, and conservation across 80 rounded buys.
 - `npm run typecheck`, `npm test` (202 tests) and `npm run build`: pass. The production build uses network access for the existing Google Fonts dependency.
-- Browser verification and final screenshots are recorded after the final rerun. Cold Next.js route compilation exceeded the original five-second assertions; the suite now allows 90 seconds for assertions, 240 seconds per flow and 360 seconds for the cold development server startup. The observed cold token-route compilation took 55 seconds; the existing group route took 72 seconds, and the initial root compilation took 258 seconds.
-- Real app decoders: `NEXT_PUBLIC_NETWORK=testnet NEXT_PUBLIC_USE_MOCKS=false npx tsx scripts/verify-ico-testnet.ts` reads the same registry and state methods used in the UI, checks bigint/u32 decoding and verifies existing curve tokens are not mistaken for ICOs.
+- `E2E_PORT=3037 npx playwright test`: all 21 tests pass (2.9 minutes), including ICO success/refund, validation and 375px/theme screenshots. Cold Next.js route compilation exceeded the original five-second assertions; the suite now allows 90 seconds for assertions, 240 seconds per flow and 360 seconds for the cold development server startup. The observed cold token-route compilation took 55 seconds; the existing group route took 72 seconds, and the initial root compilation took 258 seconds.
+- Real app decoders (verified success phase 1 and refund phase 2, each with 20 XLM raised): `NEXT_PUBLIC_NETWORK=testnet NEXT_PUBLIC_USE_MOCKS=false npx tsx scripts/verify-ico-testnet.ts` reads the same registry and state methods used in the UI, checks bigint/u32 decoding and verifies existing curve tokens are not mistaken for ICOs.
 - Screenshots: `docs/ui/ico-desktop-dark.png`, `ico-desktop-light.png`, `ico-mobile-dark.png`, `ico-create-mobile.png`.
 - Required ICO scope is implemented. Optional Aquarius seeding, lending market graduation, vesting and allowlists are not included. No mainnet deployment or transactions. No keeper changes or changes to the reference Soroban repository.
 
