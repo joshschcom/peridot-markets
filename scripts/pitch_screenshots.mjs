@@ -56,12 +56,12 @@ const children = [];
 async function startServer(name) {
   const s = SERVERS[name];
   if (!existsSync(path.join(APP, s.dist, 'BUILD_ID'))) throw new Error(`no build in app/${s.dist}; run with --build`);
-  const p = spawn('npx', ['next', 'start', '--port', String(s.port), '--hostname', '127.0.0.1'], { cwd: APP, env: { ...process.env, ...s.env, NEXT_DIST_DIR: s.dist }, stdio: 'ignore' });
+  const p = spawn('npx', ['next', 'start', '--port', String(s.port), '--hostname', '127.0.0.1'], { cwd: APP, env: { ...process.env, ...s.env, NEXT_DIST_DIR: s.dist }, stdio: 'ignore', detached: true });
   children.push(p);
   await waitHttp(`http://127.0.0.1:${s.port}/`);
   return `http://127.0.0.1:${s.port}`;
 }
-process.on('exit', () => children.forEach((c) => { try { c.kill('SIGTERM'); } catch {} }));
+process.on('exit', () => children.forEach((c) => { try { process.kill(-c.pid, 'SIGTERM'); } catch {} }));
 
 const settle = async (page, ms = 3500) => { await page.waitForLoadState('networkidle').catch(() => {}); await sleep(ms); };
 const scrollTo = async (page, heading, offset = 140) => { await page.evaluate(({ heading, offset }) => { const el = [...document.querySelectorAll('h1,h2,h3')].find((e) => e.textContent.trim().startsWith(heading)); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - offset); }, { heading, offset }); await sleep(900); };
@@ -73,7 +73,8 @@ const TRADING_TOKEN = TESTNET.demo.launchpad.first.curve;
 const GRADUATED_TOKEN = TESTNET.demo.launchpad.graduated.token;
 
 const SHOTS = [
-  { id: 'landing', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Landing page with live group cards', run: async (p, b) => { await p.goto(b + '/'); await settle(p, 5000); } },
+  { id: 'landing', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Landing page hero (home story, new illustration group YOURTOKEN is an illustration, not a real group)', run: async (p, b) => { await p.goto(b + '/'); await settle(p, 5000); } },
+  { id: 'groups', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Groups directory: the three live mainnet groups', run: async (p, b) => { await p.goto(b + '/groups'); await settle(p, 7000); } },
   { id: 'wizard-market', server: 'mock', kind: 'MOCK mode (demo banner, no chain)', desc: 'Launch wizard, markets step with a market card', run: async (p, b) => { await p.goto(b + '/launch'); await settle(p, 1500); await p.getByLabel(/Group name/).fill('PitchDemo'); await click(p, 'Continue'); await settle(p, 1200); } },
   { id: 'wizard-review', server: 'mock', kind: 'MOCK mode (demo banner, no chain)', desc: 'Launch wizard review step listing every transaction', run: async (p, b) => {
       await p.goto(b + '/launch'); await settle(p, 1500);
@@ -137,5 +138,5 @@ const mp = path.join(OUT, 'pitch-screenshots.json');
 let old = []; try { old = JSON.parse(readFileSync(mp, 'utf8')); } catch {}
 const merged = [...old.filter((o) => !manifest.some((m) => m.id === o.id)), ...manifest];
 writeFileSync(mp, JSON.stringify(merged, null, 2));
-children.forEach((c) => c.kill('SIGTERM'));
+children.forEach((c) => { try { process.kill(-c.pid, 'SIGTERM'); } catch {} });
 process.exit(0);

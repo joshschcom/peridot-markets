@@ -1,20 +1,11 @@
 [
   {
-    "id": "landing",
-    "file": "docs/assets/pitch-landing.png",
-    "server": "mainnet",
-    "kind": "real mainnet data (read-only, no wallet)",
-    "description": "Landing page with live group cards",
-    "capturedAt": "2026-10-26T08:56:35.134Z",
-    "ok": true
-  },
-  {
     "id": "wizard-market",
     "file": "docs/assets/pitch-wizard-market.png",
     "server": "mock",
     "kind": "MOCK mode (demo banner, no chain)",
     "description": "Launch wizard, markets step with a market card",
-    "capturedAt": "2026-10-26T08:56:44.573Z",
+    "capturedAt": "2026-10-26T09:15:57.189Z",
     "ok": true
   },
   {
@@ -23,7 +14,7 @@
     "server": "mock",
     "kind": "MOCK mode (demo banner, no chain)",
     "description": "Launch wizard review step listing every transaction",
-    "capturedAt": "2026-10-26T08:56:48.646Z",
+    "capturedAt": "2026-10-26T09:16:00.868Z",
     "ok": true
   },
   {
@@ -32,7 +23,7 @@
     "server": "mainnet",
     "kind": "real mainnet data (read-only, no wallet)",
     "description": "Group 1 Meridian page: markets, yield routes, caps",
-    "capturedAt": "2026-10-26T08:56:55.338Z",
+    "capturedAt": "2026-10-26T09:16:07.378Z",
     "ok": true
   },
   {
@@ -41,7 +32,7 @@
     "server": "mainnet",
     "kind": "real mainnet registry data (read-only)",
     "description": "Vault options panel (/vaults)",
-    "capturedAt": "2026-10-26T08:57:08.385Z",
+    "capturedAt": "2026-10-26T09:16:20.887Z",
     "ok": true
   },
   {
@@ -50,7 +41,7 @@
     "server": "mainnet",
     "kind": "real mainnet data (read-only, no wallet)",
     "description": "Group 1 Leverage tab",
-    "capturedAt": "2026-10-26T08:57:24.150Z",
+    "capturedAt": "2026-10-26T09:16:36.839Z",
     "ok": true
   },
   {
@@ -59,7 +50,7 @@
     "server": "mainnet",
     "kind": "real mainnet data (read-only, no wallet)",
     "description": "Real Control Panel for group 1 (read-only without the owner wallet): staged changes, leverage sync, market list",
-    "capturedAt": "2026-10-26T08:57:38.733Z",
+    "capturedAt": "2026-10-26T09:16:51.435Z",
     "ok": true
   },
   {
@@ -68,7 +59,7 @@
     "server": "mock",
     "kind": "MOCK mode (demo banner, no chain); same guardrail as the on-chain CollateralFactorTooHigh error",
     "description": "Control Panel rejecting a 90% collateral factor",
-    "capturedAt": "2026-10-26T08:58:02.406Z",
+    "capturedAt": "2026-10-26T09:17:17.853Z",
     "ok": true
   },
   {
@@ -77,7 +68,7 @@
     "server": "mock",
     "kind": "MOCK mode (demo banner, no chain)",
     "description": "Control Panel in demo mode: a staged collateral-factor change and the change history",
-    "capturedAt": "2026-10-26T08:58:07.169Z",
+    "capturedAt": "2026-10-26T09:17:22.541Z",
     "ok": true
   },
   {
@@ -86,7 +77,7 @@
     "server": "testnet",
     "kind": "real TESTNET data (read-only)",
     "description": "Launched token still on its bonding curve (PDEMO), before graduation",
-    "capturedAt": "2026-10-26T08:58:12.750Z",
+    "capturedAt": "2026-10-26T09:17:28.121Z",
     "ok": true
   },
   {
@@ -95,7 +86,25 @@
     "server": "testnet",
     "kind": "real TESTNET data (read-only)",
     "description": "Graduated token (PGRAD): Aquarius pool, locked LP, own market group",
-    "capturedAt": "2026-10-26T08:58:23.725Z",
+    "capturedAt": "2026-10-26T09:17:39.502Z",
+    "ok": true
+  },
+  {
+    "id": "groups",
+    "file": "docs/assets/pitch-groups.png",
+    "server": "mainnet",
+    "kind": "real mainnet data (read-only, no wallet)",
+    "description": "Groups directory: the three live mainnet groups",
+    "capturedAt": "2026-10-26T09:18:23.222Z",
+    "ok": true
+  },
+  {
+    "id": "landing",
+    "file": "docs/assets/pitch-landing.png",
+    "server": "mainnet",
+    "kind": "real mainnet data (read-only, no wallet)",
+    "description": "Landing page hero (home story, new illustration group YOURTOKEN is an illustration, not a real group)",
+    "capturedAt": "2026-10-26T09:26:03.880Z",
     "ok": true
   }
 ]

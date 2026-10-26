@@ -132,6 +132,25 @@ async function sectionContracts() {
     const mi = await simulate(xf, 'get_margin', [u32Arg(g)]).catch(() => null);
     if (mi && mi.swap_adapter) derived.push([`group ${g}.swap_adapter`, mi.swap_adapter]);
   }
+  // Launchpad (mainnet): factory id from deployments/mainnet.json `launchpad_factory`, or env LAUNCHPAD_FACTORY while the
+  // manifest is not updated yet. Lists every launch (token + curve) and counts launched / graduated tokens.
+  let launchpad = null;
+  const lf = DEP.launchpad_factory || process.env.LAUNCHPAD_FACTORY;
+  if (lf) {
+    try {
+      derived.push(['launchpad factory', lf]);
+      const cfg = await simulate(lf, 'config');
+      const launches = await simulate(lf, 'list_launches', [u32Arg(0), u32Arg(50)]);
+      let graduated = 0; const items = [];
+      for (const l of launches) {
+        derived.push([`launch ${l.symbol} token`, l.token]); derived.push([`launch ${l.symbol} curve`, l.curve]);
+        let phase = null; try { phase = (await simulate(l.curve, 'get_state')).phase; } catch {}
+        if (Number(phase) === 2) graduated++;
+        items.push({ symbol: l.symbol, token: l.token, curve: l.curve, createdAt: l.created_at, phase });
+      }
+      launchpad = { factory: lf, launchCount: cfg.launch_count, graduated, items };
+    } catch (e) { launchpad = { factory: lf, error: String(e.message).slice(0, 100) }; }
+  }
   const seen = new Set(); const rows = [];
   for (const [label, id] of [...ids, ...derived]) {
     if (seen.has(id)) continue; seen.add(id);
@@ -140,7 +159,7 @@ async function sectionContracts() {
   }
   const derivedIds = new Set(derived.map((d) => d[1]));
   const factoryMade = rows.filter((r) => derivedIds.has(r.id) && r.exists);
-  return { rows, groups, groupCount: gc, factoryCreatedContracts: factoryMade.length };
+  return { rows, groups, groupCount: gc, factoryCreatedContracts: factoryMade.length, launchpad };
 }
 
 // decode invoke host function ops from Horizon
@@ -353,6 +372,7 @@ function toMd(data) {
   if (data.contracts) {
     L.push('### Contract existence check (Soroban RPC getLedgerEntries, instance key)', '', '| Label | Contract ID | On chain | Kind / Wasm hash |', '|---|---|---|---|');
     for (const r of data.contracts.rows) L.push(`| ${r.label} | \`${r.id}\` | ${r.exists === null ? 'ERROR' : r.exists ? 'YES' : 'NO'} | ${r.exists ? (r.kind === 'wasm' ? 'wasm ' + r.wasmHash.slice(0, 12) + '...' : r.kind) : (r.error || '')} |`);
+    if (data.contracts.launchpad) L.push('', `Launchpad on this network: ${j(data.contracts.launchpad)} (phase 0 Trading, 1 Graduatable, 2 Graduated, 3 Graduating)`);
     L.push('', `Market groups on the market-factory (group_count): ${data.contracts.groupCount}. Contracts created by the factories (controllers, price routers, markets, jump-rate models, distributors, adapters, margin controllers, swap adapters), counted from on-chain state: ${data.contracts.factoryCreatedContracts}.`, '');
   }
   if (data.accounts) {
