@@ -7,6 +7,7 @@ import { network } from '@/lib/peridot/network';
 import { useWallet } from '@/lib/peridot/wallet';
 import { reconcilePendingTransaction } from '@/lib/peridot/rpc';
 import { ThemeToggle } from './ThemeToggle';
+import { RecentTransactions } from './RecentTransactions';
 
 /* Presentation-only shell. Wallet, network and recovery behaviour are the same calls as
  * components/peridot/AppShell.tsx; only the markup, badges and theme toggle differ. */
@@ -41,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
           {wallet.isConnecting && <button className="button ghost" onClick={wallet.disconnect}>Cancel</button>}
           <ThemeToggle />
+          <RecentTransactions />
         </div>
       </div>
     </header>
