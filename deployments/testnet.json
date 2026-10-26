@@ -45,6 +45,27 @@
         "create_tx": "26184e1b2a0052073620883b473ea7831f9d9db9ef38fc10c062071fb15ad795",
         "factory_upgrade_tx": "e89a956e0cf1022d205d6bfceeb8cd9b0a1a019c0032dc7f427438a6d00aec3d"
       }
+    },
+    "aquarius_vault": {
+      "vault": "CCLMKV7K4DCKHZRGUVYRQLRXGBKJJYLKLJW2AWOLMIGPCQHHY6WYSSY6",
+      "second_vault": "CBGQUG5IWPAUESUZXE4BGVUOH2WJ6ACSQZFY5TZ5G5QCAGBYWCMGZ6TN",
+      "pool": "CA6DAGOMK5D7GKBNWVCIEAYSTPJXLQUFWFKSZOMNEM6BVOTUBDCTIT5I",
+      "underlying": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      "config": "5 rungs, width 2, step 2, pyramid, recenter 3, cooldown 300s, fee 10%, slippage 3%, cap 100000",
+      "txs": {
+        "create_vault": "d8a04c35bd2db44f09c0f75b17bee16c44075727640ec10c4f701db22963efc9",
+        "deposit_60_xlm": "7a8f115483318675fcbf89984ac382e09618f97cfaf905370541297b7a16682e",
+        "rebalance_1_swap_and_two_rungs": "19ca0413acf31ebb1313e6109e622e247c6c8f5b7456349290c25932df810577",
+        "rebalance_2_two_rungs": "77fd52182a2cd7e126d9447efcefebeb7a2e6d80b224002625633f77ec7daf32",
+        "rebalance_3_last_rung": "261ff2bfb4e7e5ab6cd10d635582839f9d4ae8596f7f56494288b865d2db6fc9",
+        "withdraw_25_percent": "6d462c7eb74c53d621552eb23614446a1b1afa38e255eacae209285411a42313",
+        "harvest": "ed11634d7df5b2ed538833c8ae6b09cfbfdb7c04162a1d97d83b78d9df9a9af2",
+        "wind_down": "e73a7e3e663b03d283d027e202601a29536c97a53bbdcb9d9b76da32599122b6",
+        "unwind_step": "f2ecced45b4a39c108014f3fed024e0a5e009dfbbc1ec33a1e7bf7c9134062b7",
+        "withdraw_rest": "93a1a2b12d8552cc3898df7c0cc61046772c59ffecea9539571e32dce0d4ac50",
+        "second_vault_wind_down": "1217ac363a113d2e93750ce667a034979ef0b3d664d29e5f35296b5c4da21e43",
+        "second_vault_withdraw_all": "e45237c5f5108f38bd659b357f52e4115ec5d983784a320874a3651ce221a7f0"
+      }
     }
   },
   "external": {
@@ -61,5 +82,8 @@
     "blend_pool": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
     "xlm_usdt_pool": "CCMNSENXDBNJSY72BDIPH5CCXLLHBKZ4LXTRKDLKZN4UI2NJFQLWTLD6"
   },
-  "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE"
+  "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE",
+  "vault_kinds": {
+    "aquarius": "804bb4e29cc13c7adf7ef6da31098bf569d2b468cdeb6bf50b722ae9aab482d6"
+  }
 }

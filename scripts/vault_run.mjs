@@ -67,8 +67,11 @@ if (cmd === 'create') {
 } else if (cmd === 'harvest') {
   const r = await call(rest[0], 'harvest', [addr(me), i128(0)]); console.log('AQUA', r.value);
 } else if (cmd === 'withdraw') {
-  const sh = rest[1] === 'all' ? (await call(rest[0], 'balance', [addr(me)], { send: false })).value : BigInt(rest[1]);
+  const bal = (await call(rest[0], 'balance', [addr(me)], { send: false })).value;
+  const sh = rest[1] === 'all' ? bal : rest[1].endsWith('%') ? (bal * BigInt(parseInt(rest[1]))) / 100n : BigInt(rest[1]);
   const r = await call(rest[0], 'redeem', [addr(me), i128(sh), i128(0)]); console.log('OUT', r.value);
+} else if (cmd === 'winddown') {
+  await call(rest[0], 'set_wind_down', [addr(me), nativeToScVal(rest[1] !== 'off', { type: 'bool' })]);
 } else if (cmd === 'state') {
   for (const m of ['get_state', 'get_rungs', 'get_idle', 'total_supply']) console.log(m, JSON.stringify((await call(rest[0], m, [], { send: false })).value, (k, v) => typeof v === 'bigint' ? v.toString() : v));
   console.log('my_shares', (await call(rest[0], 'balance', [addr(me)], { send: false })).value);
