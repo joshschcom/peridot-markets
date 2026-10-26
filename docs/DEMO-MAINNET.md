@@ -70,3 +70,38 @@ XLM market `CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM`, Blend ada
 | `enter_market` | [6e2f9c20...](https://stellar.expert/explorer/public/tx/6e2f9c202133a430909f02db1ca91743e6a3394feb15d225aa2362279127b5fd) |
 | Supply 5 XLM (4 XLM sent to Blend, adapter value 39,999,999 stroops) | [9af448d3...](https://stellar.expert/explorer/public/tx/9af448d3603385adddacba91b103dbeda8c67946fd32c76090be8bb319658db9) |
 | Withdraw all | [0dafc04e...](https://stellar.expert/explorer/public/tx/0dafc04e651ff663e1a0b8bfe47823d29d7218110ba0c1e3e32a5b33e7fc991c) |
+
+
+## Launchpad (bonding curve) and graduation upgrade, 2026-10-26
+
+Beta, unaudited new contracts. Everything below was sent by `peridot-mainnet-admin` (`GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH`) with `scripts/launchpad_mainnet.sh`. Times are UTC; Lisbon is on WET (UTC+0) on this date, so the times are the same. Authorised by Joshua: launchpad deploy, one demo token, and the in-place market-factory upgrade plus the AquariusOnly-capable price router Wasm so graduation can work. Second opinion: `docs/qa/CODEX-LAUNCHPAD-MAINNET.md`.
+
+Launchpad factory `CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J` (admin and treasury = the admin account, **open**: not paused, anyone can launch, no launch fee). Graduation is wired to the mainnet market-factory `CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S` and the Aquarius router `CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK`; quote asset XLM priced by the Reflector external feed.
+
+Demo token **PDEMO** ("Peridot Demo"): token `CDKHQPYSBULW3T2FNLPKKKXVKREDYZTI37KRURBNVNEUIZ5YDT4O4DYT`, curve `CDWJL4YJ4H546FFXNXSNREW27PFQFNMBQPXDIUHTN765Z52MRDUJH43A`, Fast preset (500 XLM graduation target, 1% trade fee, 800M tokens on the curve, 200M reserved for the pool, creator buy cap 5% of the curve). The creator bought with 5 XLM atomically at launch and received 29,276,445.7 PDEMO (3.66% of the curve supply, inside the 5% cap).
+
+| Step (UTC) | Ledger | Transaction | Cost XLM |
+|---|---|---|---|
+| 09:15:48 upload launchpad-token Wasm `aab4c9e0...` | 65144073 | [4afb0393...](https://stellar.expert/explorer/public/tx/4afb03933df16a24baa258045c376f976664ace368f592748caa323f106d3f8c) | 11.83 |
+| 09:16:08 upload launchpad-curve Wasm `bdde6afc...` | 65144077 | [69bf21f0...](https://stellar.expert/explorer/public/tx/69bf21f0e2cfe7cdba8460a7f38aa5b66ef90e9988078e8f38c3466c36d7a81a) | 43.47 |
+| 09:16:18 upload launchpad-factory Wasm `e7c070ce...` | 65144079 | [3b5bb0e0...](https://stellar.expert/explorer/public/tx/3b5bb0e00b4dff298e217e45409dad1082e82eeb642a79a627f387d898d33790) | 37.39 |
+| 09:16:28 upload market-factory Wasm `baec971c...` | 65144081 | [103ebbac...](https://stellar.expert/explorer/public/tx/103ebbac38906ccc595f1fd6a99d78c00a89ac3c0324011e110a7cf9de6af9fb) | 58.63 |
+| 09:16:38 upload price-router-ext Wasm `14c83a90...` (AquariusOnly) | 65144083 | [90ff3106...](https://stellar.expert/explorer/public/tx/90ff31061d5b4d977ac9eec3edad73fd89370319af14a625b60a76d5e92df764) | 28.57 |
+| 09:17:08 market-factory `upgrade` `a5442cae...` to `baec971c...` (3 groups still readable) | 65144089 | [be954d81...](https://stellar.expert/explorer/public/tx/be954d8101b54e2936b1082be89752d8be8ce1b55db86ceecafd83848f9dec16) | 0.0005 |
+| 09:17:53 deploy launchpad factory | 65144098 | [ef3dfcc9...](https://stellar.expert/explorer/public/tx/ef3dfcc92c3e1618b83464cb5efa2ac021322614c11201ffb46d7818e7c7d699) | 0.05 |
+| 09:18:23 `set_wasm` (token, curve) | 65144104 | [86ed4ae8...](https://stellar.expert/explorer/public/tx/86ed4ae8d685c0c74ac87e7d773271c0551b19fa67a90b96484501e9d20d6731) | 0.02 |
+| 09:18:28 `set_default_presets` XLM | 65144105 | [6ea456f1...](https://stellar.expert/explorer/public/tx/6ea456f137690195d84c4ba27272f8cc6bd19556320d928c9690d41d6f8504ae) | 0.23 |
+| 09:18:38 `set_preset` Fast = 500 XLM | 65144107 | [45fca49c...](https://stellar.expert/explorer/public/tx/45fca49c16c52cc691ea50233098f480149e59e87ba6529ba22599afb7c39aa9) | 0.0006 |
+| 09:18:48 `set_graduation` | 65144109 | [49510585...](https://stellar.expert/explorer/public/tx/49510585b39e6a090d3614f3ccc91508fcc944265b8ff8a7fdb19f40accf9d43) | 0.03 |
+| 09:18:58 `set_quote_price` XLM (Reflector) | 65144111 | [560343b7...](https://stellar.expert/explorer/public/tx/560343b7f5de791a2db8957ae0c4d7c6f65f5cfd9f86d7c8c82c6f364519858b) | 0.05 |
+| 09:19:18 market-factory `set_launchpad` | 65144115 | [c0019b9d...](https://stellar.expert/explorer/public/tx/c0019b9d1262b8c13fdc7aa5e039761617dc06546d48fe818c28766c3adff5d3) | 0.01 |
+| 09:19:28 market-factory `set_wasm` (price router `e04a63e0...` to `14c83a90...`) | 65144117 | [bb6ed2a3...](https://stellar.expert/explorer/public/tx/bb6ed2a361d55f8c608998b72cb17172926a8556ba574f7ffd098d4403c19e79) | 0.0006 |
+| 09:21:03 `launch_curve` PDEMO with 5 XLM creator buy | 65144136 | [fce3e87f...](https://stellar.expert/explorer/public/tx/fce3e87f87ade9af25b5eb7785f80ea2b19b28901773a0f19d61b2ef4acf4030) | 0.53 (+5 XLM into the curve) |
+
+**Total spent: 185.84 XLM** (180.84 XLM fees and Soroban rent, mostly the five Wasm uploads at 179.9, plus the 5 XLM creator buy). Admin balance 247.15 XLM before, 61.31 XLM after.
+
+What to click (in the app, once it reads this manifest): open the Launchpad page, select PDEMO, show the curve state (price, progress to the 500 XLM target, creator bought 5 XLM), simulate a 1 XLM buy (quote about 5.66M PDEMO for 1 XLM) and a sell, then show the Launch wizard (token plus curve, optional creator buy). The simple-token path (`create_plain_token`) is live on the same factory.
+
+Read-only checks done after launch: `get_state` (price, 0.99% progress, 49.5 XLM raised), `quote_buy` 1 XLM and `quote_sell` of 10M tokens, `is_curve` is true, the market-factory `get_launchpad`, `get_wasm` (new price router), and three existing groups still read. Graduation was NOT run: `graduation_cost()` reads 300,000 AQUA on mainnet, and `graduate` correctly refuses a curve below target. A simulated `create_group(owner = curve)` on the market-factory succeeds (it would be group 4 with a new AquariusOnly-capable price router), so the market-factory half of graduation is accepted; the Aquarius pool-creation half is exercised on testnet only.
+
+Caveats (details in `docs/qa/CODEX-LAUNCHPAD-MAINNET.md`): a 500 XLM raise gives a pool below the price router's 500 USD per side floor, so a graduated 500 XLM token would have supply but no borrowing price; AquariusOnly pricing has a manipulation window after 300 s that must be fixed before real graduations; the factory admin can upgrade curves immediately (house rule); the rollback for the market-factory is `upgrade(admin, a5442cae...)` and restores code only.
