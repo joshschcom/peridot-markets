@@ -30,6 +30,7 @@ members = [
   "contracts/launchpad-token",
   "contracts/launchpad-curve",
   "contracts/launchpad-factory",
+  "contracts/launchpad-ico",
   "contracts/vault-factory",
   "contracts/mocks/mock-kind-vault",
   "contracts/aquarius-vault",
