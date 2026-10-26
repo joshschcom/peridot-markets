@@ -111,7 +111,7 @@ const solutions = [
   { icon: Coins, title: 'Oracle options with guards', body: 'Reflector feeds for listed assets. Tokens without a feed are priced from their Aquarius pool behind a depth floor and a 20% step guard. No admin fallback prices, ever.', fine: ['Reflector', 'Aquarius + step guard', 'CF 50% on pool prices'] },
   { icon: Sprout, title: 'Yield vaults for idle liquidity', body: 'Keep 10% to 100% liquid and route the rest into Blend or DeFindex vaults today. Aquarius LP vaults are next; XOXNO and Zenex are on the roadmap.', fine: ['Blend', 'DeFindex', 'Aquarius LP next'] },
   { icon: Scale, title: 'Leverage on any enabled market', body: 'The owner enables leverage per market through the margin factory: up to 5x per group, bounded by each market’s collateral factor, swapped through allowlisted Aquarius pools.', fine: ['1x to 5x per group', 'long and short'] },
-  { icon: Rocket, title: 'Launchpad that graduates into a market', body: 'Launch a token on a bonding curve. When it reaches its target, anyone can graduate it: an Aquarius pool with permanently locked liquidity plus its own lending group, in six permissionless steps.', fine: ['Testnet beta', 'plain token and ICO next'] },
+  { icon: Rocket, title: 'Launchpad that graduates into a market', body: 'Launch a simple fixed-supply token, or a bonding curve. When a curve reaches its target, anyone can graduate it: an Aquarius pool with permanently locked liquidity plus its own lending group, in six permissionless steps.', fine: ['Testnet beta', 'simple token or curve', 'ICO next'] },
   { icon: ShieldCheck, title: 'Audited core, guardrails, timelocks', body: 'Lending contracts are Peridot’s audited core, with timelocks shortened from 24 h to 60 s for the hackathon. Owners act only through factory guardrails and every change is an on-chain event. New factory and adapter contracts are unaudited.', fine: ['60 s staged changes', 'event history'] },
 ];
 
@@ -137,7 +137,7 @@ export function Solution() {
 
 /* ---------------------------------------------------------- How it works */
 const steps = [
-  { title: 'Bring or launch a token', body: 'Use any Stellar token with a Reflector feed, or launch one on the launchpad bonding curve and let it graduate into its own market.', fine: 'Curve presets: 25k, 85k or 250k XLM target' },
+  { title: 'Bring or launch a token', body: 'Use any Stellar token with a Reflector feed, or launch one on the launchpad: a simple token, or a bonding curve that graduates into its own market.', fine: 'Curve presets: 25k, 85k or 250k XLM target' },
   { title: 'Create the group, add markets', body: 'One transaction per step: create the group, then deploy, activate and attach yield for each market. Set collateral factor, caps, reserve factor and a rate curve, 0% borrow included.', fine: 'CF up to 75% · 10% to 100% kept liquid' },
   { title: 'Plug in price, yield, leverage', body: 'Pick the price source per market, route idle liquidity into Blend or DeFindex, enable leverage where you want it, and fund rewards in your own token.', fine: 'Leverage 1x to 5x per group' },
   { title: 'Run it from the Control Panel', body: 'Adjust rates, caps, buffers and pauses. Risk and price changes stage for 60 seconds before they apply, and every change emits an event your community can audit.', fine: 'Staged changes · public history' },
@@ -223,6 +223,7 @@ export function Closing() {
         </div>
         <div className="home-links">
           <Link href="/about"><BookOpen size={14} aria-hidden /> How it works and prior work</Link>
+          <Link href="/vaults"><Sprout size={14} aria-hidden /> Vault options</Link>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer"><GitBranch size={14} aria-hidden /> GitHub: joshschcom/peridot-markets <ArrowUpRight size={12} aria-hidden /></a>
           <a href={`${GITHUB_URL}/blob/main/docs/SPECS.md`} target="_blank" rel="noreferrer"><FileCode2 size={14} aria-hidden /> Contract specs <ArrowUpRight size={12} aria-hidden /></a>
           <a href={`${GITHUB_URL}/blob/main/core/CORE_DIFF.md`} target="_blank" rel="noreferrer"><Lock size={14} aria-hidden /> Audited core and the 60 s timelock diff <ArrowUpRight size={12} aria-hidden /></a>

@@ -6,23 +6,25 @@ import { network } from '@/lib/peridot/network';
 import { GroupCards, routeLabel, useGroupSummaries } from '@/components/markets/GroupOverview';
 import { Skeleton } from '@/components/ui/primitives';
 import { fmtCompact } from '@/components/ui/format';
-import { getCurveState, listLaunches } from '@/lib/launchpad/client';
+import { getCurveState, listLaunches, listPlainTokens } from '@/lib/launchpad/client';
 import { Phase } from '@/lib/launchpad/types';
 
 type LaunchCounts = { total: number; graduated: number | null };
 
-/** Launch count first, graduated count once every curve state has answered. Errors degrade to "unavailable". */
+/** Curve launches plus simple tokens first, graduated count once every curve state has answered.
+ * A failing plain-token list only lowers the total; a failing launch list degrades to "unavailable". */
 function useLaunchpadCounts(): LaunchCounts | 'error' | null {
   const [state, setState] = useState<LaunchCounts | 'error' | null>(null);
   useEffect(() => {
     let alive = true;
-    listLaunches().then(async list => {
+    Promise.all([listLaunches(), listPlainTokens().catch(() => [])]).then(async ([curves, plain]) => {
       if (!alive) return;
-      setState({ total: list.length, graduated: null });
-      const states = await Promise.allSettled(list.map(l => getCurveState(l.curve)));
+      const total = curves.length + plain.length;
+      setState({ total, graduated: null });
+      const states = await Promise.allSettled(curves.map(l => getCurveState(l.curve)));
       if (!alive) return;
       const graduated = states.filter(s => s.status === 'fulfilled' && s.value.phase === Phase.Graduated).length;
-      setState({ total: list.length, graduated });
+      setState({ total, graduated });
     }).catch(() => { if (alive) setState('error'); });
     return () => { alive = false; };
   }, []);
