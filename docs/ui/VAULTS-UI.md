@@ -98,3 +98,32 @@ A vault bound to a market (`bind_market(owner, market)`, set once) accepts depos
 - `app/src/lib/vaults/kinds/`: `types.ts` (VaultKind, FieldSpec), `schema.ts` (validation, encoding), `aquarius.ts` (the Aquarius kind), `index.ts` (`VAULT_KINDS`). **Sibling agents add a kind by creating `kinds/<id>.ts` and adding it to `VAULT_KINDS`.** The Create page, live validation, summary, preview and My vaults are driven by the schema.
 - `app/src/lib/vaults/factory-client.ts`: `createVault`, `listMyVaults`, manifest lookups (`vault_factory`, `vault_kinds.<kind>` in the app manifests `app/src/lib/peridot/deployments/<network>.json`). Demo mode keeps vaults in localStorage.
 - `app/src/components/vaults/CreateVault.tsx`, `LadderPreview.tsx` (preview renderer per `PreviewModel.type`), `MyVaults.tsx`.
+
+
+### Aquarius ladder vault: what it does
+
+Depositors give ONE token (the pool's `underlying`). The vault lays it across a ladder of adjacent Aquarius concentrated-liquidity ranges ("rungs", 1 to 7) around the price, earning swap fees and AQUA emissions. The owner chooses, at creation and within hard bounds enforced by the constructor: pool, deposit token, keeper, rung count, rung width and spacing (in tick spacings), weighting (flat, pyramid, wings), rebalance trigger, cooldown, performance fee (max 20%, can only go down), deposit cap, swap slippage cap (0.5% to 5%).
+
+Maintenance is a keeper loop: call `rebalance(keeper)` while `needs_rebalance()` is true. Pool operations on concentrated liquidity cost about 40 to 85 million CPU instructions each, so one transaction can only do 3 withdrawals (unwind) or 1 guarded swap plus 2 deposits (fund). A full rebuild of a five rung ladder therefore takes 5 transactions (about 1 XLM of fees in total on testnet). Withdrawals pay from idle funds first and then burn at most 2 rungs (the ones holding the most underlying, which also avoids a swap), so one withdrawal can take roughly a third of the vault; larger exits go in parts, or the owner calls `set_wind_down(true)`, the keeper unwinds, and everyone leaves atomically.
+
+### Trust model (summary; the full text is the header of `contracts/aquarius-vault/src/lib.rs`)
+
+- No function lets the owner or keeper send depositor funds to an address of their choice. Outflows are share redemptions to the redeemer, pool operations on the configured pool, and `sweep_extra` for tokens that are not the pool pair (AQUA rewards, airdrops).
+- No upgrade path (immutable). After creation the owner can only change keeper, cap, lower the fee, pause deposits and rebalances, start a wind-down, and bind the vault to one market once.
+- Pause and wind-down never block withdrawals. The vault-factory is not an admin of any vault; its admin can only register wasm hashes for future vaults and upgrade the factory.
+- NAV is marked at the pool's spot price: a manipulated pool price moves the share price. Mitigations: deposit cap, 0.5% to 5% slippage guard on every swap, dead shares on the first deposit (no donation inflation, tracked balances), withdrawals priced on the same NAV.
+- Known limits: AQUA emissions stay in the vault and are only sweepable by the owner (routing them to depositors is future work); performance fee shares are minted on deposits, withdrawals and rebalances; share tokens are not transferable.
+
+### Testnet record (network `testnet`)
+
+- vault-factory `CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE`, wasm sha256 `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d` (reproducible), admin `GBZ7C3N43KURCM3DWN4LOOKR5XWHNU6EZEJQT5VGRLHKUUQQYL7UXFMJ`.
+- kind `aquarius` registered with wasm hash `804bb4e29cc13c7adf7ef6da31098bf569d2b468cdeb6bf50b722ae9aab482d6` (`aquarius-vault`, reproducible).
+- Demo vault `CCLMKV7K4DCKHZRGUVYRQLRXGBKJJYLKLJW2AWOLMIGPCQHHY6WYSSY6` on the testnet XLM/USDT concentrated pool `CA6DAGOMK5D7GKBNWVCIEAYSTPJXLQUFWFKSZOMNEM6BVOTUBDCTIT5I`, underlying XLM, 5 rungs.
+- Real run, all on testnet: create_vault `d8a04c35bd2db44f09c0f75b17bee16c44075727640ec10c4f701db22963efc9`; deposit 60 XLM `7a8f115483318675fcbf89984ac382e09618f97cfaf905370541297b7a16682e`; rebalance steps `19ca0413ac...810577`, `77fd52182a...daf32` (see deployments/testnet.json `demo.aquarius_vault.txs` for full hashes), last rung `261ff2bfb4e7e5ab6cd10d635582839f9d4ae8596f7f56494288b865d2db6fc9`; 25% withdrawal `6d462c7eb74c53d621552eb23614446a1b1afa38e255eacae209285411a42313`; harvest `ed11634d7df5b2ed538833c8ae6b09cfbfdb7c04162a1d97d83b78d9df9a9af2`; wind-down `e73a7e3e663b03d283d027e202601a29536c97a53bbdcb9d9b76da32599122b6`; unwind `f2ecced45b4a39c108014f3fed024e0a5e009dfbbc1ec33a1e7bf7c9134062b7`; final withdrawal `93a1a2b12d8552cc3898df7c0cc61046772c59ffecea9539571e32dce0d4ac50`. A second vault `CBGQUG5IWPAUESUZXE4BGVUOH2WJ6ACSQZFY5TZ5G5QCAGBYWCMGZ6TN` ran a full cycle (60 XLM in, 59.83 XLM out after a ladder build and a full exit; wind-down `1217ac36...a21e43`, withdraw `e45237c5f5108f38bd659b357f52e4115ec5d983784a320874a3651ce221a7f0`). Earlier vaults from the debugging of wasm iterations (`CADQ6JXQ...`, `CB4MT3NM...`, `CC6BSANB...`, `CDBI36YD...`, `CA7UV5A6...`, `CA3KQ2M6...`, `CDODD7IC...`, `CAP6ME4D...`) are testnet leftovers with a few test XLM in older wasm builds and can be ignored.
+- CLI: `NETWORK=testnet IDENTITY=<identity> node scripts/vault_run.mjs create|deposit|rebalance|withdraw|winddown|harvest|state ...`; `scripts/deploy_vault_factory.sh factory|kind`.
+
+### How siblings add a vault kind (Zenex, XOXNO)
+
+1. Contract crate with a constructor whose FIRST argument is the owner address and which validates every bound itself. Build it with `scripts/deploy_vault_factory.sh kind <kind_id> <wasm_name>` (uploads and calls `set_wasm`; needs the factory admin key).
+2. `app/src/lib/vaults/kinds/<id>.ts`: a `VaultKind` (fields with labels, help, min/max, defaults; `encode` for argument order; optional `validate`, `preview`, `summary`, `risks`). Register it in `kinds/index.ts` (`VAULT_KINDS`) and add a unit test like `kinds.test.ts`.
+3. Record the wasm hash in `app/src/lib/peridot/deployments/<network>.json` under `vault_kinds.<id>`; the form enables submit once the factory and the kind are present for the selected network.
