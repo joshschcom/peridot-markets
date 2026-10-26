@@ -76,6 +76,8 @@ pub enum Error {
     AlreadyBound = 20,
     NotOwner = 21,
     NoOpenOrder = 22,
+    /// Deposits are refused until the depositing market is bound.
+    NotBound = 23,
 }
 
 /// Per-vault customization. All bounds are enforced in the constructor and `set_params`.
@@ -143,6 +145,8 @@ pub trait ZenexMarketApi {
     fn get_vault(env: Env) -> Address;
     fn get_token(env: Env) -> Address;
     fn get_status(env: Env) -> u32;
+    fn get_claimable_credit(env: Env, user: Address) -> i128;
+    fn claim_credit(env: Env, user: Address) -> i128;
     fn get_config(env: Env) -> Map<Symbol, Val>;
 }
 
@@ -428,7 +432,12 @@ fn total_value(env: &Env, cfg: &ZenexConfig, underlying: &Address) -> Option<i12
     let (dep, shares) = exposure(env, cfg)?;
     let gross = zenex_gross_value(env, cfg, shares)?.checked_add(dep)?;
     let net = gross.checked_sub(bps(env, gross, cfg.haircut_bps))?;
-    buffer.checked_add(net)
+    // A Zenex payout that failed to transfer is parked as a claimable credit: it is ours, count it at face.
+    let credit = match ZxMarketClient::new(env, &cfg.zenex_market).try_get_claimable_credit(&env.current_contract_address()) {
+        Ok(Ok(c)) if c > 0 => c,
+        _ => 0,
+    };
+    buffer.checked_add(net)?.checked_add(credit)
 }
 
 fn authorize_transfers(env: &Env, calls: Vec<(Address, Address, i128)>) {
@@ -443,6 +452,53 @@ fn authorize_transfers(env: &Env, calls: Vec<(Address, Address, i128)>) {
         }));
     }
     env.authorize_as_current_contract(auths);
+}
+
+/// Creates a Zenex redeem order that refills the buffer to `target`. Shared by `sync` and `unwind`.
+fn create_redeem(
+    env: &Env,
+    cfg: &ZenexConfig,
+    underlying: &Address,
+    buffer: i128,
+    target: i128,
+    exec_fee: i128,
+    now: u64,
+) -> Result<u32, Error> {
+    let this = env.current_contract_address();
+    let (_dep, held) = exposure(env, cfg).ok_or(Error::ZenexUnavailable)?;
+    if held <= 0 || buffer < exec_fee {
+        return Err(Error::NothingToDo);
+    }
+    let gross = zenex_gross_value(env, cfg, held).ok_or(Error::ZenexUnavailable)?;
+    if gross <= 0 {
+        return Err(Error::NothingToDo);
+    }
+    let need = (target - buffer).max(1);
+    let need_gross = mul_div_ceil(env, need, BPS, BPS - cfg.slippage_bps as i128).ok_or(Error::Overflow)?;
+    let mut shares = mul_div_ceil(env, need_gross, held, gross).ok_or(Error::Overflow)?;
+    if shares > held {
+        shares = held;
+    }
+    let zvault = ZxVaultClient::new(env, &cfg.zenex_vault);
+    let quote = match zvault.try_preview_redeem(&shares, &0) {
+        Ok(Ok(q)) => q,
+        _ => return Err(Error::ZenexUnavailable),
+    };
+    let min_out = quote - bps(env, quote, cfg.slippage_bps);
+    if min_out <= 0 {
+        return Err(Error::NothingToDo);
+    }
+    let mut calls = vec![env, (cfg.zenex_vault.clone(), cfg.zenex_market.clone(), shares)];
+    if exec_fee > 0 {
+        calls.push_back((underlying.clone(), cfg.zenex_market.clone(), exec_fee));
+    }
+    authorize_transfers(env, calls);
+    let id = ZxMarketClient::new(env, &cfg.zenex_market).create_vault_order(&this, &1u32, &shares, &min_out);
+    let st = env.storage().instance();
+    st.set(&DataKey::PendingRedeem, &id);
+    st.set(&DataKey::NextSync, &(now + SYNC_COOLDOWN_SECS));
+    OrderEvent { kind: 1, id, amount: shares, min_out }.publish(env);
+    Ok(id)
 }
 
 #[contractimpl]
@@ -507,6 +563,9 @@ impl ZenexVault {
         invest: bool,
     ) -> Result<Vec<i128>, Error> {
         let _ = invest; // always buffered; the keeper decides when to invest
+        if !env.storage().instance().get(&DataKey::Bound).unwrap_or(false) {
+            return Err(Error::NotBound);
+        }
         if from != get_addr(&env, &DataKey::Market) {
             return Err(Error::NotMarket);
         }
@@ -696,42 +755,45 @@ impl ZenexVault {
         }
 
         if buffer < floor {
-            let (dep, held) = exposure(&env, &cfg).ok_or(Error::ZenexUnavailable)?;
-            let _ = dep;
-            if held <= 0 || buffer < exec_fee {
-                return Err(Error::NothingToDo);
-            }
-            let gross = zenex_gross_value(&env, &cfg, held).ok_or(Error::ZenexUnavailable)?;
-            if gross <= 0 {
-                return Err(Error::NothingToDo);
-            }
-            // refill to target, grossed up for fees and slippage
-            let need = (target - buffer).max(1);
-            let need_gross = mul_div_ceil(&env, need, BPS, BPS - cfg.slippage_bps as i128).ok_or(Error::Overflow)?;
-            let mut shares = mul_div_ceil(&env, need_gross, held, gross).ok_or(Error::Overflow)?;
-            if shares > held {
-                shares = held;
-            }
-            let quote = match zvault.try_preview_redeem(&shares, &0) {
-                Ok(Ok(q)) => q,
-                _ => return Err(Error::ZenexUnavailable),
-            };
-            let min_out = quote - bps(&env, quote, cfg.slippage_bps);
-            if min_out <= 0 {
-                return Err(Error::NothingToDo);
-            }
-            let mut calls = vec![&env, (cfg.zenex_vault.clone(), cfg.zenex_market.clone(), shares)];
-            if exec_fee > 0 {
-                calls.push_back((underlying.clone(), cfg.zenex_market.clone(), exec_fee));
-            }
-            authorize_transfers(&env, calls);
-            let id = market.create_vault_order(&this, &1u32, &shares, &min_out);
-            st.set(&DataKey::PendingRedeem, &id);
-            st.set(&DataKey::NextSync, &(now + SYNC_COOLDOWN_SECS));
-            OrderEvent { kind: 1, id, amount: shares, min_out }.publish(&env);
-            return Ok(id);
+            return create_redeem(&env, &cfg, &underlying, buffer, target, exec_fee, now);
         }
         Err(Error::NothingToDo)
+    }
+
+    /// Owner or keeper: unwind from Zenex until the buffer reaches `want_buffer` (token units), regardless of the
+    /// refill threshold. For an oversized withdrawal that failed with `LiquidityShortfall`, or to wind the vault
+    /// down. One order at a time; the owner may top the buffer up with a plain USDC transfer to cover the fee.
+    pub fn unwind(env: Env, caller: Address, want_buffer: i128) -> Result<u32, Error> {
+        require_operator(&env, &caller)?;
+        bump_instance(&env);
+        let cfg = config(&env);
+        let underlying: Address = get_addr(&env, &DataKey::Underlying);
+        let st = env.storage().instance();
+        for key in [DataKey::PendingDeposit, DataKey::PendingRedeem] {
+            match order_state(&env, &cfg, pending(&env, &key)) {
+                OrderState::Gone => st.set(&key, &0u32),
+                OrderState::Open(_) => return Err(Error::OrderPending),
+                OrderState::Unknown => return Err(Error::ZenexUnavailable),
+            }
+        }
+        let now = env.ledger().timestamp();
+        if now < st.get(&DataKey::NextSync).unwrap_or(0) {
+            return Err(Error::Cooldown);
+        }
+        let (exec_fee, _min, _max) = zenex_limits(&env, &cfg.zenex_market).ok_or(Error::ZenexUnavailable)?;
+        let buffer = token::Client::new(&env, &underlying).balance(&env.current_contract_address());
+        if want_buffer <= buffer {
+            return Err(Error::NothingToDo);
+        }
+        create_redeem(&env, &cfg, &underlying, buffer, want_buffer, exec_fee, now)
+    }
+
+    /// Owner or keeper: claim a Zenex credit parked after a failed payout into the buffer.
+    pub fn claim_zenex_credit(env: Env, caller: Address) -> Result<i128, Error> {
+        require_operator(&env, &caller)?;
+        bump_instance(&env);
+        let cfg = config(&env);
+        Ok(ZxMarketClient::new(&env, &cfg.zenex_market).claim_credit(&env.current_contract_address()))
     }
 
     /// Cancels the open order (owner or keeper). Zenex refunds principal and exec fee. For a stuck order,
@@ -827,6 +889,9 @@ impl ZenexVault {
         require_owner(&env, &owner)?;
         if env.storage().instance().get(&DataKey::Bound).unwrap_or(false) {
             return Err(Error::AlreadyBound);
+        }
+        if total_shares(&env) != 0 {
+            return Err(Error::InvalidConfig);
         }
         env.storage().instance().set(&DataKey::Market, &market);
         env.storage().instance().set(&DataKey::Bound, &true);

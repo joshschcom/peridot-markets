@@ -68,6 +68,7 @@ enum MKey {
     Status,
     Counter(Address),
     Order(Address, u32),
+    Credit(Address),
 }
 
 #[cfg(feature = "market")]
@@ -94,6 +95,22 @@ impl MockZenexMarket {
     }
     pub fn get_config(env: Env) -> Config {
         env.storage().instance().get(&MKey::Config).unwrap()
+    }
+    pub fn get_claimable_credit(env: Env, user: Address) -> i128 {
+        env.storage().persistent().get(&MKey::Credit(user)).unwrap_or(0)
+    }
+    /// Test hook: park `amount` already held by the market as a credit for `user`.
+    pub fn park_credit(env: Env, user: Address, amount: i128) {
+        env.storage().persistent().set(&MKey::Credit(user), &amount);
+    }
+    pub fn claim_credit(env: Env, user: Address) -> i128 {
+        user.require_auth();
+        let c = Self::get_claimable_credit(env.clone(), user.clone());
+        if c > 0 {
+            env.storage().persistent().remove(&MKey::Credit(user.clone()));
+            token::Client::new(&env, &Self::get_token(env.clone())).transfer(&env.current_contract_address(), &user, &c);
+        }
+        c
     }
     pub fn set_config(env: Env, cfg: Config) {
         env.storage().instance().set(&MKey::Config, &cfg);
