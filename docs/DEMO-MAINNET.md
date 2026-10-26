@@ -42,7 +42,7 @@ Opening and closing a position is done from the app (V3 flow: begin, swap, activ
 ## Rewards (group 2 "Rewards")
 
 Rewards lock a group's market list, so they live in a separate group and group 1 stays open for adding markets. Group 2 controller `CADHYBWKFNDE3LKNWCRD7F6FNHTNQAR4W3AT2G3TROO7V6RZ2VMUKZSZ`, XLM market `CARDJEVXDP5RY3GAKRYSW4T5CKYY7Y4PQTS4CJSVQEBKP4JMHTDFPXNV`,
-reward distributor `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF`. Reward token: XLM, funded with 20 XLM, supply speed 200 stroops per second (about 17 XLM per day), refundable with `withdraw_unallocated`.
+reward distributor `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF`. Reward token: XLM, funded with 20 XLM, supply speed 200 stroops per second (about 1.73 XLM per day, so the 20 XLM last about 11 days), refundable with `withdraw_unallocated`.
 
 | Step | Transaction |
 |---|---|
