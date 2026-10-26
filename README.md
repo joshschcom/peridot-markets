@@ -40,8 +40,8 @@ One factory deploys a complete, isolated market group per token or community: it
 | Launchpad: bonding curve | Live on mainnet: PDEMO launched with a 5 XLM creator buy, still trading | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
 | Launchpad: ICO (fixed price, soft and hard cap, refunds) | Mainnet factory upgraded with the ICO Wasm, no ICO created there yet. Success and refund flows complete on testnet | [deployments/testnet.json](deployments/testnet.json) |
 | Launchpad: graduation into an Aquarius pool and a new market group | Testnet only (PGRAD). Mainnet graduation needs the 300,000 AQUA pool fee | [DEMO-TESTNET.md](docs/DEMO-TESTNET.md) |
-| Control Panel (staged parameter changes, guardrails, add market, margin sync) | Live in the app on mainnet. Edits verified on testnet; guardrail rejection verified on mainnet by simulation; no mainnet edit sent yet | [docs/qa/FINDINGS.md](docs/qa/FINDINGS.md) |
-| Keeper (interest accrual, boosted-vault refresh, liquidation) | Running for mainnet group 1 on a droplet: hundreds of refresh and accrual transactions. Liquidation path tested, not exercised live | [KEEPER.md](docs/KEEPER.md) |
+| Control Panel (staged parameter changes, guardrails, add market, margin sync) | Live in the app on mainnet. Edits verified on testnet; guardrail rejection verified on mainnet by simulation; no mainnet edit sent yet | [docs/qa/RESULTS-testnet.md](docs/qa/RESULTS-testnet.md) |
+| Keeper (interest accrual, boosted-vault refresh, liquidation) | Running for mainnet group 1 on a droplet: hundreds of refresh and accrual transactions. Liquidation path tested, not exercised live | [PITCH-FACTS.md section 3](docs/PITCH-FACTS.md) |
 | Wallet picker (Stellar Wallets Kit) | Built: Albedo, Freighter, xBull, LOBSTR and Hana | `app/src/wallet/catalog.ts` |
 
 Not built: hosted keeper subscriptions, Aquarius LP loss reserve, custom per-asset margin fees, switching a market's yield route after launch.
@@ -137,7 +137,7 @@ npm run build
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_NETWORK` | `mainnet` or `testnet` (the header switch changes it at runtime) |
+| `NEXT_PUBLIC_NETWORK` | `mainnet` or `testnet` build default; the header switch overrides it in the browser and reloads |
 | `NEXT_PUBLIC_MAINNET_RPC_URL` | Browser-safe mainnet Soroban RPC |
 | `NEXT_PUBLIC_TESTNET_RPC_URL` | Testnet RPC, defaults to `https://soroban-testnet.stellar.org` |
 | `NEXT_PUBLIC_READ_ONLY` | `true` disables every transaction submission |
@@ -150,9 +150,10 @@ Browser variables are public; never put a key in them. Contract IDs come from `d
 ```sh
 cd keeper/liquidator/margin
 npm ci && npm run check && npm test
-cp mainnet-group1.env.example .env         # dedicated keeper key, dry-run by default
-npm start
+node --env-file=<path to your group env file> src/group-main.mjs   # template: mainnet-group1.env.example, dry-run by default
 ```
+
+The env file holds the dedicated keeper key and lives outside the repository (`scripts/run_keeper_group1.sh` shows the dry-run and live invocations).
 
 Operations, fee caps and the droplet service are in [KEEPER.md](docs/KEEPER.md). CI (`.github/workflows/frontend-keeper.yml`) runs the app typecheck, unit and e2e tests and the keeper tests.
 
