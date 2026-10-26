@@ -60,3 +60,14 @@
   .preset-grid, .grad-facts { grid-template-columns: 1fr; }
   .lp-trades .col-opt { display: none; }
 }
+
+/* Launch type chooser and simple-token pages */
+.launch-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.launch-choice { display: grid; align-content: start; gap: 10px; text-align: left; padding: 20px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); color: inherit; font: inherit; cursor: pointer; min-width: 0; transition: border-color 0.15s, background 0.15s; }
+button.launch-choice:hover { border-color: var(--accent); background: var(--accent-soft); }
+button.launch-choice:focus-visible { box-shadow: var(--focus); outline: none; }
+.launch-choice strong { font-size: 17px; }
+.launch-choice.disabled { opacity: 0.6; cursor: not-allowed; }
+.launch-choice-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
+.launch-choice-go { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-text); font-weight: 600; font-size: 14px; margin-top: 4px; }
+@media (max-width: 900px) { .launch-choice-grid { grid-template-columns: minmax(0, 1fr); } }

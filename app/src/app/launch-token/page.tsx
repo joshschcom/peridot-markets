@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import LaunchTokenForm from '@/components/launchpad/LaunchTokenForm';
+import LaunchEntry from '@/components/launchpad/LaunchEntry';
 
-export const metadata: Metadata = { title: 'Launch a test token | Peridot Markets', description: 'Launch a fixed-supply test token on a bonding curve. Testnet only.' };
+export const metadata: Metadata = { title: 'Launch a token | Peridot Markets', description: 'Create a simple fixed-supply token or launch one on a bonding curve. Testnet only.' };
 
-export default function LaunchTokenPage() { return <LaunchTokenForm />; }
+export default function LaunchTokenPage() { return <LaunchEntry />; }

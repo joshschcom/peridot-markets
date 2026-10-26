@@ -9,6 +9,8 @@ test('launch a test token, trade, reach a target, graduate in six steps and clai
 
   // Launch: one transaction with a small creator buy (creator buys are capped at 5% of the curve supply).
   await page.goto('/launch-token');
+  await expect(page.getByRole('heading', { name: 'Launch a token' })).toBeVisible();
+  await page.getByRole('button', { name: 'Bonding curve launch' }).click();
   await expect(page.getByRole('heading', { name: /Launch a test token/ })).toBeVisible();
   await expect(page.getByText('Testnet', { exact: true }).first()).toBeVisible();
   await page.getByLabel('Name', { exact: true }).fill('Browser Fox');
@@ -89,4 +91,49 @@ test('launchpad routes fit a 375px viewport and resolve a curve address', async 
   await expect(page.getByRole('heading', { level: 1, name: /Peridot Graduate/ })).toBeVisible();
   await page.goto('/token/mock-token-unknown');
   await expect(page.getByRole('heading', { name: 'Token unavailable' })).toBeVisible();
+});
+
+test('simple token: choose the plain path, create it in one step and find it tagged Plain in the list', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/launch-token');
+  await expect(page.getByRole('button', { name: 'Simple token (no curve, no ICO)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bonding curve launch' })).toBeVisible();
+  await expect(page.getByText('Coming later')).toBeVisible();
+  await page.getByRole('button', { name: 'Simple token (no curve, no ICO)' }).click();
+  await expect(page.getByRole('heading', { name: /Create a simple token/ })).toBeVisible();
+  await expect(page.getByLabel('Decimals')).toBeDisabled();
+
+  const create = page.getByRole('button', { name: 'Create demo token' });
+  await expect(create).toBeDisabled();
+  await page.getByLabel('Name', { exact: true }).fill('Plain Fox');
+  await page.getByLabel('Symbol', { exact: true }).fill('pfox');
+  await page.getByLabel('Total supply (whole tokens)').fill('0');
+  await expect(page.getByText(/Supply must be a whole number between 1 and/).first()).toBeVisible();
+  await page.getByLabel('Total supply (whole tokens)').fill('2500000');
+  await expect(create).toBeDisabled();
+  await page.getByLabel(/I understand this is a testnet experiment/).check();
+  await expect(create).toBeEnabled();
+  await create.click();
+  await expect(page.getByRole('heading', { name: 'Your token is live on testnet' })).toBeVisible();
+  await expect(page.getByText('Later: add a Peridot market')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Open token page' }).click();
+  await expect(page).toHaveURL(/\/token\/mock-plain-pfox$/);
+  await expect(page.getByRole('heading', { level: 1, name: /Plain Fox/ })).toBeVisible();
+  await expect(page.getByText('Plain token', { exact: true })).toBeVisible();
+  await expect(page.getByText('Later: add a Peridot market')).toBeVisible();
+
+  await page.goto('/tokens');
+  await page.getByRole('button', { name: /^Plain \(1\)/ }).click();
+  await expect(page.getByRole('article', { name: 'Plain Fox (PFOX), plain token' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('simple token routes fit a 375px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/launch-token'); await page.waitForLoadState('networkidle');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'chooser').toBeTruthy();
+  await page.getByRole('button', { name: 'Simple token (no curve, no ICO)' }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'simple form').toBeTruthy();
 });
