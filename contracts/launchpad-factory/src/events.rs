@@ -85,3 +85,6 @@ pub struct PlainTokenCreated {
     pub symbol: String,
     pub supply: i128,
 }
+
+#[soroban_sdk::contractevent(topics = ["ico_created"])]
+pub struct IcoCreated { pub info: crate::types::IcoInfo }

@@ -12,6 +12,7 @@ import { GradStep, PRESETS, Phase, type CurveActivity, type CurveConfig, type Cu
 import { CurveChart } from './CurveChart';
 import { GraduationPanel } from './GraduationPanel';
 import { LpAddress, LpTxLink } from './LpAddress';
+import { launchpadNetworkLabel } from '@/lib/launchpad/config';
 import { LaunchpadBadges, MainnetNotice, PhaseBadge, RiskNotice, TokenIcon, TxStatus, TypeBadge, fmtIso } from './LaunchpadFrame';
 import { TradePanel } from './TradePanel';
 
@@ -89,7 +90,7 @@ export default function TokenPage({ address }: { address: string }) {
   };
   const signer = (): Signer => {
     if (!wallet.address) throw new Error('Connect your wallet first.');
-    if (wallet.networkMismatch) throw new Error('Switch your wallet to testnet before signing.');
+    if (wallet.networkMismatch) throw new Error(`Switch your wallet to ${launchpadNetworkLabel()} before signing.`);
     return { address: wallet.address, signTransaction: wallet.signTransaction };
   };
 
@@ -133,7 +134,7 @@ export default function TokenPage({ address }: { address: string }) {
         {state.phase !== Phase.Trading && <GraduationPanel launch={launch} state={state} params={params} graduation={graduation} cost={cost} costError={costError} aqua={aqua} groupOwner={groupOwner} busy={busy} run={run} signer={signer} report={report} />}
         <section className="card"><CurveChart params={params} sold={state.sold} symbol={launch.symbol} /></section>
         <section className="card" aria-label="Recent trades">
-          <div className="card-header"><div><h2>Recent trades</h2><p>Buys and sells decoded from the curve&apos;s contract events on testnet.</p></div>{activity?.partial && <Badge tone="warn">Older events not scanned</Badge>}</div>
+          <div className="card-header"><div><h2>Recent trades</h2><p>Buys and sells decoded from the curve&apos;s contract events on {launchpadNetworkLabel()}.</p></div>{activity?.partial && <Badge tone="warn">Older events not scanned</Badge>}</div>
           {!activity && !activityError ? <p role="status" className="muted">Loading trades...</p>
             : activityError ? <p className="muted">Recent trades unavailable: {activityError}</p>
             : activity && activity.trades.length === 0 ? <p className="muted">No trades yet.</p>

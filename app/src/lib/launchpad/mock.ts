@@ -1,6 +1,7 @@
 /** Browser-local simulation of the launchpad for NEXT_PUBLIC_USE_MOCKS=true. Same storage pattern as
  * lib/peridot/mock.ts (own key), same curve math as the contract, no signatures. Demo ids use the `mock-` prefix
  * so address components render them as plain text without explorer links. */
+import type { MockIco } from './ico-mock';
 import { network } from '@/lib/peridot/network';
 import { MOCK_OWNER } from '@/lib/peridot/mock';
 import { creatorCap, feeOf, quoteBuy, quoteSell, reserves, soldAtTarget } from './math';
@@ -34,6 +35,7 @@ export interface MockLaunchpadState {
   launches: MockLaunch[];
   /** Simple tokens (absent in states saved before the simple-token path existed). */
   plainTokens?: PlainTokenInfo[];
+  icos?: MockIco[];
   plainHoldings?: Record<string, Record<string, bigint>>;
   xlm: Record<string, bigint>;
   aqua: Record<string, bigint>;

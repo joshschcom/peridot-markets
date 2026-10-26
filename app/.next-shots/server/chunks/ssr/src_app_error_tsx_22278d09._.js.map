@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/joshua/Peridot/peridot-markets-vaultfactory/app/src/app/error.tsx"],"sourcesContent":["'use client';\nimport { ErrorCard } from '@/components/ui/ErrorBoundary';\n\n/** Next.js route error UI: rendered inside the shell when a page throws during render or data loading. */\nexport default function RouteError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {\n  return <ErrorCard error={error} onRetry={reset} title=\"This page could not be shown\" />;\n}\n"],"names":[],"mappings":";;;;;AACA;AADA;;;AAIe,SAAS,WAAW,EAAE,KAAK,EAAE,KAAK,EAA6D;IAC5G,qBAAO,8OAAC,sJAAS;QAAC,OAAO;QAAO,SAAS;QAAO,OAAM;;;;;;AACxD","debugId":null}}]
+}

@@ -95,3 +95,16 @@ pub struct PlainTokenInfo {
     pub supply: i128,
     pub created_at: u64,
 }
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct IcoInfo {
+    pub id: u32,
+    pub token: Address,
+    pub ico: Address,
+    pub creator: Address,
+    pub quote_token: Address,
+    pub name: String,
+    pub symbol: String,
+    pub created_at: u64,
+}

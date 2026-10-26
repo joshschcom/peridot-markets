@@ -27,4 +27,5 @@ pub enum FactoryError {
     InvalidQuotePrice = 16,
     /// Plain token supply must be 1..=1e12 whole tokens.
     InvalidSupply = 17,
+    BadIcoParams = 18,
 }
