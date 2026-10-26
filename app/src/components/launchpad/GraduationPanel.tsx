@@ -26,7 +26,7 @@ export function AquaRequirement({ cost }: { cost: GraduationCost | null }) {
   return <p>Graduation step 1 is paid in {code}: <strong>{amount} {code}</strong> (read live from the curve), plus the network fee. The payer needs an {code} trustline{cost?.issuer ? <> (issuer <LpAddress value={cost.issuer} label="AQUA issuer" head={6} tail={6} />)</> : ''} and that balance. Buy {code} with XLM on Aquarius: <a className="text-link" href={launchpadSwapUrl()} target="_blank" rel="noreferrer">Get AQUA on Aquarius <ExternalLink size={12} aria-hidden /></a>. Anyone can pay it, not only the creator.</p>;
 }
 /** Mainnet only: a graduated token whose raise is below the price router's 500 USD per pool side floor gets a supply-only market. */
-export const ROUTER_FLOOR_NOTE = 'A 500 XLM raise is below the price router\'s 500 USD per pool side floor, so a token that graduates from the Fast preset gets a supply-only lending market (no borrowing against it) until its Aquarius pool is deeper.';
+export const ROUTER_FLOOR_NOTE = 'A 500 XLM raise is below the price router\'s 500 USD per pool side floor, so a token that graduates from the Fast preset gets a supply-only lending market until its Aquarius pool is deeper.';
 export function belowRouterFloor(params: CurveParams): boolean { return params.graduation_target <= 1_000n * 10_000_000n; }
 
 /** What graduation will do, shown while the curve is still trading. */
