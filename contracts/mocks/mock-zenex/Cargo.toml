@@ -8,6 +8,11 @@ publish = false
 crate-type = ["cdylib", "lib"]
 doctest = false
 
+[features]
+default = ["market", "vault"]
+market = []
+vault = []
+
 [dependencies]
 soroban-sdk = { workspace = true }
 

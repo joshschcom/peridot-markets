@@ -504,8 +504,9 @@ impl ZenexVault {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
-        _invest: bool,
+        invest: bool,
     ) -> Result<Vec<i128>, Error> {
+        let _ = invest; // always buffered; the keeper decides when to invest
         if from != get_addr(&env, &DataKey::Market) {
             return Err(Error::NotMarket);
         }

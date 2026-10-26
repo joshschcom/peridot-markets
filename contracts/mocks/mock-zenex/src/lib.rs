@@ -9,7 +9,7 @@
 //! `mock_fill(user, id, reject)` plays the keeper (no price report needed).
 #![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, token, Address, Env, MuxedAddress, String,
+    contract, contractclient, contracterror, contractimpl, contracttype, token, Address, Env, MuxedAddress, String,
 };
 
 pub const OFFSET: u32 = 6;
@@ -51,6 +51,14 @@ pub struct Config {
     pub redeem_lock: u64,
 }
 
+#[contractclient(name = "VaultApiClient")]
+pub trait VaultApi {
+    fn preview_deposit(env: Env, assets_in: i128, net_pnl: i128) -> i128;
+    fn preview_redeem(env: Env, shares: i128, net_pnl: i128) -> i128;
+    fn mint_for_fill(env: Env, to: Address, shares: i128);
+    fn burn_for_fill(env: Env, from: Address, shares: i128, receiver: Address, assets_out: i128);
+}
+
 #[contracttype]
 #[derive(Clone)]
 enum MKey {
@@ -62,9 +70,11 @@ enum MKey {
     Order(Address, u32),
 }
 
+#[cfg(feature = "market")]
 #[contract]
 pub struct MockZenexMarket;
 
+#[cfg(feature = "market")]
 #[contractimpl]
 impl MockZenexMarket {
     pub fn __constructor(env: Env, token: Address, vault: Address, cfg: Config) {
@@ -144,7 +154,7 @@ impl MockZenexMarket {
         let me = env.current_contract_address();
         let tok = token::Client::new(&env, &Self::get_token(env.clone()));
         let vault_addr = Self::get_vault(env.clone());
-        let vault = MockZenexVaultClient::new(&env, &vault_addr);
+        let vault = VaultApiClient::new(&env, &vault_addr);
         env.storage().persistent().remove(&MKey::Order(user.clone(), id));
         if o.kind == 0 {
             if reject {
@@ -187,6 +197,7 @@ impl MockZenexMarket {
     }
 }
 
+#[cfg(feature = "vault")]
 #[contracttype]
 #[derive(Clone)]
 enum VKey {
@@ -195,23 +206,29 @@ enum VKey {
     Bal(Address),
 }
 
+#[cfg(feature = "vault")]
 #[contract]
 pub struct MockZenexVault;
 
+#[cfg(feature = "vault")]
 fn supply(env: &Env) -> i128 {
     env.storage().instance().get(&VKey::Supply).unwrap_or(0)
 }
+#[cfg(feature = "vault")]
 fn bal(env: &Env, a: &Address) -> i128 {
     env.storage().persistent().get(&VKey::Bal(a.clone())).unwrap_or(0)
 }
+#[cfg(feature = "vault")]
 fn set_bal(env: &Env, a: &Address, v: i128) {
     env.storage().persistent().set(&VKey::Bal(a.clone()), &v);
 }
+#[cfg(feature = "vault")]
 fn assets(env: &Env) -> i128 {
     let a: Address = env.storage().instance().get(&VKey::Asset).unwrap();
     token::Client::new(env, &a).balance(&env.current_contract_address())
 }
 
+#[cfg(feature = "vault")]
 #[contractimpl]
 impl MockZenexVault {
     pub fn __constructor(env: Env, asset: Address) {
