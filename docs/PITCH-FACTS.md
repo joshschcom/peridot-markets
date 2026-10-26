@@ -44,7 +44,7 @@ How to read this file (for the deck and video LLM):
 - Do not say "audited" for the factories, adapters, launchpad, vaults, frontend or keeper; only the imported core is audited, and its timelocks were changed.
 - Do not claim TVL, users or volume: one depositor (the deployer), about 5 USD.
 - Do not claim CI is green (red on all runs) or that Albedo signing works for Soroban transactions (unverified).
-- Do not claim llms.txt, robots.txt or sitemap.xml are served: they returned HTTP 404 on both domains and the droplet IP at 11:47 UTC (the files exist in the repo, `app/public`; the droplet may not have been redeployed yet).
+- Update 11:56 UTC: `/llms.txt`, `/robots.txt` and `/sitemap.xml` are now served with HTTP 200 on both https://markets.peridot.finance and https://test-markets.peridot.finance (redeployed from commit 6b43fbd; verified by curl). The droplet's `/etc/peridot-web/deployed-commit` reads `6b43fbd`. The /vaults page copy may still say "testnet" for Zenex and XOXNO although demo vaults exist on mainnet.
 - Do not use the 1 hour-ahead `[A]` times in `docs/COORDINATION.md`; use chain times.
 
 ## 0. One-paragraph truth
@@ -246,7 +246,7 @@ Read from chain where marked "chain"; otherwise from the repo file named.
 |---|---|---|
 | Repo | https://github.com/joshschcom/peridot-markets (public). `main` is behind; the integrated branch is `demo-merge` (head `6b43fbd`, 26 Oct 11:38 UTC, when this was written) | verified with `gh repo view` |
 | Local build | http://localhost:3010 | not checked at the final refresh (was not running earlier); run it yourself |
-| Public droplet, mainnet app | http://165.22.89.201 and https://markets.peridot.finance | both HTTP 200 at 11:47 UTC; coordinator states the droplet serves the final merge (UNVERIFIED by me: the deployed-commit file was not read). `/llms.txt`, `/robots.txt` and `/sitemap.xml` returned 404 on the domain and the IP at 11:47 UTC, although the files exist in `app/public`; the droplet may need a redeploy |
+| Public droplet, mainnet app | http://165.22.89.201 and https://markets.peridot.finance | both HTTP 200 at 11:47 UTC; coordinator states the droplet serves the final merge (UNVERIFIED by me: the deployed-commit file was not read). `/llms.txt`, `/robots.txt` and `/sitemap.xml` return 200 as of 11:56 UTC after the redeploy; deployed commit `6b43fbd` (read from the droplet) |
 | Public droplet, testnet launchpad app | https://test-markets.peridot.finance and http://testnet.165.22.89.201.sslip.io | both HTTP 200 at 11:47 UTC, same caveats |
 | Vercel previews (private, Vercel-authenticated, HTTP 302 to login) | latest connected mainnet beta https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app (source `b896c82`, before the QoL, launchpad and vault merges). Older: eg1grm094 (`20099c2`), mbm5vqtlz, q1q53sbiz (labelled mock demo, `4f92a41`) | URLs from `docs/COORDINATION.md` and `docs/DEMO.md` |
 | Custom domains | https://markets.peridot.finance (mainnet) and https://test-markets.peridot.finance (testnet): HTTPS, DNS only, droplet 165.22.89.201 (per coordinator; HTTP 200 over HTTPS verified at 11:47 UTC). The `markets.peridot.xyz` name in `docs/WEB-HOSTING.md` is only an example | HTTPS reachability verified; ownership and DNS settings UNVERIFIED |
@@ -357,7 +357,7 @@ All shots were taken at 11:5x UTC against the app built from `demo-merge` `6b43f
 | Albedo signs Soroban envelopes | One real Albedo signature on testnet |
 | Custom domain exists | Joshua confirms domain ownership and runs `peridot-set-domain` |
 | Anything deployed on mainnet after 11:47 UTC (graduation, ICO creation, Aquarius ladder vault, market binding of the new vaults) | Rerun `node scripts/pitch_facts_refresh.mjs` (it reads `launchpad_factory` from the manifest) and update sections 2 to 6 |
-| Droplet serves the final merge; llms.txt, robots.txt, sitemap.xml | `curl` them again after a redeploy (404 at 11:47 UTC); read `/etc/peridot-web/deployed-commit` on the droplet |
+| Droplet serves the final merge; llms.txt, robots.txt, sitemap.xml | VERIFIED 11:56 UTC: all three return 200 on both domains; deployed commit 6b43fbd. Rerun `curl` after any later redeploy |
 | Cargo test count after the ICO, XOXNO and vault-factory merges | `cargo test --workspace --no-fail-fast` (not rerun after 729010e) |
 | Zenex constructor simulated against the real Zenex | Re-run the simulation described in `deployments/mainnet.json` `zenex.constructor_simulation` |
 | Any wallet Joshua will use on camera besides the deployer | Joshua gives the address; `--only=wallets` reads it |
