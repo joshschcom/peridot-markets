@@ -72,8 +72,8 @@ export function TradePanel({ launch, state, params, xlm, token, busy, run, signe
     const value = amountIn;
     void run(async () => {
       const s = signer();
-      if (side === 'buy') await buyTokens(s, launch.curve, value, minimum, report);
-      else await sellTokens(s, launch.curve, value, minimum, report);
+      if (side === 'buy') await buyTokens(s, launch, value, minimum, report);
+      else await sellTokens(s, launch, value, minimum, report);
       setAmount('');
     });
   };

@@ -1,8 +1,13 @@
 /** Human-readable messages for launchpad contract errors. Codes mirror `contracts/launchpad-curve/src/errors.rs`
  * and `contracts/launchpad-factory/src/errors.rs`. Errors are mapped by (contract role, code), because the same
- * number means different things on the curve, the factory and a Stellar Asset Contract. */
+ * number means different things on the curve, the factory, a Stellar Asset Contract and the OpenZeppelin token.
+ *
+ * The host prints its diagnostic log newest first. When a nested call fails, every outer frame re-emits the same
+ * code while escalating, so the OUTER contract appears first and the frame that actually failed appears LAST
+ * (verified against a testnet simulation of `launch_curve` with an over-cap creator buy: factory, factory, then
+ * the curve as a "Failed Diagnostic Event"). The mapper therefore reads the innermost frame only. */
 
-export type ContractRole = 'curve' | 'factory' | 'token';
+export type ContractRole = 'curve' | 'factory' | 'sac' | 'token';
 
 const CURVE_ERRORS: Record<number, string> = {
   1: 'A curve parameter must be positive.',
@@ -51,6 +56,19 @@ const FACTORY_ERRORS: Record<number, string> = {
   16: 'The quote price must be a Reflector mapping.',
 };
 
+/** Stellar Asset Contract (XLM, AQUA) errors that a trade or graduation step can surface. */
+const SAC_ERRORS: Record<number, string> = {
+  8: 'Amounts must be positive.',
+  10: 'Insufficient balance for this transfer.',
+  11: 'Your trustline for this asset is not authorized.',
+  13: 'Your account has no trustline for this asset. Add it in your wallet, then try again.',
+};
+/** OpenZeppelin fungible token (the launch token) errors. */
+const TOKEN_ERRORS: Record<number, string> = {
+  100: 'You do not hold enough of this token.',
+  101: 'Insufficient token allowance.',
+};
+
 const DIAGNOSTIC = /contract:(C[A-Z2-7]{55}), topics:\[error, Error\(Contract, #(\d+)\)\]/g;
 const PLAIN = /Error\(Contract, #(\d+)\)/;
 
@@ -58,20 +76,29 @@ export function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : typeof error === 'string' ? error : 'The request failed.';
 }
 
-/** Returns a readable message for a failed launchpad call. `roles` maps contract ids to what they are, so the
- * failing contract (the first entry of the newest-first diagnostic log) picks the right table. */
-export function describeLaunchpadError(error: unknown, roles: Record<string, ContractRole>, fallbackRole?: ContractRole): string {
+export interface DescribeOptions {
+  /** Role to assume when the message carries a bare `Error(Contract, #N)` without a contract id. */
+  fallbackRole?: ContractRole;
+  /** Role to assume for an innermost contract that is not in `roles`: `launch_curve` fails inside a curve whose
+   * address does not exist before the call. */
+  innerFallback?: ContractRole;
+}
+
+/** Returns a readable message for a failed launchpad call. `roles` maps contract ids to what they are; the
+ * innermost failing frame (last entry of the newest-first diagnostic log) picks the table. An innermost contract
+ * with no known role returns the raw message rather than a guess from an outer frame. */
+export function describeLaunchpadError(error: unknown, roles: Record<string, ContractRole>, options: DescribeOptions = {}): string {
   const message = messageOf(error);
-  if (/trustline entry is missing/.test(message)) return 'Your account has no trustline for this asset. Add it in your wallet, then try again.';
+  if (/trustline entry is missing/.test(message)) return SAC_ERRORS[13];
   const matches = [...message.matchAll(DIAGNOSTIC)];
-  for (const [, contract, code] of matches) {
-    const role = roles[contract];
-    const described = describeCode(role, Number(code));
-    if (described) return described;
+  if (matches.length > 0) {
+    const [, contract, code] = matches[matches.length - 1];
+    const role = roles[contract] ?? options.innerFallback;
+    return describeCode(role, Number(code)) ?? message;
   }
   const plain = message.match(PLAIN);
-  if (plain && fallbackRole) {
-    const described = describeCode(fallbackRole, Number(plain[1]));
+  if (plain && options.fallbackRole) {
+    const described = describeCode(options.fallbackRole, Number(plain[1]));
     if (described) return described;
   }
   if (/insufficient balance|resulting balance is not within the allowed range|balance is not sufficient/i.test(message)) return 'Insufficient balance for this transaction.';
@@ -81,5 +108,7 @@ export function describeLaunchpadError(error: unknown, roles: Record<string, Con
 function describeCode(role: ContractRole | undefined, code: number): string | null {
   if (role === 'curve') return CURVE_ERRORS[code] ?? null;
   if (role === 'factory') return FACTORY_ERRORS[code] ?? null;
+  if (role === 'sac') return SAC_ERRORS[code] ?? null;
+  if (role === 'token') return TOKEN_ERRORS[code] ?? null;
   return null;
 }

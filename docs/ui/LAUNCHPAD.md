@@ -38,7 +38,7 @@ Testnet RPC `getEvents` works for curve events: the scan starts from a ledger es
 
 ## Errors
 
-`errors.ts` maps `Error(Contract, #N)` by the failing contract (first entry of the newest-first diagnostic log): curve codes (for example 12 slippage, 13 trading closed, 15 creator cap, 22 pool not fresh) and factory codes (5 name, 6 symbol, 10 launch not found) read differently, and SAC code 13 with the "trustline entry is missing" diagnostic becomes a trustline hint.
+`errors.ts` maps `Error(Contract, #N)` by the contract that actually failed. The host prints its diagnostic log newest first and every outer frame re-emits the same code while escalating, so the innermost frame is the LAST error entry (verified with a testnet simulation of `launch_curve` with an over-cap creator buy: factory, factory, then the new curve as a "Failed Diagnostic Event"). Curve codes (12 slippage, 13 trading closed, 15 creator cap, 22 pool not fresh), factory codes (5 name, 6 symbol, 10 launch not found), SAC codes (10 balance, 13 trustline) and the OpenZeppelin token's 100 (balance) read differently; `launch_curve` treats an unknown innermost contract as the new curve, and `graduate` returns the raw host message when the market factory, router, pool or AQUA fail, since their enums are not mapped.
 
 ## Demo data (mock mode)
 

@@ -9,20 +9,30 @@ const FACTORY = 'CBYQC54BS5HIWEO6KQNVGZ6XRNOTG3OMT6UZYBUD2NESGHBQMALGSBWC';
 const USER = 'GAXGGPKR2K3PXRVHSVN654AIRQDPETWDSRPDTGV4Q7ZUFY66VRM7TNYT';
 const diagnostic = (contract: string, code: number, fn: string) => new Error(`Unable to read ${fn}: HostError: Error(Contract, #${code})\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:${contract}, topics:[error, Error(Contract, #${code})], data:"escalating Ok(ScErrorType::Contract) frame-exit to Err"\n   1: [Diagnostic Event] topics:[fn_call, ${contract}, ${fn}], data:1000000000\n`);
 
-test('contract errors are mapped by the failing contract, not by the code alone', () => {
-  const roles = { [FACTORY]: 'factory' as const, [CURVE]: 'curve' as const };
+const XLM = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
+const NEW_CURVE = 'CAC2RFMTBBSXYIPOYJKL3ZLIJH7IJJQDWZ5T2LLXOFAGNEL5JEWBXE3M';
+/** Recorded from a testnet simulation of launch_curve with an over-cap creator buy (2026-10-26): the factory
+ * escalates twice before the curve frame that actually failed, which the host prints last. */
+const nestedLaunch = new Error(`Simulation failed: HostError: Error(Contract, #15)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:${FACTORY}, topics:[error, Error(Contract, #15)], data:"escalating error to VM trap from failed host function call: call"\n   1: [Diagnostic Event] contract:${FACTORY}, topics:[error, Error(Contract, #15)], data:["contract call failed", buy, [${USER}, 1000000000000, 1]]\n   2: [Failed Diagnostic Event (not emitted)] contract:${NEW_CURVE}, topics:[error, Error(Contract, #15)], data:"escalating Ok(ScErrorType::Contract) frame-exit to Err"\n   3: [Diagnostic Event] contract:${FACTORY}, topics:[fn_call, ${NEW_CURVE}, buy], data:[${USER}, 1000000000000, 1]`);
+
+test('contract errors are mapped by the innermost failing contract, not by the code alone', () => {
+  const roles = { [FACTORY]: 'factory' as const, [CURVE]: 'curve' as const, [XLM]: 'sac' as const };
   assert.match(describeLaunchpadError(diagnostic(CURVE, 13, 'quote_buy'), roles), /Trading is closed/);
   assert.match(describeLaunchpadError(diagnostic(FACTORY, 10, 'get_launch'), roles), /not launched through/);
   assert.match(describeLaunchpadError(diagnostic(CURVE, 10, 'buy'), roles), /amount above zero/);
   assert.match(describeLaunchpadError(diagnostic(CURVE, 12, 'buy'), roles), /slippage/);
   assert.match(describeLaunchpadError(diagnostic(CURVE, 15, 'buy'), roles), /creator cap/);
-  // A creator buy inside launch_curve fails in the curve: the newest diagnostic entry names the curve.
-  const nested = new Error(`Simulation failed: HostError: Error(Contract, #15)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:${CURVE}, topics:[error, Error(Contract, #15)], data:"x"\n   1: [Diagnostic Event] contract:${FACTORY}, topics:[error, Error(Contract, #15)], data:"x"`);
-  assert.match(describeLaunchpadError(nested, roles), /creator cap/);
+  // launch_curve: the new curve has no address before the call, so the innermost unknown frame is read as a curve.
+  assert.match(describeLaunchpadError(nestedLaunch, roles, { fallbackRole: 'factory', innerFallback: 'curve' }), /creator cap/);
+  // Without the inner fallback an unknown innermost contract yields the raw message, never the outer frame's text.
+  assert.equal(describeLaunchpadError(nestedLaunch, roles), nestedLaunch.message);
+  // A SAC failure inside buy (XLM transfer) is reported as a balance problem, not as a curve code 10.
+  const sacInside = new Error(`HostError: Error(Contract, #10)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:${CURVE}, topics:[error, Error(Contract, #10)], data:"escalating"\n   1: [Failed Diagnostic Event (not emitted)] contract:${XLM}, topics:[error, Error(Contract, #10)], data:"balance"`);
+  assert.match(describeLaunchpadError(sacInside, roles), /Insufficient balance/);
   // Without a contract id the fallback role decides.
-  assert.match(describeLaunchpadError(new Error('HostError: Error(Contract, #19)'), roles, 'curve'), /target has not been reached/);
+  assert.match(describeLaunchpadError(new Error('HostError: Error(Contract, #19)'), roles, { fallbackRole: 'curve' }), /target has not been reached/);
   assert.equal(describeLaunchpadError(new Error('RPC unavailable'), roles), 'RPC unavailable');
-  assert.match(describeLaunchpadError(new Error(`contract:${CURVE}, topics:[error, Error(Contract, #13)], data:["trustline entry is missing for account", ${USER}]`), roles), /trustline/);
+  assert.match(describeLaunchpadError(new Error(`contract:${XLM}, topics:[error, Error(Contract, #13)], data:["trustline entry is missing for account", ${USER}]`), roles), /trustline/);
 });
 
 test('curve events decode into trades and history entries', () => {

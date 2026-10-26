@@ -25,10 +25,12 @@ const MOCK_SAVED = 'Demo action saved. No onchain transaction.';
 async function read<T>(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<T> {
   return launchpadMode() === 'live' ? readContract<T>(contractId, method, args) : readTestnet<T>(contractId, method, args);
 }
-function roles(extra: Record<string, ContractRole> = {}): Record<string, ContractRole> { return { [FACTORY]: 'factory', ...extra }; }
-function rethrow(error: unknown, extra: Record<string, ContractRole>, fallback: ContractRole): never {
-  throw new Error(describeLaunchpadError(error, roles(extra), fallback));
+/** The launchpad factory and the XLM SAC are always known; callers add the curve and the launch token. */
+function roles(extra: Record<string, ContractRole> = {}): Record<string, ContractRole> { return { [FACTORY]: 'factory', [TESTNET_XLM]: 'sac', ...extra }; }
+function rethrow(error: unknown, extra: Record<string, ContractRole>, fallback: ContractRole, innerFallback?: ContractRole): never {
+  throw new Error(describeLaunchpadError(error, roles(extra), { fallbackRole: fallback, innerFallback }));
 }
+const tradeRoles = (launch: Pick<LaunchInfo, 'curve' | 'token'>): Record<string, ContractRole> => ({ [launch.curve]: 'curve', [launch.token]: 'token' });
 /** Quote token of every testnet preset. */
 export function quoteToken(): string { return launchpadMode() === 'mock' ? MOCK_XLM_TOKEN : TESTNET_XLM; }
 
@@ -147,23 +149,26 @@ export async function launchCurve(signer: Signer, input: LaunchInput, onProgress
     const result = await submitContract<[string, string]>({ contractId: FACTORY, method: 'launch_curve', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), params], signer, onProgress });
     const [token, curve] = result.value;
     return { token, curve, hash: result.hash };
-  } catch (error) { rethrow(error, {}, 'factory'); }
+  } catch (error) {
+    // The curve of a new launch has no address before the call: an unknown innermost frame is that curve (creator buy).
+    rethrow(error, {}, 'factory', 'curve');
+  }
 }
-export async function buyTokens(signer: Signer, curve: string, quoteIn: bigint, minTokensOut: bigint, onProgress?: (p: TxProgress) => void): Promise<{ tokensOut: bigint; hash: string }> {
+export async function buyTokens(signer: Signer, launch: Pick<LaunchInfo, 'curve' | 'token'>, quoteIn: bigint, minTokensOut: bigint, onProgress?: (p: TxProgress) => void): Promise<{ tokensOut: bigint; hash: string }> {
   assertSigning();
-  if (launchpadMode() === 'mock') { const r = mutateLaunchpadMock(state => mockBuy(state, signer.address, findMockLaunch(state, curve), quoteIn, minTokensOut)); demoDone(onProgress, r.hash); return r; }
+  if (launchpadMode() === 'mock') { const r = mutateLaunchpadMock(state => mockBuy(state, signer.address, findMockLaunch(state, launch.curve), quoteIn, minTokensOut)); demoDone(onProgress, r.hash); return r; }
   try {
-    const result = await submitContract<bigint>({ contractId: curve, method: 'buy', args: [scAddress(signer.address), scI128(quoteIn), scI128(minTokensOut)], signer, onProgress });
+    const result = await submitContract<bigint>({ contractId: launch.curve, method: 'buy', args: [scAddress(signer.address), scI128(quoteIn), scI128(minTokensOut)], signer, onProgress });
     return { tokensOut: result.value, hash: result.hash };
-  } catch (error) { rethrow(error, { [curve]: 'curve' }, 'curve'); }
+  } catch (error) { rethrow(error, tradeRoles(launch), 'curve'); }
 }
-export async function sellTokens(signer: Signer, curve: string, tokensIn: bigint, minQuoteOut: bigint, onProgress?: (p: TxProgress) => void): Promise<{ quoteOut: bigint; hash: string }> {
+export async function sellTokens(signer: Signer, launch: Pick<LaunchInfo, 'curve' | 'token'>, tokensIn: bigint, minQuoteOut: bigint, onProgress?: (p: TxProgress) => void): Promise<{ quoteOut: bigint; hash: string }> {
   assertSigning();
-  if (launchpadMode() === 'mock') { const r = mutateLaunchpadMock(state => mockSell(state, signer.address, findMockLaunch(state, curve), tokensIn, minQuoteOut)); demoDone(onProgress, r.hash); return r; }
+  if (launchpadMode() === 'mock') { const r = mutateLaunchpadMock(state => mockSell(state, signer.address, findMockLaunch(state, launch.curve), tokensIn, minQuoteOut)); demoDone(onProgress, r.hash); return r; }
   try {
-    const result = await submitContract<bigint>({ contractId: curve, method: 'sell', args: [scAddress(signer.address), scI128(tokensIn), scI128(minQuoteOut)], signer, onProgress });
+    const result = await submitContract<bigint>({ contractId: launch.curve, method: 'sell', args: [scAddress(signer.address), scI128(tokensIn), scI128(minQuoteOut)], signer, onProgress });
     return { quoteOut: result.value, hash: result.hash };
-  } catch (error) { rethrow(error, { [curve]: 'curve' }, 'curve'); }
+  } catch (error) { rethrow(error, tradeRoles(launch), 'curve'); }
 }
 /** One graduation step per call. Only the first step needs the payer's AQUA; later steps ignore the payer. */
 export async function graduate(signer: Signer, curve: string, onProgress?: (p: TxProgress) => void): Promise<{ step: GradStep; hash: string }> {
@@ -172,7 +177,11 @@ export async function graduate(signer: Signer, curve: string, onProgress?: (p: T
   try {
     const result = await submitContract<GradStep>({ contractId: curve, method: 'graduate', args: [scAddress(signer.address)], signer, onProgress });
     return { step: result.value, hash: result.hash };
-  } catch (error) { rethrow(error, { [curve]: 'curve', [MARKET_FACTORY]: 'factory' }, 'curve'); }
+  } catch (error) {
+    // The market factory, router, pool and AQUA SAC have their own error enums: an innermost failure there
+    // surfaces as the raw host message with its contract id rather than a guessed text.
+    rethrow(error, { [curve]: 'curve' }, 'curve');
+  }
 }
 export async function claimGroup(signer: Signer, curve: string, onProgress?: (p: TxProgress) => void): Promise<{ groupId: number; hash: string }> {
   assertSigning();
