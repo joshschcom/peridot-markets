@@ -22,6 +22,8 @@ members = [
   "contracts/reward-distributor",
   "contracts/price-router-ext",
   "contracts/blend-vault-adapter",
+  "contracts/xoxno-vault",
+  "contracts/mocks/mock-xoxno-lending",
   "contracts/margin-factory",
   "contracts/launchpad-token",
   "contracts/launchpad-curve",

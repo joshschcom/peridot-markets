@@ -1,0 +1,22 @@
+[package]
+name = "xoxno-vault"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "lib"]
+doctest = false
+
+[features]
+# Lets a non-test build fall back to the default (testnet) admin and controller. Never use for a release.
+test-defaults = []
+
+[dependencies]
+soroban-sdk = { workspace = true }
+peridot-interfaces = { path = "../peridot-interfaces" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+mock-token = { path = "../../core/mocks/mock-token" }
+mock-xoxno-lending = { path = "../mocks/mock-xoxno-lending" }
