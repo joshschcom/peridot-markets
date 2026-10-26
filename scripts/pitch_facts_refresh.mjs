@@ -34,6 +34,7 @@ const want = (s) => !ONLY || ONLY === s;
 const ADDRS = {
   'peridot-mainnet-admin (deployer, group owner, factory admin)': DEP.admin,
   'peridot-mainnet-keeper (liquidation and refresh keeper)': 'GAFJVD3TKIEMIUEBJPQVZNRCG7PF25XOX7QZDRGR7Y3MNQWYQR6C2S3W',
+  'peridot-mainnet-vaults (vault agents key, funded by the deployer)': 'GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP',
   'peridot-mainnet (Peridot prod admin, prior work key)': 'GDYDTMY46RNAUIIUVG6RPD2D3I3ES4J2SSXGCKIQP2OET4Q5PV75LSPL',
 };
 const SIM_SOURCE = DEP.admin; // public key used only as the simulation source; never signs.
