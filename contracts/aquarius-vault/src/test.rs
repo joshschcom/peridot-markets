@@ -321,6 +321,10 @@ fn drift_and_cooldown_gate_rebalances() {
     // price moves 4 spacings: past the 3-spacing trigger, but the cooldown has not elapsed
     pool.set_tick(&(17_487 + 4 * 60));
     assert_eq!(c.vault.try_rebalance(&c.keeper).unwrap_err().unwrap(), Error::NotDue);
+    // a deposit while the price sits beyond the ladder is refused until the ladder follows it
+    pool.set_tick(&(17_487 + 40 * 60));
+    assert_eq!(c.vault.try_deposit_underlying(&c.alice, &(10 * E7), &0).unwrap_err().unwrap(), Error::OutOfRange);
+    pool.set_tick(&(17_487 + 4 * 60));
     c.env.ledger().set_timestamp(1_000_000 + 3_601);
     assert!(c.vault.needs_rebalance());
     // five rungs: 2 unwind transactions (3 + 2 withdrawals), then 3 funding transactions (2 + 2 + 1 deposits)
@@ -384,6 +388,12 @@ fn market_binding_restricts_deposits_and_defindex_shape() {
     let r = c.vault.deposit(&vec![&c.env, 500 * E7], &vec![&c.env, 500 * E7], &market, &true);
     assert_eq!(r, vec![&c.env, 500 * E7]);
     assert_eq!(c.vault.market(), market);
+    // closed for deposits: the market's call still succeeds and takes nothing
+    c.vault.set_paused(&c.owner, &true);
+    let before = TokenClient::new(&c.env, &u_tok(&c)).balance(&market);
+    assert_eq!(c.vault.deposit(&vec![&c.env, 10 * E7], &vec![&c.env, 10 * E7], &market, &true), vec![&c.env, 0i128]);
+    assert_eq!(TokenClient::new(&c.env, &u_tok(&c)).balance(&market), before);
+    c.vault.set_paused(&c.owner, &false);
     assert!(c.vault.balance(&market) > 0);
     let out = c.vault.withdraw(&c.vault.balance(&market), &vec![&c.env, 0i128], &market);
     assert!(out.get(0).unwrap() > 0);

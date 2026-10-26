@@ -46,6 +46,8 @@ pub const MIN_FIRST_DEPOSIT: i128 = 100_000;
 pub const DEAD_SHARES: i128 = 1_000;
 /// Rebalances also deploy idle funds once idle exceeds this share of NAV (bps).
 const IDLE_REDEPLOY_BPS: i128 = 100;
+/// Idle value (raw underlying units) below which a rebalance step is not worth a transaction.
+const MIN_DEPLOY_VALUE: i128 = 100_000;
 const SCALE: i128 = 1_000_000_000_000; // price-per-share scale for the performance fee high-water mark
 
 #[contracterror]
@@ -74,6 +76,8 @@ pub enum Error {
     Impaired = 20,
     /// This exit needs more pool unwinding than one transaction allows. Exit in smaller parts, or after wind-down.
     LiquidityBusy = 21,
+    /// The pool price is outside the ladder: deposits wait for a rebalance (limits price-manipulation exposure).
+    OutOfRange = 22,
 }
 
 #[contracttype]
@@ -315,13 +319,7 @@ fn nav(env: &Env, c: &Config, sqrt: &U256) -> Result<i128, Error> {
             _ => return Err(Error::PoolUnavailable),
         }
     }
-    if !rungs(env).is_empty() {
-        if let Ok(Ok(f)) = pool.try_get_all_position_fees(&me) {
-            let (a, b) = split(c, &f);
-            u += a;
-            o += b;
-        }
-    }
+    // `estimate_withdraw_position` already includes the fees accrued by each position (verified on the deployed pool).
     Ok(u + other_to_u(env, c, o, sqrt)?)
 }
 
@@ -420,7 +418,21 @@ fn deposit_inner(env: &Env, from: &Address, amount: i128, min_shares: i128) -> R
         }
     }
     bump(env);
-    let (sqrt, _) = spot(env, &c)?;
+    let (sqrt, tick) = spot(env, &c)?;
+    let live = rungs(env);
+    if !live.is_empty() {
+        // Deposits are priced at the pool's spot, so refuse them while the price sits outside every rung: a manipulated
+        // price inside the ladder moves NAV only slightly, one beyond it moves NAV a lot.
+        let mut lo = i32::MAX;
+        let mut hi = i32::MIN;
+        for r in live.iter() {
+            lo = lo.min(r.lower);
+            hi = hi.max(r.upper);
+        }
+        if tick < lo || tick >= hi {
+            return Err(Error::OutOfRange);
+        }
+    }
     let ts = total_shares(env);
     let nav_before = if ts == 0 { 0 } else { nav(env, &c, &sqrt)? };
     if ts > 0 {
@@ -513,12 +525,6 @@ fn withdraw_inner(env: &Env, from: &Address, shares: i128, in_kind: bool) -> Res
             _ => return Err(Error::PoolUnavailable),
         }
     }
-    if !rs.is_empty() {
-        if let Ok(Ok(f)) = pool.try_get_all_position_fees(&me) {
-            let (a, b) = split(&c, &f);
-            total += a + other_to_u(env, &c, b, &sqrt)?;
-        }
-    }
     accrue_fee(env, &c, total);
     let ts = total_shares(env);
     let pay_value = mul_div(env, total, shares, ts).ok_or(Error::InvalidAmount)?;
@@ -575,6 +581,7 @@ fn withdraw_inner(env: &Env, from: &Address, shares: i128, in_kind: bool) -> Res
         idle_u -= u;
         idle_o -= o;
     } else {
+        let mut loss = 0i128;
         if idle_u < pay_value && idle_o > 0 {
             let need_u = pay_value - idle_u;
             let sell = u_to_other(env, &c, need_u * 10_000 / (10_000 - c.slippage_bps as i128), &sqrt)?.min(idle_o);
@@ -583,9 +590,11 @@ fn withdraw_inner(env: &Env, from: &Address, shares: i128, in_kind: bool) -> Res
                 let got = swap_guarded(env, &c, false, sell, expected)?;
                 idle_u += got;
                 idle_o -= sell;
+                // the exiter pays for the conversion (fee and price impact), not the holders who stay
+                loss = (expected - got).max(0);
             }
         }
-        let u = idle_u.min(pay_value);
+        let u = idle_u.min((pay_value - loss).max(0));
         if u < haircut(pay_value) {
             return Err(Error::LiquidityBusy);
         }
@@ -595,9 +604,17 @@ fn withdraw_inner(env: &Env, from: &Address, shares: i128, in_kind: bool) -> Res
     }
     set_i128(env, &DataKey::IdleU, idle_u);
     set_i128(env, &DataKey::IdleO, idle_o);
-    env.storage().instance().set(&DataKey::Rungs, &rs);
+    // drop rungs that were burned completely (the pool rejects a zero-liquidity withdrawal later)
+    let mut kept: Vec<RungPos> = Vec::new(env);
+    for r in rs.iter() {
+        if r.liquidity > 0 {
+            kept.push_back(r);
+        }
+    }
+    env.storage().instance().set(&DataKey::Rungs, &kept);
     set_shares(env, from, shares_of(env, from) - shares);
     set_i128(env, &DataKey::TotalShares, ts - shares);
+    set_i128(env, &DataKey::LastNav, (total - pay_value).max(0));
     if out_u > 0 {
         token::Client::new(env, &c.underlying).transfer(&me, from, &out_u);
     }
@@ -938,8 +955,13 @@ impl AquariusVault {
         if amounts_min.get(0).unwrap_or(0) > amount {
             return Err(Error::Slippage);
         }
-        deposit_inner(&env, &from, amount, 0)?;
-        Ok(vec![&env, amount])
+        // A market must never be blocked by this vault: when deposits are closed (paused, wind-down, cap reached, price outside
+        // the ladder) the call succeeds without taking funds, and the market keeps them as idle cash.
+        match deposit_inner(&env, &from, amount, 0) {
+            Ok(_) => Ok(vec![&env, amount]),
+            Err(Error::Paused) | Err(Error::OutOfRange) | Err(Error::CapExceeded) => Ok(vec![&env, 0]),
+            Err(e) => Err(e),
+        }
     }
 
     // ------------------------------------------------------------ withdrawals (always open)
@@ -964,7 +986,7 @@ impl AquariusVault {
         Ok(u)
     }
 
-    /// Emergency exit with no swap: pays the pro-rata share in BOTH pool tokens. Never blocked by pause or by a stressed pool price.
+    /// Exit with no swap: pays the share in BOTH pool tokens (still valued at the pool price, like every exit). Never blocked by pause.
     pub fn redeem_in_kind(env: Env, from: Address, shares: i128) -> Result<(i128, i128), Error> {
         from.require_auth();
         withdraw_inner(&env, &from, shares, true)
@@ -978,7 +1000,8 @@ impl AquariusVault {
             return zero;
         }
         let Some(c) = env.storage().instance().get::<_, Config>(&DataKey::Config) else { return zero };
-        let value = spot(&env, &c).and_then(|(s, _)| nav(&env, &c, &s)).unwrap_or_else(|_| get_i128(&env, &DataKey::LastNav));
+        // Fails closed: when the pool price cannot be read the quote is 0 (integrators keep their last good value).
+        let value = spot(&env, &c).and_then(|(s, _)| nav(&env, &c, &s)).unwrap_or(0);
         vec![&env, mul_div(&env, shares, value, ts).unwrap_or(0)]
     }
 
@@ -1008,13 +1031,17 @@ impl AquariusVault {
         let now = env.ledger().timestamp();
         let mut unwinding: bool = env.storage().instance().get(&DataKey::Unwinding).unwrap_or(false);
         let mut plan: Vec<PlanRung> = env.storage().instance().get(&DataKey::Plan).unwrap_or(Vec::new(&env));
+        if env.storage().instance().get::<_, bool>(&DataKey::WindDown).unwrap_or(false) && !plan.is_empty() {
+            plan = Vec::new(&env);
+            env.storage().instance().set(&DataKey::Plan, &plan);
+        }
         let live = rungs(&env);
 
         if !unwinding && plan.is_empty() {
             // idle ladder: decide whether anything is due
             let nav_now = nav(&env, &c, &sqrt)?;
             if live.is_empty() {
-                if nav_now <= 0 || env.storage().instance().get::<_, bool>(&DataKey::WindDown).unwrap_or(false) {
+                if nav_now < MIN_DEPLOY_VALUE || env.storage().instance().get::<_, bool>(&DataKey::WindDown).unwrap_or(false) {
                     return Err(Error::NotDue);
                 }
                 plan = fresh_plan(&env, &c, tick);
@@ -1029,7 +1056,7 @@ impl AquariusVault {
                 let center: i32 = env.storage().instance().get(&DataKey::Center).unwrap_or(0);
                 let drifted = ((tick - center).abs() as i64) >= c.recenter_sp as i64 * c.spacing as i64;
                 let idle_val = get_i128(&env, &DataKey::IdleU) + other_to_u(&env, &c, get_i128(&env, &DataKey::IdleO), &sqrt)?;
-                let idle_heavy = idle_val * 10_000 >= nav_now * IDLE_REDEPLOY_BPS;
+                let idle_heavy = idle_val >= MIN_DEPLOY_VALUE && idle_val * 10_000 >= nav_now * IDLE_REDEPLOY_BPS;
                 let wind: bool = env.storage().instance().get(&DataKey::WindDown).unwrap_or(false);
                 if wind {
                     accrue_fee(&env, &c, nav_now);
@@ -1060,6 +1087,10 @@ impl AquariusVault {
             let mut done = 0u32;
             while !rs.is_empty() && done < MAX_WITHDRAWS_PER_TX {
                 let r = rs.get(rs.len() - 1).unwrap();
+                if r.liquidity == 0 {
+                    rs.pop_back();
+                    continue;
+                }
                 let min = vec![&env, 0u128, 0u128];
                 match pool.try_withdraw_position(&me, &r.lower, &r.upper, &r.liquidity, &min) {
                     Ok(Ok(_)) => {}
@@ -1178,6 +1209,10 @@ impl AquariusVault {
         require_owner(&env, &owner)?;
         bump(&env);
         env.storage().instance().set(&DataKey::WindDown, &on);
+        if on {
+            // never keep funding while winding down
+            env.storage().instance().set(&DataKey::Plan, &Vec::<PlanRung>::new(&env));
+        }
         SettingEvent { name: Symbol::new(&env, "wind_down") }.publish(&env);
         Ok(())
     }
@@ -1274,7 +1309,7 @@ impl AquariusVault {
         let Ok((s, tick)) = spot(&env, &c) else { return false };
         let old = rungs(&env);
         if old.is_empty() {
-            return get_i128(&env, &DataKey::IdleU) > 0 || get_i128(&env, &DataKey::IdleO) > 0;
+            return get_i128(&env, &DataKey::IdleU) + other_to_u(&env, &c, get_i128(&env, &DataKey::IdleO), &s).unwrap_or(0) >= MIN_DEPLOY_VALUE;
         }
         let now = env.ledger().timestamp();
         let last: u64 = env.storage().instance().get(&DataKey::LastRebalance).unwrap_or(0);
@@ -1287,7 +1322,7 @@ impl AquariusVault {
         }
         let Ok(n) = nav(&env, &c, &s) else { return false };
         let idle = get_i128(&env, &DataKey::IdleU) + other_to_u(&env, &c, get_i128(&env, &DataKey::IdleO), &s).unwrap_or(0);
-        n > 0 && idle * 10_000 >= n * IDLE_REDEPLOY_BPS
+        idle >= MIN_DEPLOY_VALUE && idle * 10_000 >= n * IDLE_REDEPLOY_BPS
     }
     pub fn get_plan(env: Env) -> (bool, Vec<PlanRung>) {
         (
