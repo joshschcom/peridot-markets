@@ -15,15 +15,15 @@ export function publicStatus(state, now = Date.now()) {
   const healthy = (state.dryRun || interestReady(state.markets,state.interest||{},false,now)) && !refreshUnhealthy && !state.lastError && !state.fatal && !state.stopping && state.lastSuccessfulCycle !== null && now - state.lastSuccessfulCycle < 180000;
   return { ...state, healthy, mode: state.dryRun ? 'simulation-only' : 'live', uptimeSeconds: Math.floor((now - state.startedAt) / 1000) };
 }
-export function createStatusServer(state) {
+export function createStatusServer(state, view = publicStatus) {
   return createServer((request, response) => {
     if (request.method !== 'GET' || !['/health','/status'].includes(request.url)) {
       response.writeHead(404, { 'Content-Type': 'application/json' }); response.end('{"error":"not found"}'); return;
     }
-    const status = publicStatus(state);
+    const status = view(state);
     response.writeHead(request.url === '/health' && !status.healthy ? 503 : 200, {
       'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
     });
-    response.end(JSON.stringify(request.url === '/health' ? { healthy: status.healthy, mode: status.mode, groupId: status.groupId } : status));
+    response.end(JSON.stringify(request.url === '/health' ? { healthy: status.healthy, mode: status.mode, ...(status.groupId !== undefined ? { groupId: status.groupId } : {}) } : status));
   });
 }

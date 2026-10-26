@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { Account, Contract, Networks, StrKey, TransactionBuilder, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
 
-function contract(value, label) {
+export function contract(value, label) {
   if (typeof value !== 'string' || !StrKey.isValidContract(value)) throw new Error(`${label} must be a verified contract address`);
   return value;
 }
-function hash(value, label) {
+export function hash(value, label) {
   if (!/^[a-f0-9]{64}$/.test(value ?? '')) throw new Error(`${label} must be a 64-character lowercase Wasm hash`);
   return value;
 }
@@ -38,6 +38,12 @@ export function groupSettings(env = process.env) {
     deploymentsFile: env.DEPLOYMENTS_FILE || fileURLToPath(new URL(`../../../../deployments/${network}.json`, import.meta.url)),
   };
 }
+/** Router code hashes a group may legitimately run: the current one plus any legacy or extension builds the manifest records. */
+export function routerHashes(wasm = {}) {
+  const hashes = [wasm.price_router, wasm.price_router_ext, wasm.price_router_legacy, ...(Array.isArray(wasm.price_router_allowed) ? wasm.price_router_allowed : [])]
+    .filter(value => value !== undefined && value !== null).map(value => hash(value, 'manifest.wasm price router'));
+  return [...new Set(hashes)];
+}
 export function validateManifest(manifest, settings) {
   if (manifest.network !== settings.network) throw new Error('Deployment manifest network mismatch');
   const admin = manifest.admin;
@@ -50,6 +56,7 @@ export function validateManifest(manifest, settings) {
     receiptHash: hash(manifest.wasm?.receipt_vault, 'manifest.wasm.receipt_vault'),
     lendingHash: hash(manifest.wasm?.controller, 'manifest.wasm.controller'),
     priceRouterHash: hash(manifest.wasm?.price_router, 'manifest.wasm.price_router'),
+    priceRouterHashes: routerHashes(manifest.wasm),
   };
 }
 /** The deployment account may supply a public address for simulation, never the live keeper key. */

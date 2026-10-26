@@ -5,7 +5,7 @@ import { MarginLiquidationKeeper } from './keeper.mjs';
 import { loadState, saveState } from './state.mjs';
 import { StellarClient } from './stellar.mjs';
 import { openJournal } from './journal.mjs';
-import { requireSafe, verifyController } from './safety.mjs';
+import { requireSafe, verifyController, verifyContractHashIn } from './safety.mjs';
 import { createStatusState, createStatusServer } from './status.mjs';
 import { refreshBoostedMarkets, refreshInterestMarkets, interestReady } from './refresh.mjs';
 import { lendingSettings, loadLendingState, saveLendingState, LendingLiquidationKeeper, assertLendingEconomics } from './lending.mjs';
@@ -54,7 +54,7 @@ const lending = new LendingLiquidationKeeper(lendingConfig, group, lendingClient
   lendingState, () => saveLendingState(lendingConfig.stateFile, lendingState), logger, status.lending);
 lendingClient.config.validateLendingCall = async args => {
   const { scValToNative } = await import('@stellar/stellar-sdk');
-  await verifyController(lendingClient.server, { ...config, controllerId:group.priceRouter, expectedControllerHash:group.priceRouterHash });
+  await verifyContractHashIn(lendingClient.server, { ...config, controllerId:group.priceRouter, allowedHashes:group.priceRouterHashes });
   return assertLendingEconomics({ repayMarket:scValToNative(args[1]), collateralMarket:scValToNative(args[2]), repayAmount:scValToNative(args[3]),
     read:lending.read, priceRouter:group.priceRouter, settings:lendingConfig });
 };
@@ -72,7 +72,7 @@ try {
   // Startup attestation also applies to dry runs, before any worker action.
   await verifyController(client.server, config);
   await verifyController(lendingClient.server, lendingClient.config);
-  await verifyController(client.server, { ...config, controllerId:group.priceRouter, expectedControllerHash:group.priceRouterHash });
+  await verifyContractHashIn(client.server, { ...config, controllerId:group.priceRouter, allowedHashes:group.priceRouterHashes });
   for (const market of group.markets) await verifyController(client.server, { ...config, controllerId: market, expectedControllerHash: group.receiptHash });
   status.feeBudget = await estimateRefreshBudget({refreshClients,interestClients,settings,config});
   logger[status.feeBudget.sufficient?'info':'warn']('scheduled fee budget estimate', status.feeBudget);

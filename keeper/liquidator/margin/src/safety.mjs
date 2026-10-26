@@ -32,6 +32,8 @@ export function assertKeeperCall(config, method, args) {
   }
   if (config.role === "boosted-refresh") {
     requireSafe(method === "refresh_boosted_underlying" && args.length === 0, "refresh worker only permits the no-argument refresh call");
+    // Multi-group upkeep passes a live list of attested boosted markets; group-main leaves it unset.
+    if (config.boostedMarkets) requireSafe(config.boostedMarkets.includes(config.controllerId), "refresh target is outside the attested boosted markets");
     return;
   }
   const callerMethods = new Map([
@@ -110,4 +112,14 @@ export async function verifyController(server, config) {
   requireSafe((await server.getNetwork()).passphrase === config.networkPassphrase, "RPC network mismatch");
   const wasm = await server.getContractWasmByContractId(config.controllerId);
   requireSafe(hash(wasm).toString("hex") === config.expectedControllerHash, "controller code hash mismatch");
+}
+
+/** Like verifyController, but accepts any hash from a pinned allow-list (for example the live and legacy price routers). */
+export async function verifyContractHashIn(server, { networkPassphrase, controllerId, allowedHashes }) {
+  requireSafe(Array.isArray(allowedHashes) && allowedHashes.length > 0, "no allowed code hashes configured");
+  requireSafe((await server.getNetwork()).passphrase === networkPassphrase, "RPC network mismatch");
+  const wasm = await server.getContractWasmByContractId(controllerId);
+  const actual = hash(wasm).toString("hex");
+  requireSafe(allowedHashes.includes(actual), "contract code hash is not in the allowed list");
+  return actual;
 }

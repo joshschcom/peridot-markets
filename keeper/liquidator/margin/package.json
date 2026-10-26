@@ -9,8 +9,9 @@
   "scripts": {
     "start": "node src/group-main.mjs",
     "inventory": "node src/inventory.mjs",
-    "check": "node --check src/budget.mjs && node --check src/group-main.mjs && node --check src/group-config.mjs && node --check src/refresh.mjs && node --check src/status.mjs && node --check src/keeper.mjs && node --check src/stellar.mjs && node --check src/lending.mjs",
-    "test": "node --test"
+    "check": "node --check src/budget.mjs && node --check src/group-main.mjs && node --check src/group-config.mjs && node --check src/refresh.mjs && node --check src/status.mjs && node --check src/keeper.mjs && node --check src/stellar.mjs && node --check src/lending.mjs && node --check src/upkeep.mjs && node --check src/upkeep-main.mjs && node --check src/safety.mjs && node --check src/journal-status.mjs",
+    "test": "node --test",
+    "upkeep": "node src/upkeep-main.mjs"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "16.3.1",

@@ -149,7 +149,21 @@ Margin discovery: `get_position_counter` is 0, `activePositions` 0, event checkp
 
 Other upkeep: not covered by any running keeper. Reward-distributor top-ups (`fund` is manual). Aquarius vault `rebalance` and `harvest`, XOXNO `harvest` and Zenex `sync`/`harvest` are owner-or-vault-keeper-gated (not permissionless), have no mainnet runner, and the factory `rebalance_idle_cash` is admin-only. A user-created group or market gets no keeper today. `/health` of the group-1 service cannot go green until repay caps are set.
 
-Code finding: current `main` pins price router `14c83a90...` in `deployments/mainnet.json` while all three live groups still use `e04a63e0...`. `group-main.mjs` verifies the router hash, so starting it from current `main` would fail for group 1. The droplet runs the older `bcb7f83` manifest.
+Code finding (fixed on `keeper-all-groups`): `main` pins price router `14c83a90...` in `deployments/mainnet.json` while all three live groups still use `e04a63e0...`, and `group-main.mjs` required an exact match, so it could not start for group 1 from current `main`. The manifest already records the legacy build (`wasm.price_router_legacy`) and the extension build (`price_router_ext`); both services now accept any hash in that allowed list (plus an optional `wasm.price_router_allowed` array), attesting each group's own router. Confirmed read-only against mainnet: `group-main` dry run for group 1 and the new upkeep dry run for groups 1 to 3 both start from current `main`.
+
+## All-groups upkeep mode
+
+`src/upkeep-main.mjs` is a second entry point for unattended operation across every group the market factory lists, so a user-created group or market is covered without a new deployment per group. It signs only `update_interest` (every attested receipt vault) and `refresh_boosted_underlying` (every attested boosted market). It never signs liquidation, rebalance, harvest, `fund` or any other method, and margin and ordinary-lending liquidation are NOT part of this mode (run `group-main.mjs` for those).
+
+- Discovery: `group_count` and `list_groups` (50 per page) every 5 minutes (`DISCOVERY_INTERVAL_MS`). `GROUP_IDS` is mandatory (`all` or a list); `GROUP_DENY` always wins.
+- Attestation, per group and independent of the others: lending controller code hash equals `wasm.controller`; price router code hash is in the allowed router list (so `e04a63e0` for the three live groups and `14c83a90` for new launchpad groups); every market equals `wasm.receipt_vault`. Any mismatch skips that whole group (reported in `/status` under `groups.skipped`) and never stops the service. Groups without a margin controller are fine; no margin reads are made.
+- Boosted vaults are refreshed only if the vault address is recorded in the manifest (`external.defindex_vaults`, `demo.blend_adapter`, or `UPKEEP_EXTRA_BOOSTED_VAULTS`) or its code hash is `wasm.blend_adapter`. Otherwise the market still gets `update_interest` and the vault is listed under `unattestedBoosted`.
+- Before every signature the group is re-attested and the market's code hash re-checked. A group that fails loses its jobs, the rest keep running. The signer arrays are shared by reference, so a removed market is refused by the safety layer at once.
+- Cadence: boosted every 2 minutes (the on-chain cache expires after 5), interest every 10 minutes (`INTEREST_REFRESH_INTERVAL_MS`, 1 to 60 minutes; interest is also accrued inside every user action). Health is judged per job against twice its own interval, so a slow cadence does not make `/health` flap.
+- Budget gate: per-job ceiling `UPKEEP_MAX_TX_FEE_STROOPS` (default 200,000 stroops, 0.02 XLM) and the shared rolling-24-hour journal cap. Groups are admitted in ID order while the padded reservation plus 25% headroom fits; the first group that does not fit, and every later one, is deferred and nothing is signed for it.
+- Same journal, scope and advisory lock as `group-main` (scope is network plus signing account). Both services cannot run with one key: stop one before starting the other.
+
+Dry run on mainnet, 26 October 2026, no signing: groups 1, 2, 3 admitted, nothing skipped or deferred, 4 interest and 2 boosted jobs, 2,022 scheduled transactions per day, maximum job reservation 32,920 stroops, 77.4M stroops (7.74 XLM) required with headroom against the 10 XLM cap. Measured on-chain cost is about 2.4 XLM per day. Deployment steps are in [KEEPER-DEPLOY-ALLGROUPS.md](KEEPER-DEPLOY-ALLGROUPS.md).
 
 ## Local validation
 
