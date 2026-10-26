@@ -982,6 +982,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mock-zenex"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1993,6 +2000,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7218c655a553b0bed4426cf54b20d7ba363ef543b52d515b3e48d7fd55318dda"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "zenex-vault"
+version = "0.1.0"
+dependencies = [
+ "mock-token",
+ "mock-zenex",
+ "peridot-interfaces",
+ "soroban-sdk",
 ]
 
 [[package]]
