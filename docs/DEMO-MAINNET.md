@@ -74,7 +74,7 @@ XLM market `CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM`, Blend ada
 
 ## Vault factory and Aquarius ladder vault (branch `vault-factory`)
 
-Deployer: `GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP` (identity `peridot-mainnet-vaults`, shared funding of 75 XLM, cap for this job 60 XLM). Artifacts are reproducible and identical to the testnet ones: vault-factory wasm `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d`, aquarius-vault wasm `923b1dd7c5142c4488c7fccad494721a25201c1981f74f14dd6294a52e0f5381`. Neither crate has a baked admin; the factory admin is the constructor argument (the deployer key, see the trust note in `docs/ui/VAULTS-UI.md`).
+Deployer: `GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP` (identity `peridot-mainnet-vaults`, shared funding of 75 XLM, cap for this job 60 XLM). Artifacts are reproducible and identical to the testnet ones: vault-factory wasm `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d`, aquarius-vault wasm `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76`. Neither crate has a baked admin; the factory admin is the constructor argument (the deployer key, see the trust note in `docs/ui/VAULTS-UI.md`).
 
 Cost estimate from the testnet fees charged for the same transactions (stroops converted to XLM): upload aquarius-vault about 3.5, upload vault-factory about 1.9, deploy factory about 0.02, set_wasm below 0.01, create_vault about 0.02, seed deposit about 0.02, three rebalance steps about 1.1 in total, a withdrawal about 0.01. Fees about 7 XLM plus the 10 XLM seed: about 17 XLM, well under the 60 XLM cap.
 
