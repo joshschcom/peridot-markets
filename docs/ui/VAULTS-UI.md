@@ -102,3 +102,7 @@ A vault bound to a market (`bind_market(owner, market)`, set once) accepts depos
 ## Zenex vault kind (branch `zenex-vault`)
 
 Kind `zenex` in `app/src/lib/vaults/kinds/zenex.ts` (fields, bounds that mirror the constructor, `init_args` = `(owner, market, underlying, cfg struct as a sorted ScMap)`, preview rows, summary, risks). It appears in the Create vault form and in the venue list as "Testnet, customizable". It is not a market-wizard route (`factoryRoute: null`): create the vault on `/vaults`, then the Peridot admin allow-lists it and the market uses it through the DeFindex route. Testnet runs against a MOCK Zenex; Zenex itself is mainnet only. Screenshots: `docs/ui/zenex-venues.png`, `zenex-create.png`, `zenex-created.png`. Mainnet txs: none submitted (upload would cost about 35 XLM).
+
+### Zenex mainnet status (branch `zenex-vault-mainnet`)
+
+Zenex wasm uploaded on mainnet by `peridot-mainnet-vaults` (tx `259c9419...c64d`, 32.39 XLM), hash `99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399`, reproducible, baked admin `GC3FLITV...7CXH`. A `create_contract` simulation with the real Zenex market and vault ids succeeds (constructor checks pass against the live protocol). No vault instance and no USDC deposit yet. Admin commands: `scripts/zenex_vault_mainnet.sh admin-cmds` (set_wasm on the mainnet vault factory once it exists, then `set_yield_vault_allowed` on the market factory per vault). `scripts/zenex_vault_mainnet.sh create` simulates by default; `SEND=yes` submits.
