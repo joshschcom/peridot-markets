@@ -18,15 +18,15 @@ export function StepArt({ step }: { step: number }) {
     {/* a group frame with two market cards and a third being added */}
     <rect className="surface-fill" x="10" y="8" width="180" height="54" rx="8" />
     <rect className="ink-strong" x="10" y="8" width="180" height="54" rx="8" />
-    <rect className="acc" x="20" y="18" width="46" height="34" rx="5" />
-    <text className="label" x="43" y="33" textAnchor="middle">USDC</text>
-    <text className="label" x="43" y="45" textAnchor="middle">CF 75%</text>
-    <rect className="acc" x="74" y="18" width="46" height="34" rx="5" />
-    <text className="label" x="97" y="33" textAnchor="middle">XLM</text>
-    <text className="label" x="97" y="45" textAnchor="middle">0% borrow</text>
-    <rect className="ink" x="128" y="18" width="46" height="34" rx="5" strokeDasharray="3 3" />
-    <line className="acc" x1="151" y1="28" x2="151" y2="42" />
-    <line className="acc" x1="144" y1="35" x2="158" y2="35" />
+    <rect className="acc" x="20" y="18" width="52" height="34" rx="5" />
+    <text className="label" x="46" y="33" textAnchor="middle">USDC</text>
+    <text className="label" x="46" y="45" textAnchor="middle">CF 75%</text>
+    <rect className="acc" x="78" y="18" width="52" height="34" rx="5" />
+    <text className="label" x="104" y="33" textAnchor="middle">XLM</text>
+    <text className="label" x="104" y="45" textAnchor="middle">0% rate</text>
+    <rect className="ink" x="136" y="18" width="44" height="34" rx="5" strokeDasharray="3 3" />
+    <line className="acc" x1="158" y1="28" x2="158" y2="42" />
+    <line className="acc" x1="151" y1="35" x2="165" y2="35" />
   </svg>;
   if (step === 2) return <svg className="home-art" viewBox="0 0 200 70" preserveAspectRatio="xMidYMid meet">
     {/* market in the middle, plugs for price, yield, leverage */}
