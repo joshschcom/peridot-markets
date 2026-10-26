@@ -71,6 +71,7 @@
   },
   "vault_factory": "CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW",
   "vault_kinds": {
-    "zenex": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399"
+    "zenex": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399",
+    "xoxno": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23"
   }
 }

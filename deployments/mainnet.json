@@ -54,13 +54,13 @@
   },
   "margin_factory": "CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH",
   "xoxno_vault_prepared": {
-    "status": "prepared, not deployed",
+    "status": "wasm uploaded, vault not yet created",
     "wasm_sha256": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23",
     "wasm_bytes": 22775,
     "controller": "CAUCMIN5KSXEVZ7NMXR3LZATGD5EFIEUI5XWTFLYRO2R5OTXI22WE5JX",
     "baked_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
-    "sim_upload_xlm": 30.95,
-    "codex_review": "GO x2"
+    "codex_review": "GO x2",
+    "upload_tx": "1f902ad6f654cb5677d91b7128264b21179ca87e525cdd80d0804e2506f14423"
   },
   "zenex": {
     "note": "Zenex wasm uploaded; baked admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH; zenex_market CAOZCITWHWAXH5FRU4EULQ5EN2HMTCHICRNC4R5ZAOVD7XHCCQSJ42IB, zenex_vault CB2MX4WXJHOHCTDTN5DCFC7G3TLFLOYLCRCINPK7G2A3EUVW2AYVA56N",
@@ -259,6 +259,28 @@
   "vault_factory_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
   "vault_factory_deploy_tx": "079627868c13673bc029ec2e133b35f6f0c704b87816fce47e1c9524def0c2db",
   "vault_kinds": {
-    "zenex": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399"
+    "zenex": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399",
+    "xoxno": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23"
+  },
+  "xoxno_vault": {
+    "status": "live on mainnet against the real XOXNO controller",
+    "demo_vault": "CCXPXDV3VXQE2WHOQOBRO7XSQTPJXSYWRF4H3UHIEWNVGL2RRYDIHCDC",
+    "wasm_sha256": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23",
+    "controller": "CAUCMIN5KSXEVZ7NMXR3LZATGD5EFIEUI5XWTFLYRO2R5OTXI22WE5JX",
+    "baked_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+    "owner": "GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP",
+    "asset": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+    "hub_id": 1,
+    "spoke_id": 1,
+    "cap_xlm": 10,
+    "fee_bps": 1000,
+    "xoxno_account_id": 95,
+    "txs": {
+      "upload_wasm": "1f902ad6f654cb5677d91b7128264b21179ca87e525cdd80d0804e2506f14423",
+      "set_wasm_kind": "6c57f036b326ed1cdb518e6ea624fc78a6c0265595f8b16adfb02b7303a83c32",
+      "create_vault": "2b8ce5b3bdaef9c807149cfa9daf5e5bc3795b45f69fc5e98f782542602b29b9",
+      "deposit_5xlm": "71abddbea7edc02f72644cc9a86e3171b2ae2880b1e9b4ca3a3424d30ac395a5",
+      "withdraw_2xlm": "320f7f44d69e70ef1dae3eea9647080cc69313b93cf7bfd8ef6596c87cf53523"
+    }
   }
 }
