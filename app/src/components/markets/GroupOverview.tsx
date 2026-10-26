@@ -8,6 +8,7 @@ import { useWallet } from '@/lib/peridot/wallet';
 import type { Group } from '@/lib/peridot/types';
 import { Badge, Meter, Skeleton, EmptyState } from '@/components/ui/primitives';
 import { fmtCompact, fmtPct } from '@/components/ui/format';
+import { GroupAvatar } from '@/components/groups/GroupAvatar';
 
 export interface GroupSummary { group: Group; markets: MarketSummary[] | null; error?: string }
 
@@ -44,7 +45,7 @@ export function GroupCard({ summary, owned }: { summary: GroupSummary; owned: bo
   const routes = markets ? [...new Set(markets.map(m => m.config.yield_route.tag))] : [];
   return <article className="card group-card">
     <div className="group-card-top">
-      <span className="group-icon" aria-hidden><Layers3 size={18} /></span>
+      <GroupAvatar groupId={group.id} name={group.name} size={36} />
       <h3><Link href={`/groups/${group.id}`}>{group.name}</Link></h3>
       {owned ? <Badge tone="accent">Your group</Badge> : <Badge>Group #{group.id}</Badge>}
     </div>

@@ -20,6 +20,7 @@ import { RunwayBar } from '@/components/charts/RunwayBar';
 import { HealthGauge } from '@/components/charts/HealthGauge';
 import { routeLabel } from '@/components/markets/GroupOverview';
 import { AccountHealth } from '@/components/groups/AccountHealth';
+import { GroupAvatar } from '@/components/groups/GroupAvatar';
 const readable=(e:unknown)=>e instanceof Error?e.message:String(e);
 const quantity=(amount:bigint,decimals:number)=>formatAmount(amount,decimals);
 const priceTone=(status?:string)=>status==='ok'?'success':status==='stale'||status==='deviation'?'warn':'danger';
@@ -96,7 +97,7 @@ export default function GroupDashboard({id}:{id:string}) {
     <header className="page-heading">
       <div style={{minWidth:0}}>
         <p className="eyebrow">Isolated market group #{group.id}</p>
-        <h1>{group.name}</h1>
+        <div className="group-header-title"><GroupAvatar groupId={group.id} name={group.name} size={56}/><h1>{group.name}</h1></div>
         <div className="row" style={{marginTop:6}}>
           {group.margin_controller&&<Badge tone="info" icon={Scale}>Leverage</Badge>}
           {group.reward_distributor&&<Badge tone="warn" icon={Gift}>Rewards</Badge>}

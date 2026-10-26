@@ -14,6 +14,7 @@ import { Badge, Countdown, KeyValue, Notice, Skeleton, Stat } from '@/components
 import { Address, TxLink } from '@/components/ui/Address';
 import { RateCurveChart } from '@/components/charts/RateCurveChart';
 import { RunwayBar } from '@/components/charts/RunwayBar';
+import { GroupImageEditor } from '@/components/groups/GroupImageEditor';
 import { fmtAmount, fmtDate } from '@/components/ui/format';
 import './control.css';
 
@@ -55,6 +56,8 @@ export default function ControlPanel({id}:{id:number}) {
     {!wallet.address?<div className="card row between"><p style={{margin:0}}>Connect the group owner wallet to edit settings.</p><button className="button" onClick={()=>wallet.connect()}>Connect wallet</button></div>:!owner?<Notice tone="warn" role="status">This wallet is not the group owner. Settings are read-only. Owner: <code>{state.group.owner}</code></Notice>:null}
     {wallet.networkMismatch&&<Notice tone="danger" role="alert">Switch your wallet to {network.name} before signing.</Notice>}
     {(error||busy||progress)&&<div className={`status ${error?'danger':progress?.status==='success'?'success':'info'}`} role={error?'alert':'status'} aria-live="polite"><div style={{minWidth:0,flex:1}}>{busy&&<strong style={{display:'block'}}>{busy}</strong>}<p>{error||progress?.message||progress?.status}</p>{progress?.hash&&<TxLink hash={progress.hash}>View transaction</TxLink>}{progress?.status==='unknown'&&<p>Do not repeat this action until its outcome is confirmed.</p>}</div></div>}
+
+    <section className="card"><div className="card-header"><div><h2>Group image</h2><p>Shown on the group card and group page. Stored off chain; only the group owner can change it.</p></div></div><GroupImageEditor groupId={id} owner={state.group.owner} groupName={state.group.name} disabled={!owner||!!busy}/></section>
 
     <section className="card">
       <div className="card-header"><div><h2>Staged changes</h2><p>Collateral and price updates wait 60 seconds. A staged collateral factor cannot be cancelled; replace it with a different value to restart its delay. Applying market changes submits all pending collateral and price changes for that market in one wallet signature. When margin is enabled, market changes immediately request an additional signature to synchronize leverage limits.</p></div>{pendingRows.length>0&&<Badge tone="warn">{pendingRows.length} staged</Badge>}</div>
