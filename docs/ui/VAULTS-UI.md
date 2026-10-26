@@ -98,3 +98,8 @@ A vault bound to a market (`bind_market(owner, market)`, set once) accepts depos
 - `app/src/lib/vaults/kinds/`: `types.ts` (VaultKind, FieldSpec), `schema.ts` (validation, encoding), `aquarius.ts` (the Aquarius kind), `index.ts` (`VAULT_KINDS`). **Sibling agents add a kind by creating `kinds/<id>.ts` and adding it to `VAULT_KINDS`.** The Create page, live validation, summary, preview and My vaults are driven by the schema.
 - `app/src/lib/vaults/factory-client.ts`: `createVault`, `listMyVaults`, manifest lookups (`vault_factory`, `vault_kinds.<kind>` in the app manifests `app/src/lib/peridot/deployments/<network>.json`). Demo mode keeps vaults in localStorage.
 - `app/src/components/vaults/CreateVault.tsx`, `LadderPreview.tsx` (preview renderer per `PreviewModel.type`), `MyVaults.tsx`.
+
+
+## XOXNO vault kind (branch `xoxno-vault`)
+
+`app/src/lib/vaults/kinds/xoxno.ts` adds the `xoxno` kind to the VaultKind registry (fields, bounds, `init_args` order, summary, preview), so it appears in Create a vault. The yield venue list shows XOXNO as "Testnet, customizable" (`statusNote` in `registry.ts`): not selectable as a market route in the launch wizard (`factoryRoute: null`) until Peridot admin allowlists a created vault; honest note on the card. The real testnet vault works (see SPECS "XOXNO vault"); in-app deposit and withdraw are not built, use `node scripts/xoxno_vault.mjs deposit|withdraw|show`. Tests: `src/lib/vaults/kinds/xoxno.test.ts`, e2e in `tests/e2e/vaults-flows.spec.ts`. Screenshots: `docs/ui/xoxno-create-vault.png`, `xoxno-create-vault-result.png`, `xoxno-venue-list.png`.
