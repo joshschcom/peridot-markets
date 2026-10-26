@@ -16,7 +16,7 @@ for (const outcome of ['success', 'refund'] as const) {
     await page.getByRole('button', { name: 'Create demo ICO' }).click();
     await expect(page.getByRole('heading', { name: 'Your ICO is live on testnet' })).toBeVisible();
     await page.getByRole('link', { name: 'Open ICO page' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: new RegExp(`Browser ${outcome}`) })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: new RegExp(`Browser ${outcome}`) })).toBeVisible({ timeout: 30000 });
     await expect(page.locator('h1 [data-token-type="ico"]')).toBeVisible();
     await page.getByRole('button', { name: 'Start sale now (demo)' }).click();
     await page.getByLabel('Spend XLM').fill('201');

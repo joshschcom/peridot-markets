@@ -475,8 +475,7 @@ fn effective_max_leverage(group_id, market) -> u128;              // min(group m
 
 ## Launchpad
 
-Stage 1 (token, bonding curve, factory) and stage 2 (graduation, see "Graduation (stage 2)" below). The ICO is not
-built. Crates: `launchpad-token`, `launchpad-curve`, `launchpad-factory`.
+Stage 1 (token, bonding curve, factory), stage 2 (graduation, see "Graduation (stage 2)" below), and fixed-price ICOs on testnet. Crates: `launchpad-token`, `launchpad-curve`, `launchpad-ico`, `launchpad-factory`.
 
 - **Token** (`launchpad-token`): OpenZeppelin fungible `Base`, 7 decimals, the whole supply minted once in
   `__constructor(recipient, name, symbol, supply, metadata_uri)` to the curve. No mint, no admin, no freeze, no
@@ -776,3 +775,18 @@ Crate `contracts/xoxno-vault` (soroban-sdk 25.3, no dependency on the XOXNO SDK:
 **Powers and trust model**. Owner: pause deposits, rotate the keeper, change the deposit cap (never to zero), change the fee within the bound, one-time `bind_market`. Keeper: `harvest` only (books the fee, cannot move funds). Protocol admin (baked): pause deposits and `upgrade(admin, hash)` with immediate effect and no timelock, like every Peridot adapter; this is the largest trust assumption and is disclosed in the app. Nobody can withdraw funds except share holders, and withdrawals work while paused. The vault has not been audited.
 
 **Tests**: 14 unit tests (`cargo test -p xoxno-vault`) against the mock controller: round trip with account close and reopen, yield and fee accounting, deposit after yield, only-depositor, cap and minimum, pause, bounded owner powers, constructor bounds and frozen market, liquidity shortfall, empty views, slippage, `get_assets` shape, `bind_market`. The auth tree is NOT validated by the mock (it uses `mock_all_auths`); it was validated on the real testnet controller with `scripts/xoxno_vault.mjs` (create, deposit, partial and full withdraw, reopen).
+
+
+### Fixed-price ICO (testnet)
+
+`launchpad-factory.create_ico(creator, name, symbol, metadata_uri, params)` deploys an immutable token and one `launchpad-ico` escrow atomically. The token constructor mints the entire supply to the predicted escrow address. The escrow constructor verifies funding, distinct assets and seven decimals. The quote must have a Standard preset in the factory, the same allowlist used by curve launches. ICOs have independent counters and salts (token kind 4, escrow kind 5); only new storage keys were appended. `get_ico(token)`, `ico_count`, `list_icos(start, limit <= 50)` and `icos_of(creator)` expose the registry. Maximum 100 ICOs per creator. There is no launch fee.
+
+Amounts use seven-decimal base units. `price` is quote base units per whole token. A purchase of `amount` allocates `floor(amount * 10^7 / price)` token base units. The full input is charged and counts toward caps; rounding dust stays in the successful raise. Purchases rounding to zero are rejected. Splitting purchases never increases the token allocation. Refunds return the exact amount paid, including rounding dust. Hard-cap overflow is rejected, not partially filled.
+
+Constructor bounds: `start >= ledger timestamp`, duration 600 to 2,592,000 seconds, supply and price in `(0, 10^19]`, `0 < soft_cap <= hard_cap <= 10^19`, `0 <= buyer_cap <= hard_cap`. Zero buyer cap disables it. Supply must cover `floor(hard_cap * 10^7 / price)`, which must be positive. These conservative bounds keep arithmetic within i128. The sale window includes start and excludes end; reaching the hard cap closes purchases but does not allow early claims or withdrawals.
+
+`finalize()` is permissionless and idempotent after end. State phases are 0 (open), 1 (succeeded) and 2 (failed). `claim(user)` and `refund(user)` require the buyer's signature and auto-finalize, so neither depends on creator or admin cooperation. A successful sale permits each buyer to claim once; a failed sale permits each buyer to refund once. `withdraw(creator)` returns raised quote and unsold tokens after success, or only the full token supply after failure. Buyer obligations remain reserved regardless of withdrawal order. There is no pool, market graduation, vesting or allowlist in this version, as permitted by `ICO-TASK.md`.
+
+The admin is baked into the Wasm with `ICO_INIT_ADMIN`. Only that admin may pause new purchases or call `upgrade(admin, hash)`. A permanent upgrade lock takes effect on the first purchase (the cumulative raised counter never decreases, including after refunds). Admin pause never disables finalization, claims, refunds or creator settlement. Before the first purchase, the deployment and template administrator remains a trust assumption; after a purchase, there is no escrow upgrade or arbitrary admin withdrawal path. The factory admin can upgrade the factory or change the template for future launches only.
+
+Events: `create`, `buy`, `finalize`, `claim`, `refund`, `withdraw`; factory event `ico_created`. Instance and buyer storage extend only below 100,000 ledgers to 400,000. Buyer position reads renew their TTL; factory `get_ico` renews its registry entry and indexes. Archived persistent entries remain restorable.
