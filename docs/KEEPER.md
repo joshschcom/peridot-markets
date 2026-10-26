@@ -131,6 +131,26 @@ The inherited droplet examples under `margin/deploy/droplet` are prior-work refe
 
 No live signing, funding or deployment has been performed by this package yet. See [DEMO.md](DEMO.md) for confirmed evidence and [liquidator prior work](../keeper/liquidator/PRIOR_WORK.md) for attribution.
 
+## Mainnet audit, 26 October 2026 (read-only)
+
+Method: market-factory and receipt-vault views simulated, receipt-vault ledger entries read directly (`LastUpdateTime`, `BoostedHealthCache`), droplet `journalctl`/`systemctl`/`/status` read, keeper balance and fees from Horizon. No transaction was sent and nothing on the droplet was changed.
+
+Groups (market-factory `group_count` = 3), all with the pinned receipt-vault wasm `8cc9f723...` and controller wasm `dabe8d1c...`:
+
+| Group | Markets | Boosted | Cache age | Last `update_interest` | Blocks borrows now | Covered by |
+|---|---|---|---|---|---|---|
+| 1 Meridian | USDC `CCZHYR...`, XLM `CCK7R2...` | XLM (DeFindex) | about 70 s | about 60 s | no | group-1 service: both `update_interest`, XLM `refresh_boosted_underlying` |
+| 2 Rewards | `CARDJE...` | none | n/a | about 20 h | no (interest is also accrued inside every user action) | nothing |
+| 3 BlendDemo | `CCUQUY...` | Blend adapter | about 11.4 h (41,000 s) | about 19 h | YES, borrow fails closed after 5 min | nothing |
+
+Group-1 service (`peridot-keeper-group1`, commit `bcb7f83`, uptime 5.5 h): last hour 58 `update_interest` + 29 `refresh_boosted_underlying` confirmed, 0 failed, 0 warn/error log lines. Horizon: 87 transactions, 0.102 XLM charged in that hour (about 11.8k stroops each, 2000 inclusion fee), about 2.45 XLM/day. Keeper `GAFJVD...2S3W` holds 29.41 XLM. The journal reservation (padded, `feeBudget`) is 7.06 XLM/day of the 10 XLM cap, so reservations are about 3x real spend.
+
+Margin discovery: `get_position_counter` is 0, `activePositions` 0, event checkpoint current. Lending: `indexedThrough` is within 30 ledgers of head, 1 borrower indexed, `discoveryLag` 0. `/status` says "Lending discovery or capital configuration is incomplete" and `/health` is permanently 503 only because `LENDING_REPAY_CAPS_JSON='{}'` (no repay inventory or allowance approved), not because of backfill. Consequently no ordinary lending liquidation can ever run, by design. The scheduled jobs themselves are healthy.
+
+Other upkeep: not covered by any running keeper. Reward-distributor top-ups (`fund` is manual). Aquarius vault `rebalance` and `harvest`, XOXNO `harvest` and Zenex `sync`/`harvest` are owner-or-vault-keeper-gated (not permissionless), have no mainnet runner, and the factory `rebalance_idle_cash` is admin-only. A user-created group or market gets no keeper today. `/health` of the group-1 service cannot go green until repay caps are set.
+
+Code finding: current `main` pins price router `14c83a90...` in `deployments/mainnet.json` while all three live groups still use `e04a63e0...`. `group-main.mjs` verifies the router hash, so starting it from current `main` would fail for group 1. The droplet runs the older `bcb7f83` manifest.
+
 ## Local validation
 
 On 25 October 2026, `npm run check` passed and `PG_INTEGRATION_TEST=true npm test` passed all 62 tests with no skips. PostgreSQL ran in an isolated temporary directory over a Unix socket; no production database or signing credentials were used. Startup with missing group/manifest configuration exited with a redacted error. These checks do not replace testnet/mainnet execution evidence.
