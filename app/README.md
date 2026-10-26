@@ -6,7 +6,7 @@ Use Node.js 22.12 or newer. Run `npm ci`, then `NEXT_PUBLIC_USE_MOCKS=true npm r
 
 Mainnet is the default. Copy `.env.example` to `.env.local`, set a browser-safe RPC URL, and use `NEXT_PUBLIC_NETWORK=testnet` for testnet. Live operation requires a verified deployment manifest in `src/lib/peridot/deployments/`. Production Vercel builds reject mock mode. No wallet secret belongs in this app.
 
-Routes: `/launch`, `/groups`, `/groups/[id]`, `/groups/[id]/control`, `/about`.
+Routes: `/launch`, `/groups`, `/groups/[id]`, `/groups/[id]/control`, `/launch-token`, `/tokens`, `/token/[address]`, `/vaults`, `/about`. Wallets (Stellar Wallets Kit): Albedo, Freighter, xBull, LOBSTR, Hana.
 
 Validation: `npm run typecheck`, `npm test`, `npm run test:e2e`, `npm run build`. Install Chromium with `npx playwright install chromium` before browser tests. Browser tests use explicit mock mode and do not establish fresh Freighter or mainnet acceptance.
 
