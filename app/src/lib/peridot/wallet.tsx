@@ -78,7 +78,7 @@ export function WalletProvider({children}:{children:ReactNode}){
       const expires=Number(tx.timeBounds?.maxTime)*1000;
       if(!Number.isSafeInteger(expires)||expires<=Date.now()+10_000)throw new Error('Transaction expired. Review the action again.');
       const operation=tx.operations[0];
-      const method=operation?.type==='invokeHostFunction'&&operation.func.type==='hostFunctionTypeInvokeContract'?operation.func.invokeContract.functionName.toString():'Transaction';
+      const method=operation?.type==='invokeHostFunction'&&operation.func.type==='hostFunctionTypeInvokeContract'?operation.func.invokeContract.functionName.toString():operation?.type==='changeTrust'?'Add asset trustline':'Transaction';
       return new Promise<string>((resolve,reject)=>{
         const request:SignatureRequest={xdr,address,method,fee:tx.fee,expires,resolve,reject,timer:setTimeout(()=>settleSignature(request,new Error('Transaction review expired. Review the action again.')),expires-Date.now()-10_000)};
         signatureRef.current=request;setSignature(request);

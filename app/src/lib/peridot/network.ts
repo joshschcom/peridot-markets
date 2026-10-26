@@ -11,6 +11,7 @@ export const network = {
   rpcUrl: selected === 'mainnet'
     ? (process.env.NEXT_PUBLIC_MAINNET_RPC_URL || '')
     : (process.env.NEXT_PUBLIC_TESTNET_RPC_URL || 'https://soroban-testnet.stellar.org'),
+  fallbackRpcUrl: selected === 'mainnet' ? (process.env.NEXT_PUBLIC_MAINNET_FALLBACK_RPC_URL || 'https://rpc.lightsail.network/') : '',
   useMocks: process.env.NEXT_PUBLIC_USE_MOCKS === 'true',
   readOnly: process.env.NEXT_PUBLIC_READ_ONLY === 'true',
   explorerUrl: `https://stellar.expert/explorer/${selected === 'mainnet' ? 'public' : 'testnet'}`,

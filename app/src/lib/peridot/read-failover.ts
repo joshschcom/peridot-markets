@@ -2,17 +2,17 @@
 export function isReadTransportFailure(error:unknown):boolean {
   if(!error||typeof error!=='object')return false;
   const record=error as Record<string,unknown>;
-  // Negative JSON-RPC codes are semantic responses, even if a proxy attached an HTTP status.
-  if(typeof record.code==='number'&&record.code<0)return false;
   const response=record.response;
   if(response&&typeof response==='object'){
     const {status,data}=response as {status?:unknown;data?:unknown};
+    if(status===408||status===429)return true;
     if(data&&typeof data==='object'&&'error' in data){
       const rpcError=data.error;
       if(rpcError&&typeof rpcError==='object'&&'code' in rpcError&&typeof rpcError.code==='number'&&rpcError.code<0)return false;
     }
     if(typeof status==='number')return status===408||status===429||(status>=500&&status<=599);
   }
+  if(typeof record.code==='number'&&record.code<0)return false;
   if(typeof record.code==='string'&&[
     'ERR_NETWORK','ECONNABORTED','ETIMEDOUT','ECONNRESET','ENOTFOUND','EAI_AGAIN',
     'UND_ERR_CONNECT_TIMEOUT','UND_ERR_HEADERS_TIMEOUT','UND_ERR_BODY_TIMEOUT','UND_ERR_SOCKET',

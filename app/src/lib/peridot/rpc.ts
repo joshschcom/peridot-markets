@@ -1,7 +1,8 @@
-import { Account, Address, BASE_FEE, Contract, rpc, scValToNative, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
+import { Account, Address, BASE_FEE, Contract, rpc, scValToNative, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { network } from './network';
 import { ReadScheduler, isRateLimited } from './read-scheduler';
 import { emitTx, nextTxId } from '../ui-events';
+import { ReadFailover } from './read-failover';
 
 export interface TxProgress {
   status: 'simulating' | 'signing' | 'submitting' | 'confirming' | 'success' | 'unknown' | 'error';
@@ -22,10 +23,17 @@ export class TransactionRejectedError extends Error {
 let server: rpc.Server | undefined;
 let verifiedNetwork: Promise<void> | undefined;
 export async function assertRpcNetwork(): Promise<void> {
-  if (!verifiedNetwork) verifiedNetwork = getRpc().getNetwork().then(result => {
+  if (!verifiedNetwork) verifiedNetwork = rpcRead('getNetwork').then(result => {
     if (result.passphrase !== network.passphrase) throw new Error('RPC network does not match the selected app network.');
   }).catch(error => { verifiedNetwork = undefined; throw error; });
   return verifiedNetwork;
+}
+export type PendingOutcome='none'|'success'|'failed'|'expired'|'unknown';
+export function selectInclusionFee(percentile:string):string{
+  if(!/^\d+$/.test(percentile))throw new Error('Current network fee data is unavailable. Try again.');
+  const fee=BigInt(percentile)>BigInt(BASE_FEE)?BigInt(percentile):BigInt(BASE_FEE);
+  if(fee>100_000n)throw new Error('Current network inclusion fees exceed the app limit. Try again later.');
+  return fee.toString();
 }
 export interface PendingTransaction { hash: string; method: string; contractId: string; maxTime?: number; submissionLedger?: number }
 export function isDefinitivelyExpired(pending: PendingTransaction, result: { status: string; latestLedger: number; latestLedgerCloseTime: number; oldestLedger: number }): boolean {
@@ -47,8 +55,26 @@ function clearPending(address: string, hash: string) {
 }
 export function getRpc(): rpc.Server {
   if (!network.rpcUrl) throw new Error('Mainnet RPC is not configured. Set NEXT_PUBLIC_MAINNET_RPC_URL.');
-  if (!server) server = new rpc.Server(network.rpcUrl, { timeout: 30_000, allowHttp: network.rpcUrl.startsWith('http://localhost') || network.rpcUrl.startsWith('http://127.0.0.1') });
+  if (!server) server = new rpc.Server(network.rpcUrl, { timeout: 10_000, allowHttp: network.rpcUrl.startsWith('http://localhost') || network.rpcUrl.startsWith('http://127.0.0.1') });
   return server;
+}
+// Only this fixed set can fail over. sendTransaction is always called directly, once.
+const READ_METHODS=['getNetwork','getAccount','getLatestLedger','getLedgerEntries','getFeeStats','getTransaction','simulateTransaction'] as const;
+type ReadMethod=typeof READ_METHODS[number];
+let fallback:rpc.Server|undefined;
+function fallbackRpc(){
+  if(!network.fallbackRpcUrl)throw new Error('No read fallback is configured.');
+  if(!fallback)fallback=new rpc.Server(network.fallbackRpcUrl,{timeout:10_000});
+  return fallback;
+}
+const readFailover=new ReadFailover(async()=>{
+  if((await fallbackRpc().getNetwork()).passphrase!==network.passphrase)throw new Error('Fallback RPC network does not match this app.');
+});
+export async function rpcRead<M extends ReadMethod>(method:M,...args:Parameters<rpc.Server[M]>):Promise<Awaited<ReturnType<rpc.Server[M]>>>{
+  if(!READ_METHODS.includes(method))throw new Error('Only approved read methods can fail over.');
+  const invoke=(client:rpc.Server)=>Reflect.apply(client[method],client,args) as Promise<Awaited<ReturnType<rpc.Server[M]>>>;
+  if(!network.fallbackRpcUrl)return invoke(getRpc());
+  return readFailover.run(()=>invoke(getRpc()),()=>invoke(fallbackRpc()));
 }
 const pendingKey = (address: string) => `peridot:pending:${network.name}:${address}`;
 export function getPendingTransaction(address: string): PendingTransaction | null {
@@ -63,17 +89,17 @@ function persistPending(address: string, data: PendingTransaction | null) {
     else window.localStorage.removeItem(pendingKey(address));
   } catch { throw new Error('Pending transaction storage is unavailable. Enable browser storage before signing.'); }
 }
-async function reconcilePendingTransactionLocked(address: string): Promise<'none' | 'success' | 'failed' | 'unknown'> {
+async function reconcilePendingTransactionLocked(address: string): Promise<PendingOutcome> {
   const pending = getPendingTransaction(address);
   if (!pending) return 'none';
   await assertRpcNetwork();
-  const result = await getRpc().getTransaction(pending.hash);
+  const result = await rpcRead('getTransaction', pending.hash);
   if (result.status === 'NOT_FOUND' && !isDefinitivelyExpired(pending, result)) return 'unknown';
   clearPending(address, pending.hash);
   invalidateContractReads();
-  return result.status === 'SUCCESS' ? 'success' : 'failed';
+  return result.status === 'SUCCESS' ? 'success' : result.status === 'NOT_FOUND' ? 'expired' : 'failed';
 }
-export async function reconcilePendingTransaction(address: string): Promise<'none' | 'success' | 'failed' | 'unknown'> {
+export async function reconcilePendingTransaction(address: string): Promise<PendingOutcome> {
   return withWalletLock(address, () => reconcilePendingTransactionLocked(address));
 }
 // Coalesce only simultaneous identical reads. Never cache settled financial state.
@@ -96,7 +122,7 @@ async function performRead(contractId: string, method: string, args: xdr.ScVal[]
   }).addOperation(new Contract(contractId).call(method, ...args)).setTimeout(120).build();
   let result:Awaited<ReturnType<rpc.Server['simulateTransaction']>>;
   for(let attempt=0;;attempt++){
-    try{result=await readScheduler.run(()=>getRpc().simulateTransaction(tx));break;}
+    try{result=await readScheduler.run(()=>rpcRead('simulateTransaction',tx));break;}
     catch(error){
       if(!isRateLimited(error)||attempt>=2)throw error;
       await new Promise(resolve=>setTimeout(resolve,1000*(attempt+1)));
@@ -113,6 +139,7 @@ export async function readContract<T>(contractId: string, method: string, args: 
 interface ContractInput {
   contractId: string; method: string; args?: xdr.ScVal[]; signer: Signer;
   onProgress?: (progress: TxProgress) => void;
+  prepareClassic?: () => Transaction;
 }
 export async function submitContract<T>(input: ContractInput): Promise<TxResult<T>> {
   if (network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
@@ -120,6 +147,14 @@ export async function submitContract<T>(input: ContractInput): Promise<TxResult<
   const txId = nextTxId(), onProgress = (progress: TxProgress) => { emitTx({ id: txId, method: input.method, contractId: input.contractId, ...progress }); input.onProgress?.(progress); };
   try { return await withWalletLock(input.signer.address, () => submitContractLocked<T>({ ...input, onProgress })); }
   finally { invalidateContractReads(); }
+}
+/** Prepared classic transactions use the same locks, journal, signature checks and confirmation path. */
+export async function submitPreparedTrustline(input:{token:string;signer:Signer;validate:()=>Transaction;onProgress?:(progress:TxProgress)=>void}):Promise<TxResult<undefined>>{
+  return submitContract({contractId:input.token,method:'change_trust',signer:input.signer,onProgress:input.onProgress,prepareClassic:()=>{
+    const tx=input.validate();
+    if(tx.source!==input.signer.address||tx.operations.length!==1||tx.operations[0].type!=='changeTrust'||tx.signatures.length)throw new Error('Unexpected prepared trustline transaction.');
+    return tx;
+  }});
 }
 async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T>> {
   const { contractId, method, signer, onProgress } = input;
@@ -134,27 +169,38 @@ async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T
     if (pending) {
       const status = await reconcilePendingTransactionLocked(signer.address);
       if (status === 'unknown') throw new UnknownTransactionError(pending.hash);
-      throw new Error(`The previous transaction ${status === 'success' ? 'succeeded' : 'failed'}. Refresh balances and review this action before trying again.`);
+      submittedHash=pending.hash;
+      const outcome=status==='success'?'confirmed':status==='expired'?'expired without confirmation':'failed on chain';
+      throw new Error(`Previous transaction ${pending.hash} ${outcome}. No new transaction was sent. Refresh balances, then review and submit the action again.`);
     }
     const client = getRpc();
-    await assertRpcNetwork();
-    onProgress?.({ status: 'simulating' });
-    const account = await client.getAccount(signer.address);
-    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: network.passphrase })
-      .addOperation(new Contract(contractId).call(method, ...(input.args || []))).setTimeout(180).build();
-    const simulation = await client.simulateTransaction(tx);
-    if (!rpc.Api.isSimulationSuccess(simulation)) {
-      throw new Error(`Simulation failed: ${'error' in simulation ? simulation.error : 'Archived contract data must be restored before this transaction.'}`);
+    // The submission endpoint itself must be on the correct network, even when reads fail over.
+    if((await client.getNetwork()).passphrase!==network.passphrase)throw new Error('Submission RPC network does not match this app.');
+    onProgress?.({ status: 'simulating', message:'Checking balances, current fees and transaction limits.' });
+    const account = await rpcRead('getAccount',signer.address);
+    let prepared:Transaction;
+    if(input.prepareClassic){
+      prepared=input.prepareClassic();
+      if(BigInt(prepared.sequence)!==BigInt(account.sequenceNumber())+1n)throw new Error('Wallet activity changed the account sequence. Review the trustline again.');
+    }else{
+      const fees=await rpcRead('getFeeStats');
+      const fee=selectInclusionFee(fees.sorobanInclusionFee.p95);
+      const tx = new TransactionBuilder(account, { fee, networkPassphrase: network.passphrase })
+        .addOperation(new Contract(contractId).call(method, ...(input.args || []))).setTimeout(180).build();
+      const simulation = await rpcRead('simulateTransaction',tx);
+      if (!rpc.Api.isSimulationSuccess(simulation)) {
+        throw new Error(`Simulation failed: ${'error' in simulation ? simulation.error : 'Archived contract data must be restored before this transaction.'}`);
+      }
+      prepared = rpc.assembleTransaction(tx, simulation).build();
     }
-    const prepared = rpc.assembleTransaction(tx, simulation).build();
-    const submissionLedger = (await client.getLatestLedger()).sequence;
+    const submissionLedger = (await rpcRead('getLatestLedger')).sequence;
     onProgress?.({ status: 'signing' });
     const signedXdr = await signer.signTransaction(prepared.toXDR());
     const signed = TransactionBuilder.fromXDR(signedXdr, network.passphrase);
     if (signed.hash().length !== prepared.hash().length || signed.hash().some((value, index) => value !== prepared.hash()[index])) throw new Error('Wallet returned a different transaction.');
     submittedHash = Array.from(signed.hash(), value => value.toString(16).padStart(2, '0')).join('');
     persistPending(signer.address, { hash: submittedHash, contractId, method, maxTime: Number(prepared.timeBounds?.maxTime), submissionLedger });
-    onProgress?.({ status: 'submitting', hash: submittedHash });
+    onProgress?.({ status: 'submitting', hash: submittedHash, message:'Signature received. Submitting this transaction once.' });
     let submission: Awaited<ReturnType<rpc.Server['sendTransaction']>>;
     // A 429 means the provider never accepted the envelope. Re-sending the identical signed bytes is idempotent (same hash), so retry before declaring the outcome unknown.
     for (let attempt = 0; ; attempt++) {
@@ -170,15 +216,15 @@ async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T
     }
     if (submission.status === 'TRY_AGAIN_LATER') throw new UnknownTransactionError(submittedHash);
     if (submission.hash !== submittedHash) throw new UnknownTransactionError(submittedHash);
-    onProgress?.({ status: 'confirming', hash: submittedHash });
+    onProgress?.({ status: 'confirming', hash: submittedHash, message:'Submitted. Waiting for a ledger confirmation. Do not submit again.' });
     const deadline = Date.now() + 90_000;
     while (Date.now() < deadline) {
       let result: Awaited<ReturnType<rpc.Server['getTransaction']>>;
-      try { result = await client.getTransaction(submittedHash); }
+      try { result = await rpcRead('getTransaction',submittedHash); }
       catch { await new Promise(resolve => setTimeout(resolve, 1500)); continue; }
       if (result.status === 'SUCCESS') {
         clearPending(signer.address, submittedHash);
-        onProgress?.({ status: 'success', hash: submittedHash });
+        onProgress?.({ status: 'success', hash: submittedHash, message:`Confirmed in ledger ${result.ledger}. Updating your balances.` });
         return { hash: submittedHash, ledger: result.ledger, value: (result.returnValue ? scValToNative(result.returnValue) : undefined) as T };
       }
       if (result.status === 'FAILED') {
@@ -198,7 +244,7 @@ async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T
 export async function waitForLedgerBeyond(ledger: number): Promise<void> {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
-    if ((await getRpc().getLatestLedger()).sequence > ledger) return;
+    if ((await rpcRead('getLatestLedger')).sequence > ledger) return;
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   throw new Error('The next ledger is not available yet. Refresh chain state before the next stage.');

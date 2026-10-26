@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getRpc, readContractRaw, invalidateContractReads, isDefinitivelyExpired, withWalletLock } from './rpc';
+import { getRpc, selectInclusionFee, readContractRaw, invalidateContractReads, isDefinitivelyExpired, withWalletLock } from './rpc';
 const pending = { hash: 'hash', method: 'supply', contractId: 'contract', maxTime: 1000, submissionLedger: 100 };
 const result = { status: 'NOT_FOUND', latestLedger: 150, latestLedgerCloseTime: 1001, oldestLedger: 90 };
 test('unseen transaction expires only with complete RPC history beyond its time bound', () => {
@@ -63,4 +63,10 @@ test('simultaneous identical reads coalesce, while settled values and failures a
     const retry=readContractRaw(contract,'symbol');await tick();assert.equal(calls,4);
     complete({result:{retval:nativeToScVal('XLM')},transactionData:{},minResourceFee:'0',events:[]});await retry;
   } finally {client.getNetwork=originalNetwork;client.simulateTransaction=originalSimulate;Object.defineProperty(network,'rpcUrl',{value:originalUrl,configurable:true});}
+});
+
+
+test('Soroban inclusion fee uses current estimate with a minimum and explicit cap',()=>{
+ assert.equal(selectInclusionFee('200'),'200');assert.equal(selectInclusionFee('0'),'100');
+ assert.throws(()=>selectInclusionFee('100001'),/app limit/);assert.throws(()=>selectInclusionFee('NaN'),/unavailable/);
 });
