@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { disclaimerPreAcceptScript } from '../../src/lib/ui/risk-disclaimer';
+
+test.beforeEach(async ({ page }) => { await page.addInitScript(disclaimerPreAcceptScript); });
 
 test('launch a test token, trade, reach a target, graduate in six steps and claim a group in demo mode', async ({ page }) => {
   const errors: string[] = [];
