@@ -90,7 +90,7 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   await expect(panel.getByText('Peridot Demo Token (PDEMO)')).toBeVisible();
   await expect(panel.getByText('1,000,000')).toBeVisible();
   await expect(panel.getByText('Priced by Reflector')).toBeVisible();
-  await expect(panel).toContainText('Any token with a Reflector price and seven decimals');
+  await expect(panel).toContainText('Any token with an approved Reflector price and seven decimals');
 
   // An unpriced token: blocked with plain copy.
   await token.fill('CAEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQSCIJBEEQTD2L');
