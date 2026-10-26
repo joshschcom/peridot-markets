@@ -104,6 +104,10 @@ const SHOTS = [
       await p.getByText(/Applies in \d+s/).first().waitFor({ timeout: 8000 }).catch(() => {});
       await sleep(800); await scrollTo(p, 'Change history', 330);
     } },
+  { id: 'wallet-modal', server: 'mainnet', kind: 'real mainnet app, no wallet connected (modal only)', desc: 'Wallet picker modal opened from Connect wallet', run: async (p, b) => { await p.goto(b + '/'); await settle(p, 3000); await p.getByRole('button', { name: /Connect wallet/ }).first().click(); await sleep(1500); } },
+  { id: 'network-menu', server: 'mainnet', kind: 'real mainnet app (menu only)', desc: 'Network pill menu (Mainnet / Testnet switch)', run: async (p, b) => { await p.goto(b + '/'); await settle(p, 3000); await p.getByRole('button', { name: /Mainnet/ }).first().click(); await sleep(1200); } },
+  { id: 'launch-chooser', server: 'mainnet', kind: 'real mainnet app (read-only, nothing submitted)', desc: 'Launchpad launch chooser: Simple, Curve and ICO side by side', run: async (p, b) => { await p.goto(b + '/launch-token'); await settle(p, 5000); } },
+  { id: 'token-mainnet', server: 'mainnet', kind: 'real mainnet data (read-only); PDEMO launched 26 Oct 09:21 UTC, still on its curve', desc: 'Mainnet PDEMO token page on its bonding curve (not graduated)', run: async (p, b) => { await p.goto(b + '/token/CDKHQPYSBULW3T2FNLPKKKXVKREDYZTI37KRURBNVNEUIZ5YDT4O4DYT'); await settle(p, 9000); } },
   { id: 'token-before', server: 'testnet', kind: 'real TESTNET data (read-only)', desc: 'Launched token still on its bonding curve (PDEMO), before graduation', run: async (p, b) => { await p.goto(b + '/token/' + TRADING_TOKEN); await settle(p, 7000); } },
   { id: 'token-after', server: 'testnet', kind: 'real TESTNET data (read-only)', desc: 'Graduated token (PGRAD): Aquarius pool, locked LP, own market group', run: async (p, b) => { await p.goto(b + '/token/' + GRADUATED_TOKEN); await settle(p, 7000); } },
 ];
