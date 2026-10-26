@@ -15,10 +15,12 @@
     "zenex_vault": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399",
     "launchpad_token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
     "launchpad_curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
-    "launchpad_factory": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+    "launchpad_factory": "b371a8c37cb6a9cabd74b28c899f86114efa7a85e955042085f78c3261ee6d62",
     "market_factory_v2": "baec971cc451c9bf2e810c8abfef14589ee6b9b10fcb1245aed3fedeae47dda7",
     "price_router_ext": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5",
-    "price_router_legacy": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876"
+    "price_router_legacy": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876",
+    "launchpad_factory_v1": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+    "launchpad_ico": "7596bd473fa4d036b65a5b05ea2a65e273ca14a9f6ca1822f397b245b0b82284"
   },
   "external": {
     "reflector_external": "CAFJZQWSED6YAWZU3GWRTOCNPPCGBN32L7QV43XX5LZLFTK6JLN34DLN",

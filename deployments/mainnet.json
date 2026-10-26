@@ -15,11 +15,13 @@
     "zenex_vault": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399",
     "launchpad_token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
     "launchpad_curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
-    "launchpad_factory": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+    "launchpad_factory": "b371a8c37cb6a9cabd74b28c899f86114efa7a85e955042085f78c3261ee6d62",
     "market_factory_v2": "baec971cc451c9bf2e810c8abfef14589ee6b9b10fcb1245aed3fedeae47dda7",
     "price_router_ext": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5",
     "price_router_legacy": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876",
-    "vault_factory": "231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d"
+    "vault_factory": "231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d",
+    "launchpad_factory_v1": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+    "launchpad_ico": "7596bd473fa4d036b65a5b05ea2a65e273ca14a9f6ca1822f397b245b0b82284"
   },
   "demo": {
     "group_id": 1,
@@ -281,6 +283,18 @@
       "create_vault": "2b8ce5b3bdaef9c807149cfa9daf5e5bc3795b45f69fc5e98f782542602b29b9",
       "deposit_5xlm": "71abddbea7edc02f72644cc9a86e3171b2ae2880b1e9b4ca3a3424d30ac395a5",
       "withdraw_2xlm": "320f7f44d69e70ef1dae3eea9647080cc69313b93cf7bfd8ef6596c87cf53523"
+    }
+  },
+  "launchpad_ico_mainnet": {
+    "status": "live",
+    "note": "ICO wasm and new launchpad factory uploaded, factory CAN6YNLF... upgraded in place and set_ico_wasm done, run by Joshua via scripts/ico_mainnet.sh on 2026-10-26 (about 11:20 UTC); no ICO created on mainnet yet",
+    "ico_wasm_sha256": "7596bd473fa4d036b65a5b05ea2a65e273ca14a9f6ca1822f397b245b0b82284",
+    "factory_wasm_sha256": "b371a8c37cb6a9cabd74b28c899f86114efa7a85e955042085f78c3261ee6d62",
+    "tx": {
+      "upload_ico": "a86d1491fb62bc36f559d8225e8abc1d9d74efae568fdf2d824800b7cdcd0f49",
+      "upload_factory": "405e9ee9ab3efde21f0f041ea948e7f438f7277b2c37a9f29c87164ac9263841",
+      "upgrade": "2df7039be8a3573548f5c88c9cb49eb3d94708647bafbc04a5fe2ab1a96bffaf",
+      "set_ico_wasm": "b572adeff883116c001fd8ecf32aa6f58640139794f4e5b9e97929ca608f0e05"
     }
   }
 }

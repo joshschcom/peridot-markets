@@ -57,12 +57,12 @@ export const LAUNCHPAD_MAINNET: LaunchpadConfig = {
   market_factory: 'CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S',
   aquarius_router: 'CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK',
   /** Flip to true only after the factory upgrade and `set_ico_wasm` are confirmed on mainnet (see deployments/mainnet.json `launchpad_ico`). */
-  ico_live: false,
+  ico_live: true,
   wasm: {
     launchpad_token: 'aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550',
     launchpad_curve: 'bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c',
     /** Live factory Wasm. After the in-place upgrade this becomes `b371a8c3...6d62` (built, not yet uploaded), together with the manifest snapshot. */
-    launchpad_factory: 'e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d',
+    launchpad_factory: 'b371a8c37cb6a9cabd74b28c899f86114efa7a85e955042085f78c3261ee6d62',
     launchpad_ico: '7596bd473fa4d036b65a5b05ea2a65e273ca14a9f6ca1822f397b245b0b82284',
   },
   demo: {
