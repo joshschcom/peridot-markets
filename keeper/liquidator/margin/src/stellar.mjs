@@ -78,7 +78,7 @@ export class StellarClient {
       );
     }
     return new TransactionBuilder(account, {
-      fee: BASE_FEE,
+      fee: String(this.config.inclusionFeeStroops ?? BASE_FEE),
       networkPassphrase: this.config.networkPassphrase,
     })
       .addOperation(this.contract.call(method, ...args))

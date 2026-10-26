@@ -44,6 +44,9 @@ export function loadConfig() {
     "GDYDTMY46RNAUIIUVG6RPD2D3I3ES4J2SSXGCKIQP2OET4Q5PV75LSPL",
     "GDM5XP4ACJPXPYP5G2UYGB6WC3G2MUBCYI2ZUCYWVB5CL2JWGCFWNWA3",
   ].includes(publicKey)) throw new Error("Use a dedicated keeper key, not the deployer or treasury");
+  // Soroban inclusion fee bid per transaction. Mainnet has been quoting 200 stroops for almost every transaction since
+  // 26 Oct 2026, so the 100 stroop BASE_FEE is refused at submission. Total fee stays under MAX_TRANSACTION_FEE_STROOPS.
+  const inclusionFeeStroops = integer("INCLUSION_FEE_STROOPS", 2_000, { min: 100, max: 100_000 });
   const maxTransactionFeeStroops = BigInt(integer("MAX_TRANSACTION_FEE_STROOPS", 1_000_000, { min: 100 }));
   const maxFee24hStroops = BigInt(integer("MAX_FEE_24H_STROOPS", 10_000_000, { min: 100 }));
   if (maxFee24hStroops < maxTransactionFeeStroops) throw new Error("24-hour fee cap is below transaction cap");
@@ -64,6 +67,7 @@ export function loadConfig() {
     databaseCaFile: process.env.DATABASE_CA_FILE,
     databaseCaPem: process.env.DATABASE_CA_PEM,
     expectedControllerHash,
+    inclusionFeeStroops,
     maxTransactionFeeStroops,
     maxFee24hStroops,
     minFeeBalanceStroops: BigInt(integer("MIN_FEE_BALANCE_STROOPS", 20_000_000, { min: 1 })),
