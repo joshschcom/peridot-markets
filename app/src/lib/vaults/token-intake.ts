@@ -2,6 +2,7 @@
  * Pure and reader-injected so it runs in node tests. The RPC wiring is in token-intake-client.ts. */
 import { Asset, StrKey } from '@stellar/stellar-sdk';
 import { MIN_DEPTH_USD, type AquariusPool, type Net, type PoolToken } from './aquarius-pools';
+import { feedLabel, formatPriceUsd, freshness, maxAgeSecs, type FeedKind, type LiveQuote } from './price-sources';
 
 export type ParsedToken =
   | { kind: 'contract'; address: string }
@@ -64,6 +65,12 @@ export interface PricingInput {
   /** USDC-paired Aquarius pool found for the token, with its USDC-side reserve in whole USD (null when unreadable). */
   pool: { address: string; depthUsd: number | null } | null;
   symbol: string;
+  /** Live quote read from the approved mapping's oracle (null when it could not be read, absent in demo mode). */
+  quote?: LiveQuote | null;
+  /** The kind of oracle that lists the token without a factory-approved mapping (null when no oracle lists it). */
+  listedOn?: FeedKind | null;
+  /** Wall clock in seconds, injected for tests. */
+  nowSecs?: number;
 }
 export interface PricingDecision {
   mode: PricingMode;
@@ -79,9 +86,25 @@ export interface PricingDecision {
 export function decidePricing(input: PricingInput): PricingDecision {
   const depthOk = input.pool && input.pool.depthUsd !== null ? input.pool.depthUsd >= MIN_DEPTH_USD : null;
   if (input.reflectorApproved) {
-    return { mode: 'reflector', canSubmit: true, aquariusDepthOk: depthOk, title: 'Priced by Reflector', lines: [`${input.symbol} has a Reflector feed that the factory has approved for this exact token.`, 'This is the price source the market uses. No fallback price is set.'] };
+    const q = input.quote ?? null;
+    const label = feedLabel(q?.kind ?? null);
+    const lines = [`${input.symbol} has a ${label === 'Reflector' ? 'Reflector feed' : label + ' feed'} that the factory has approved for this exact token.`];
+    if (q) {
+      const f = freshness(q.timestamp, input.nowSecs ?? Math.floor(Date.now() / 1000), q.resolution);
+      lines.push(`Live price ${formatPriceUsd(q.price)} per ${input.symbol}, updated ${f.text}. ${f.fresh ? `Fresh: the router accepts quotes up to ${Math.round(maxAgeSecs(q.resolution) / 60)} minutes old.` : `Stale: older than the ${Math.round(maxAgeSecs(q.resolution) / 60)} minute limit, so borrowing and liquidation wait for the next oracle round.`}`);
+    } else if (input.quote === null) lines.push('The live price could not be read right now. The factory approval is on chain.');
+    if (q?.kind === 'dex') lines.push('The DEX oracle averages recent Stellar DEX trades and pool reserves in USDC. Thin markets can be moved, so keep the collateral factor and caps low.');
+    lines.push('This is the price source the market uses. No fallback price is set.');
+    return { mode: 'reflector', canSubmit: true, aquariusDepthOk: depthOk, title: `Priced by ${label}`, lines };
   }
-  const lines = [`${input.symbol} has no Reflector feed approved by the factory, and Reflector is the only price source a wallet-created market can use today.`];
+  if (input.listedOn) {
+    const label = feedLabel(input.listedOn);
+    const lines = [`${input.symbol} is listed on the ${label}, but the factory has not approved that mapping yet, so a wallet-created market cannot use it.`];
+    if (input.pool) lines.push('Pool pricing (AquariusOnly) can only be selected by markets that the launchpad creates when a token graduates. The factory rejects it for any other owner.');
+    lines.push('Ask Peridot to approve this token with the ' + label + '. Once approved it can be listed here without any other change.');
+    return { mode: 'none', canSubmit: false, aquariusDepthOk: depthOk, title: 'Feed found, waiting for Peridot approval', lines };
+  }
+  const lines = [`${input.symbol} is not listed on a Reflector oracle the factory knows, and Reflector is the only price source a wallet-created market can use today.`];
   if (input.pool) {
     lines.push(depthOk === null ? `An Aquarius pool with USDC exists (depth could not be read).` : depthOk
       ? `An Aquarius pool with USDC exists with about $${Math.round(input.pool.depthUsd!).toLocaleString('en-US')} per side, above the router's $${MIN_DEPTH_USD} per side guard.`
@@ -90,7 +113,7 @@ export function decidePricing(input: PricingInput): PricingDecision {
   } else {
     lines.push('No Aquarius pool pairs it with USDC either, so there is nothing to price it from.');
   }
-  lines.push('To list this token, ask Peridot to approve its Reflector mapping, or launch it through the launchpad so graduation creates its market.');
+  lines.push('To list this token, ask Peridot to add and approve a Reflector feed for it, or launch it through the launchpad so graduation creates its market.');
   return { mode: 'none', canSubmit: false, aquariusDepthOk: depthOk, title: 'No price source available, market blocked', lines };
 }
 

@@ -3,6 +3,7 @@
  * A token that trades in several pools is one asset with several pool choices, never a repeated row. */
 import { StrKey } from '@stellar/stellar-sdk';
 import { pairLabel, type AquariusPool, type Net, type PoolType } from './aquarius-pools';
+import type { FeedCoverage, FeedKind } from './price-sources';
 
 export type AssetOrigin = 'known' | 'aquarius' | 'launchpad' | 'demo';
 export interface AssetPool { address: string; pair: string; type: PoolType; feeBps: number | null }
@@ -17,28 +18,31 @@ export interface CatalogAsset {
   collision: boolean;
   origins: AssetOrigin[];
   pools: AssetPool[];
-  /** true: a Reflector feed for this asset is documented for this network. null: unknown until verified. */
+  /** Derived from the Reflector oracles' assets() lists. true: an oracle lists this asset. false: none does. null: oracle lists not loaded yet.
+   *  Coverage is not approval: the factory approves each (token, oracle, asset) mapping separately and the token panel shows that. */
   reflector: boolean | null;
+  /** Which kind of oracle lists it (the DEX oracle wins when both do). */
+  feed: FeedKind | null;
   /** A yield vault (DeFindex) is configured for this asset in the deployment manifest. */
   vault: boolean;
 }
-export interface KnownAsset { address: string; symbol: string; name: string; decimals: number; reflector?: boolean }
+export interface KnownAsset { address: string; symbol: string; name: string; decimals: number }
 
 /** Order here is the default order of the dropdown. Decimals: every entry is a Stellar Asset Contract (7). */
 export const KNOWN_ASSETS: Record<Net, readonly KnownAsset[]> = {
   mainnet: [
-    { address: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75', symbol: 'USDC', name: 'USD Coin (Circle)', decimals: 7, reflector: true },
-    { address: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', symbol: 'XLM', name: 'Stellar Lumens', decimals: 7, reflector: true },
+    { address: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75', symbol: 'USDC', name: 'USD Coin (Circle)', decimals: 7 },
+    { address: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', symbol: 'XLM', name: 'Stellar Lumens', decimals: 7 },
     { address: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV', symbol: 'EURC', name: 'Euro Coin (Circle)', decimals: 7 },
     { address: 'CAUIKL3IYGMERDRUN6YSCLWVAKIFG5Q4YJHUKM4S4NJZQIA3BAS6OJPK', symbol: 'AQUA', name: 'Aquarius', decimals: 7 },
     { address: 'CD25MNVTZDL4Y3XBCPCJXGXATV5WUHHOWMYFF4YBEGU5FCPGMYTVG5JY', symbol: 'BLND', name: 'Blend', decimals: 7 },
     { address: 'CCCRWH6Q3FNP3I2I57BDLM5AFAT7O6OF6GKQOC6SSJNDAVRZ57SPHGU2', symbol: 'PYUSD', name: 'PayPal USD', decimals: 7 },
-    { address: 'CBZVSNVB55ANF24QVJL2K5QCLOAB6XITGTGXYEAF6NPTXYKEJUYQOHFC', symbol: 'yXLM', name: 'Ultra Stellar yXLM', decimals: 7, reflector: false },
+    { address: 'CBZVSNVB55ANF24QVJL2K5QCLOAB6XITGTGXYEAF6NPTXYKEJUYQOHFC', symbol: 'yXLM', name: 'Ultra Stellar yXLM', decimals: 7 },
   ],
   testnet: [
     { address: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA', symbol: 'USDC', name: 'USD Coin (Circle testnet)', decimals: 7 },
-    { address: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC', symbol: 'XLM', name: 'Stellar Lumens', decimals: 7, reflector: true },
-    { address: 'CDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY', symbol: 'USDT', name: 'Tether USD (testnet mock)', decimals: 7, reflector: true },
+    { address: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC', symbol: 'XLM', name: 'Stellar Lumens', decimals: 7 },
+    { address: 'CDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY', symbol: 'USDT', name: 'Tether USD (testnet mock)', decimals: 7 },
     { address: 'CDNVQW44C3HALYNVQ4SOBXY5EWYTGVYXX6JPESOLQDABJI5FC5LTRRUE', symbol: 'AQUA', name: 'Aquarius', decimals: 7 },
     { address: 'CB22KRA3YZVCNCQI64JQ5WE7UY2VAV7WFLK6A2JN3HEX56T2EDAFO7QF', symbol: 'BLND', name: 'Blend', decimals: 7 },
     { address: 'CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU', symbol: 'USDC', name: 'USD Coin (alternate testnet issuer)', decimals: 7 },
@@ -51,6 +55,8 @@ export interface MergeInput {
   extra?: readonly ExtraAsset[];
   /** Symbols or addresses that have a configured yield vault (deployment manifest keys). */
   vaultKeys?: readonly string[];
+  /** Coverage read from the oracles' assets() lists. Without it every asset's `reflector` stays null (unknown). */
+  feeds?: FeedCoverage;
   /** When set, only these addresses are listed (demo mode knows a fixed token table). */
   allow?: ReadonlySet<string>;
 }
@@ -61,13 +67,13 @@ export function mergeAssets(net: Net, input: MergeInput = {}): CatalogAsset[] {
   const order: string[] = [];
   const add = (a: CatalogAsset) => { byAddress.set(a.address, a); order.push(a.address); };
   for (const k of KNOWN_ASSETS[net]) {
-    add({ address: k.address, symbol: k.symbol, name: k.name, decimals: k.decimals, verified: true, collision: false, origins: ['known'], pools: [], reflector: k.reflector ?? null, vault: false });
+    add({ address: k.address, symbol: k.symbol, name: k.name, decimals: k.decimals, verified: true, collision: false, origins: ['known'], pools: [], reflector: null, feed: null, vault: false });
   }
   for (const e of input.extra ?? []) {
     if (!StrKey.isValidContract(e.address)) continue;
     const existing = byAddress.get(e.address);
     if (existing) { if (!existing.origins.includes(e.origin)) existing.origins.push(e.origin); if (!existing.name && e.name) existing.name = e.name; continue; }
-    add({ address: e.address, symbol: e.symbol, name: e.name ?? '', decimals: e.decimals ?? null, verified: false, collision: false, origins: [e.origin], pools: [], reflector: null, vault: false });
+    add({ address: e.address, symbol: e.symbol, name: e.name ?? '', decimals: e.decimals ?? null, verified: false, collision: false, origins: [e.origin], pools: [], reflector: null, feed: null, vault: false });
   }
   for (const p of input.pools ?? []) {
     const pool: AssetPool = { address: p.address, pair: pairLabel(p), type: p.type, feeBps: p.feeBps };
@@ -75,13 +81,18 @@ export function mergeAssets(net: Net, input: MergeInput = {}): CatalogAsset[] {
       if (!StrKey.isValidContract(t.address)) continue;
       const existing = byAddress.get(t.address);
       if (existing) { if (!existing.origins.includes('aquarius')) existing.origins.push('aquarius'); if (!existing.pools.some(x => x.address === pool.address)) existing.pools.push(pool); continue; }
-      add({ address: t.address, symbol: t.symbol, name: '', decimals: null, verified: false, collision: false, origins: ['aquarius'], pools: [pool], reflector: null, vault: false });
+      add({ address: t.address, symbol: t.symbol, name: '', decimals: null, verified: false, collision: false, origins: ['aquarius'], pools: [pool], reflector: null, feed: null, vault: false });
     }
   }
   const verifiedSymbols = new Set(KNOWN_ASSETS[net].map(k => k.symbol.toUpperCase()));
   const vaultKeys = new Set((input.vaultKeys ?? []).map(k => k.toUpperCase()));
   for (const a of byAddress.values()) {
     if (!a.verified && verifiedSymbols.has(a.symbol.toUpperCase())) { a.collision = true; a.name = a.name || `Unverified ${a.symbol} issuer`; }
+    if (input.feeds) {
+      // DEX coverage is exact (contract id). External coverage is by symbol, so only the verified asset with that symbol counts.
+      const feed: FeedKind | null = input.feeds.dex.has(a.address) ? 'dex' : a.verified && input.feeds.cex.has(a.symbol.toUpperCase()) ? 'external' : null;
+      a.feed = feed; a.reflector = feed !== null;
+    }
     a.vault = vaultKeys.has(a.symbol.toUpperCase()) || vaultKeys.has(a.address.toUpperCase());
   }
   const rank = (a: CatalogAsset) => a.collision ? 3 : a.verified ? 0 : a.origins.includes('launchpad') || a.origins.includes('demo') ? 1 : 2;

@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { network, getDeployments } from '@/lib/peridot/network';
 import { MOCK_CUSTOM_TOKENS, readMockState } from '@/lib/peridot/mock';
+import { coverageFrom, type FeedCoverage } from '@/lib/vaults/price-sources';
+import { loadOracleSnapshots } from '@/lib/vaults/token-intake-client';
 import { mergeAssets, type CatalogAsset, type ExtraAsset } from '@/lib/vaults/assets';
 import { useAquariusPools } from './useAquariusPools';
 
@@ -10,6 +12,13 @@ import { useAquariusPools } from './useAquariusPools';
 export function useAssetCatalog(): { assets: CatalogAsset[]; loading: boolean; note: string } {
   const { loading, result } = useAquariusPools();
   const [launched, setLaunched] = useState<ExtraAsset[]>([]);
+  const [feeds, setFeeds] = useState<FeedCoverage | undefined>();
+  useEffect(() => {
+    if (network.useMocks) return;
+    let cancelled = false;
+    loadOracleSnapshots().then(s => { if (!cancelled && s.length) setFeeds(coverageFrom(s)); }).catch(() => { /* badges stay on "verify" */ });
+    return () => { cancelled = true; };
+  }, []);
   useEffect(() => {
     if (network.useMocks) return;
     let cancelled = false;
@@ -28,8 +37,8 @@ export function useAssetCatalog(): { assets: CatalogAsset[]; loading: boolean; n
       const demo: ExtraAsset[] = Object.entries(MOCK_CUSTOM_TOKENS).map(([address, t]) => ({ address, symbol: t.symbol, name: t.name, decimals: t.decimals, origin: 'demo' }));
       return mergeAssets(network.name, { pools: result?.pools ?? [], extra: demo, vaultKeys, allow: new Set([...Object.keys(state.tokens), ...Object.keys(MOCK_CUSTOM_TOKENS)]) });
     }
-    return mergeAssets(network.name, { pools: result?.pools ?? [], extra: launched, vaultKeys });
-  }, [result, launched]);
+    return mergeAssets(network.name, { pools: result?.pools ?? [], extra: launched, vaultKeys, feeds });
+  }, [result, launched, feeds]);
   const note = loading && !result ? 'Loading Aquarius pools...' : result?.primary === 'demo' ? 'Demo data.' : '';
   return { assets, loading: loading && !result, note };
 }

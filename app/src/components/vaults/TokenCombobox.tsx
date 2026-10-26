@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { Check, ChevronDown, ClipboardPaste, Search } from 'lucide-react';
 import { assetColor, assetInitials, searchAssets, type CatalogAsset } from '@/lib/vaults/assets';
 import { shortAddress } from '@/lib/vaults/aquarius-pools';
+import { feedBadge } from '@/lib/vaults/price-sources';
 import './vaults.css';
 
 export interface TokenComboboxProps {
@@ -98,7 +99,7 @@ export function TokenCombobox({ id, label, assets, value, onPick, onCustom, disa
             <span className="tc-main">
               <span className="tc-line"><span className="tc-sym">{a.symbol}</span>{a.name && <span className="tc-name">{a.name}</span>}<span className="tc-addr">{shortAddress(a.address)}</span>{a.decimals !== null && <span className="tc-dec">{a.decimals} dec</span>}</span>
               <span className="tc-badges">
-                {a.reflector === true && <span className="tc-badge ok">Reflector feed</span>}
+                {a.reflector === true && <span className="tc-badge ok">{a.feed ? feedBadge(a.feed) : 'Reflector feed'}</span>}
                 {a.reflector === null && !a.collision && <span className="tc-badge">Verify for price</span>}
                 {a.pools.length > 0 && <span className="tc-badge pool">{a.pools.length} Aquarius pool{a.pools.length > 1 ? 's' : ''}</span>}
                 {a.vault && <span className="tc-badge info">Vault available</span>}

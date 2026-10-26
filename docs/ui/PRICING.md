@@ -77,7 +77,7 @@ The add-market page needs no redeploy: `findReflectorFeed` already tries `reflec
 
 ## Rollback
 
-Same call with `--allowed false` (simulated successfully for AQUA). The flag only gates new price installs (`add_market`, `update_price`, `apply_pending`). Markets already created with the mapping keep their router config, so a rollback after a market exists does not unprice it. To unprice an existing market the owner or admin must stage a price change (60 s delay).
+Same call with `--allowed false` (simulated successfully for AQUA). The flag only gates new price installs (`add_market`, `update_price`, `apply_pending`). Markets already created with the mapping keep their router config, so a rollback after a market exists does not unprice it. There is no admin override and no remove-config call: only the group owner can stage a replacement price config (`update_price`, 60 s delay). Plan on the rollback stopping NEW listings only.
 
 ## Risk notes
 
@@ -92,6 +92,14 @@ Same call with `--allowed false` (simulated successfully for AQUA). The flag onl
 
 BLND and yXLM have no Reflector feed and stay blocked for wallet-created markets. Options would be a contract or router change (a bounded Aquarius source for non-launchpad markets), which is out of scope here.
 
-## Second opinion (codex exec)
+## Second opinion (codex exec, read-only review of this file against the contracts)
 
-See the section below, appended after review.
+Codex verdict: **NO-GO as documented**, meaning the call is mechanically correct but the safeguards in this note are advisory, not enforced. Its points, all accepted:
+
+- The call only stores permission. A successful simulation does not validate the oracle, price or quote currency. (True. The checks run later at `add_market`/`set_asset_config`, where `assets()` membership is checked at configuration time, not on every read.)
+- Rollback is weaker than first written: no admin override, no remove-config operation (corrected above).
+- The 50 percent collateral factor and low caps are voluntary. Guardrails allow 75 percent and set no upper bound on caps or aggregate AQUA exposure.
+- Oracle outages also block liquidations, so bad debt can accumulate during a stale window. The router never checks `base()` and never converts USDC to USD, so a USDC depeg misvalues every DEX-priced market.
+- Freshness uses the router's own resolution (300 s, set at group creation), not the oracle's.
+
+Conclusion for the decision maker: approving AQUA is low effort and reversible for new listings, but not for existing ones. Exposure is per group (each group has its own controller and router), so the blast radius is the groups whose owners choose AQUA, with caps they set themselves. Approve AQUA only if that is acceptable and the UI warning for DEX-priced markets stays (it does). PYUSD is the weaker case: a stable-to-stable pair where the 0.1 percent USDC basis matters, so approve AQUA first and PYUSD only on request. A stricter option, if wanted, is a contract change adding a per-oracle collateral factor cap in `guardrails.rs`; it is not required for this fix.
