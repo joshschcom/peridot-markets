@@ -574,6 +574,10 @@ impl XoxnoVault {
                 return Err(Error::UnexpectedBalance);
             }
         }
+        // The caller's minimum applies to what was actually received, not to the quote.
+        if min_amounts_out.get(0).unwrap_or(0) > received {
+            return Err(Error::SlippageExceeded);
+        }
         // Drop the stored account if XOXNO closed it (the NFT is burned when the position empties).
         if !xc.try_account_exists(&acct).map(|r| r.unwrap_or(false)).unwrap_or(true) {
             env.storage().instance().remove(&DataKey::Account);

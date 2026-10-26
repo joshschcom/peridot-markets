@@ -37,6 +37,7 @@ enum Key {
     Amount(u64),
     Frozen,
     MaxWithdraw,
+    Shave,
 }
 
 #[contract]
@@ -66,6 +67,11 @@ impl MockXoxnoLending {
 
     pub fn set_frozen(env: Env, frozen: bool) {
         env.storage().instance().set(&Key::Frozen, &frozen);
+    }
+
+    /// Pays `shave` less than the requested amount on every withdraw (XOXNO rounds in its own favour).
+    pub fn set_shave(env: Env, shave: i128) {
+        env.storage().instance().set(&Key::Shave, &shave);
     }
 
     /// Caps what one `withdraw` call can release (simulates missing pool liquidity).
@@ -133,7 +139,8 @@ impl MockXoxnoLending {
                 panic!("no liquidity");
             }
             env.storage().persistent().set(&Key::Amount(account_id), &(cur - amt));
-            token::Client::new(&env, &key.asset).transfer(&env.current_contract_address(), &caller, &amt);
+            let shave: i128 = env.storage().instance().get(&Key::Shave).unwrap_or(0);
+            token::Client::new(&env, &key.asset).transfer(&env.current_contract_address(), &caller, &(amt - shave));
             out.push_back((key, amt));
         }
         let left: i128 = env.storage().persistent().get(&Key::Amount(account_id)).unwrap_or(0);

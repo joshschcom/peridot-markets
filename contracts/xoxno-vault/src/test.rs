@@ -280,3 +280,22 @@ fn bind_market_is_one_time_owner_only_and_needs_an_empty_vault() {
     let r = c.vault.try_deposit(&vec![&c.env, E7], &vec![&c.env, 0], &c.market, &true);
     assert_eq!(r.err().unwrap().unwrap(), Error::NotDepositor);
 }
+
+#[test]
+fn full_exit_tolerates_xoxno_rounding_but_honours_the_callers_minimum() {
+    let c = setup_with(0);
+    dep(&c, 10 * E7);
+    c.xoxno.set_shave(&3); // XOXNO pays 3 stroops less on the full exit
+    // The caller's minimum is checked against what was actually received.
+    let r = c.vault.try_withdraw(&(10 * E7), &vec![&c.env, 10 * E7], &c.market);
+    assert_eq!(r.err().unwrap().unwrap(), Error::SlippageExceeded);
+    let out = c.vault.withdraw(&(10 * E7), &vec![&c.env, 10 * E7 - 3], &c.market);
+    assert_eq!(out, vec![&c.env, 10 * E7 - 3]);
+    assert_eq!(c.vault.account_id(), None);
+    // A shave beyond the tolerance (1 ppm + 2) is refused and changes nothing.
+    dep(&c, 10 * E7);
+    c.xoxno.set_shave(&(E7 / 10));
+    let r = c.vault.try_withdraw(&(10 * E7), &vec![&c.env, 0], &c.market);
+    assert_eq!(r.err().unwrap().unwrap(), Error::UnexpectedBalance);
+    assert_eq!(c.vault.balance(&c.market), 10 * E7);
+}
