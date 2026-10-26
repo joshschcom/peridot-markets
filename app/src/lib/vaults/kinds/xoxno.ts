@@ -9,6 +9,8 @@ import { parseScaled } from './schema';
 export const XOXNO_BOUNDS = { feeMaxBps: 2000, idMax: 1000 } as const;
 /** Testnet XLM Stellar Asset Contract: supplied by the demo vault (XOXNO testnet hub 1, spoke 1). */
 export const XOXNO_TESTNET_XLM = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
+/** Mainnet XLM Stellar Asset Contract (peridot-contracts/addresses.md, Assets): listed by XOXNO mainnet hub 1, spoke 1. */
+export const XOXNO_MAINNET_XLM = 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA';
 
 function validate(v: Values, ctx: VaultCtx): Validation {
   const errors: Record<string, string> = {}; const warnings: string[] = [];
@@ -48,7 +50,7 @@ export const xoxnoKind: VaultKind = {
   id: 'xoxno',
   name: 'XOXNO Lending vault',
   tagline: 'Supply one asset to XOXNO Lending with your own cap and fee',
-  description: 'A vault that supplies one asset to XOXNO Lending (hub and spoke lending on Stellar) and tracks depositors with shares. It implements the same yield-vault interface as the Blend adapter, so a Peridot market can later use it as a yield route. You set the asset, the XOXNO hub and spoke, who can deposit, a deposit cap and a performance fee. Testnet today: it runs against the real XOXNO testnet deployment.',
+  description: 'A vault that supplies one asset to XOXNO Lending (hub and spoke lending on Stellar) and tracks depositors with shares. It implements the same yield-vault interface as the Blend adapter, so a Peridot market can later use it as a yield route. You set the asset, the XOXNO hub and spoke, who can deposit, a deposit cap and a performance fee. Runs against the real XOXNO Lending deployment on mainnet (hub 1, spoke 1 lists XLM) and on testnet.',
   status: 'live',
   risks: [
     'XOXNO Lending risk applies: smart contract risk, bad debt or an exhausted pool can delay withdrawals. The vault fails a withdrawal cleanly and changes nothing when XOXNO has no liquidity.',
@@ -58,7 +60,7 @@ export const xoxnoKind: VaultKind = {
   fields: [
     { key: 'owner', label: 'Owner', help: 'Controls the cap, fee, keeper and pausing. Receives the performance fee. Cannot withdraw other people\'s funds.', group: 'Vault', input: 'address', encoding: 'address', default: ctx => ctx.owner, suggest: 'owner', locked: 'owner' },
     { key: 'depositor', label: 'Depositor', help: 'The only address that can deposit: your wallet for a standalone vault, or a Peridot market vault to use this vault as its yield route. Anyone holding shares can withdraw.', group: 'Vault', input: 'address', encoding: 'address', default: ctx => ctx.owner, suggest: 'owner' },
-    { key: 'underlying', label: 'Asset (token contract)', help: 'The token supplied to XOXNO. Its hub and spoke must list it as supplyable and not paused, or the vault refuses to deploy.', group: 'XOXNO market', input: 'address', encoding: 'address', default: ctx => ctx.net === 'testnet' ? XOXNO_TESTNET_XLM : '' },
+    { key: 'underlying', label: 'Asset (token contract)', help: 'The token supplied to XOXNO. Its hub and spoke must list it as supplyable and not paused, or the vault refuses to deploy.', group: 'XOXNO market', input: 'address', encoding: 'address', default: ctx => ctx.net === 'testnet' ? XOXNO_TESTNET_XLM : XOXNO_MAINNET_XLM },
     { key: 'hubId', label: 'XOXNO hub id', help: 'The XOXNO hub (isolated group of markets), 1 to 3 today.', group: 'XOXNO market', input: 'number', encoding: 'u32', min: 1, max: XOXNO_BOUNDS.idMax, step: 1, default: '1' },
     { key: 'spokeId', label: 'XOXNO spoke id', help: 'The risk profile of the vault\'s XOXNO account. Testnet: 1 Main. Mainnet: 1 Blue Chip, 4 Stables and FX.', group: 'XOXNO market', input: 'number', encoding: 'u32', min: 1, max: XOXNO_BOUNDS.idMax, step: 1, default: '1' },
     { key: 'keeper', label: 'Keeper', help: 'The one address (besides you) allowed to call harvest, which books the performance fee. It cannot move funds.', group: 'Operations', input: 'address', encoding: 'address', default: ctx => ctx.owner, suggest: 'owner' },
