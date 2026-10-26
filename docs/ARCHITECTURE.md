@@ -31,7 +31,7 @@ Amounts use token decimals and integer arithmetic. Receipt-share withdrawals and
 
 The canonical Rust types and TypeScript mirror live in [peridot-interfaces](../contracts/peridot-interfaces/). Lead A owns interface changes. Deployments are produced by Lead A's deployment scripts; the frontend and workers consume those manifests rather than inventing addresses.
 
-Each group has its own controller, price router, markets and optional rewards and margin contracts. Mainnet contract IDs and asset addresses are recorded in the [deployment manifest](../deployments/mainnet.json) and the [README deployment table](../README.md#mainnet-deployment). Meridian (group 1) retains an open market list without rewards; Rewards (group 2) has the funded distributor; BlendDemo (group 3) isolates the Blend route demonstration. Existing Peridot mainnet addresses are reference deployments and are not evidence that this new factory is deployed.
+Each group has its own controller, price router, markets and optional rewards and margin contracts. Mainnet contract IDs and asset addresses are recorded in the [deployment manifest](../deployments/mainnet.json) and the [README contracts table](../README.md#contracts-mainnet-deployment). Meridian (group 1) retains an open market list without rewards; Rewards (group 2) has the funded distributor; BlendDemo (group 3) isolates the Blend route demonstration. Existing Peridot mainnet addresses are reference deployments and are not evidence that this new factory is deployed.
 
 ## Yield, pricing and rewards
 
