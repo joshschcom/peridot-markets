@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight, BookOpen, ChevronDown, Eye, FileCode2, FlaskConical, GitBranch, Search, ShieldAlert, Wallet } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { getDeployments, network } from '@/lib/peridot/network';
+import { useEffect, useState, type ReactNode } from 'react';
+import { buildDefaultNetwork, getDeployments, network } from '@/lib/peridot/network';
+import type { NetworkName } from '@/lib/peridot/network-select';
 import { useWallet } from '@/lib/peridot/wallet';
 import { shortAddress, walletInfo } from '@/wallet/catalog';
 import { reconcilePendingTransaction } from '@/lib/peridot/rpc';
@@ -32,6 +33,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const wallet = useWallet();
   const path = usePathname();
   const [recovery, setRecovery] = useState('');
+  // The runtime network (header switch, ?network=) is only known in the browser; the first render must match the server.
+  const [netName, setNetName] = useState<NetworkName>(buildDefaultNetwork);
+  const [factoryUrl, setFactoryUrl] = useState<string | null>(null);
+  useEffect(() => { setNetName(network.name); setFactoryUrl(factoryExplorerUrl()); }, []);
   const bannerText = network.useMocks ? 'Demo data. No funds move and no wallet signatures are requested.' : network.readOnly ? 'Read-only preview. Transactions are not enabled.' : 'Beta. New contracts are unaudited. Caps apply.';
   const BannerIcon = network.useMocks ? FlaskConical : network.readOnly ? Eye : ShieldAlert;
   const nav = links.map(l => <Link key={l.href} className={l.match(path) ? 'active' : ''} href={l.href} aria-current={l.match(path) ? 'page' : undefined}>{l.label}</Link>);
@@ -63,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="site-footer-col">
             <strong>SuperMarkets</strong>
             <span>Isolated money markets by Peridot. Built on Stellar, composed with Reflector, DeFindex, Blend and Aquarius.</span>
-            <span className="site-footer-net"><span className={`live-dot${network.name === 'testnet' ? ' testnet' : ''}`} aria-hidden />{network.useMocks ? 'Demo data' : network.name === 'mainnet' ? 'Stellar mainnet, beta' : 'Stellar testnet'}</span>
+            <span className="site-footer-net"><span className={`live-dot${netName === 'testnet' ? ' testnet' : ''}`} aria-hidden />{network.useMocks ? 'Demo data' : netName === 'mainnet' ? 'Stellar mainnet, beta' : 'Stellar testnet'}</span>
           </div>
           <nav className="site-footer-col" aria-label="Product">
             <strong>Product</strong>
@@ -81,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="site-footer-col">
             <strong>On chain</strong>
-            {factoryExplorerUrl() ? <a href={factoryExplorerUrl()!} target="_blank" rel="noreferrer"><Search size={13} aria-hidden /> Factory on stellar.expert <ArrowUpRight size={12} aria-hidden /></a> : <span>Demo mode: no contracts are called.</span>}
+            {network.useMocks ? <span>Demo mode: no contracts are called.</span> : factoryUrl ? <a href={factoryUrl} target="_blank" rel="noreferrer"><Search size={13} aria-hidden /> Factory on stellar.expert <ArrowUpRight size={12} aria-hidden /></a> : <span>Factory contract: see the group pages.</span>}
             {wallet.address && !network.useMocks && <button onClick={() => void reconcilePendingTransaction(wallet.address!).then(s => setRecovery(`Previous transaction: ${s}. Refresh the current page before continuing.`)).catch(e => setRecovery(e.message))}>Check pending transaction</button>}
             {recovery && <p role="status">{recovery}</p>}
           </div>
