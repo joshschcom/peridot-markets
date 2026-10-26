@@ -1,0 +1,375 @@
+[
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #1 (reward group, no wait between txs)",
+    "status": "PASS",
+    "hashes": [
+      "cee71f2cbadb7005407d7db4ebd5b8af1972492781184d8106a7225d94be437a"
+    ],
+    "sims": [
+      {
+        "instructions": 24864851,
+        "readBytes": 144,
+        "writeBytes": 1996,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "47761"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "cee71f2cbadb7005407d7db4ebd5b8af1972492781184d8106a7225d94be437a",
+        "ledger": 5389556,
+        "feeCharged": "41909",
+        "resources": {
+          "instructions": 24864851,
+          "readBytes": 144,
+          "writeBytes": 1996,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "47761"
+        }
+      }
+    ],
+    "ms": 4773,
+    "startedAt": "2026-10-25T23:36:02.815Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #2 (reward group, no wait between txs)",
+    "status": "FAIL",
+    "hashes": [
+      "d78e047936efac7a7df9f9e33453bd3aeb0a2b7656d77f7ef101c1e518d0c8c3"
+    ],
+    "sims": [
+      {
+        "instructions": 22728539,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 61,
+        "readWriteEntries": 7,
+        "ledgerEntries": 68,
+        "resourceFee": "39074"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "d78e047936efac7a7df9f9e33453bd3aeb0a2b7656d77f7ef101c1e518d0c8c3",
+        "ledger": 5389558,
+        "feeCharged": "31537",
+        "resources": {
+          "instructions": 22728539,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 61,
+          "readWriteEntries": 7,
+          "ledgerEntries": 68,
+          "resourceFee": "39074"
+        }
+      }
+    ],
+    "ms": 7658,
+    "startedAt": "2026-10-25T23:36:10.515Z",
+    "error": "Error: The transaction failed on chain. Refresh state before trying again."
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #3 (reward group, no wait between txs)",
+    "status": "PASS",
+    "hashes": [
+      "497dac1bca9f1338f75bca70331388da2992566a9830d83e8c59227613cc0409"
+    ],
+    "sims": [
+      {
+        "instructions": 24864851,
+        "readBytes": 144,
+        "writeBytes": 1996,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "47761"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "497dac1bca9f1338f75bca70331388da2992566a9830d83e8c59227613cc0409",
+        "ledger": 5389560,
+        "feeCharged": "41908",
+        "resources": {
+          "instructions": 24864851,
+          "readBytes": 144,
+          "writeBytes": 1996,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "47761"
+        }
+      }
+    ],
+    "ms": 5862,
+    "startedAt": "2026-10-25T23:36:21.954Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #4 (reward group, no wait between txs)",
+    "status": "FAIL",
+    "hashes": [
+      "4a03763eba033b7975e2cb8eb12d0a979f3af8762ced26f9a9f6f7e4b802fb51"
+    ],
+    "sims": [
+      {
+        "instructions": 22728539,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 61,
+        "readWriteEntries": 7,
+        "ledgerEntries": 68,
+        "resourceFee": "39074"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "4a03763eba033b7975e2cb8eb12d0a979f3af8762ced26f9a9f6f7e4b802fb51",
+        "ledger": 5389562,
+        "feeCharged": "31537",
+        "resources": {
+          "instructions": 22728539,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 61,
+          "readWriteEntries": 7,
+          "ledgerEntries": 68,
+          "resourceFee": "39074"
+        }
+      }
+    ],
+    "ms": 7828,
+    "startedAt": "2026-10-25T23:36:30.154Z",
+    "error": "Error: The transaction failed on chain. Refresh state before trying again."
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #5 (reward group, no wait between txs)",
+    "status": "PASS",
+    "hashes": [
+      "a8fdeaf153eeb6b7904916098ce280c1bb32b2cc984a9a2251d9d85c79472e87"
+    ],
+    "sims": [
+      {
+        "instructions": 24864851,
+        "readBytes": 144,
+        "writeBytes": 1996,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "47761"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "a8fdeaf153eeb6b7904916098ce280c1bb32b2cc984a9a2251d9d85c79472e87",
+        "ledger": 5389564,
+        "feeCharged": "41908",
+        "resources": {
+          "instructions": 24864851,
+          "readBytes": 144,
+          "writeBytes": 1996,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "47761"
+        }
+      }
+    ],
+    "ms": 6106,
+    "startedAt": "2026-10-25T23:36:41.348Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "rapid supply #6 (reward group, no wait between txs)",
+    "status": "FAIL",
+    "hashes": [
+      "bfb2c41b2975104c24da7a70d261913f52a019a7f8ea85716dd5ebf7b0e5f657"
+    ],
+    "sims": [
+      {
+        "instructions": 22728539,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 61,
+        "readWriteEntries": 7,
+        "ledgerEntries": 68,
+        "resourceFee": "39074"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "bfb2c41b2975104c24da7a70d261913f52a019a7f8ea85716dd5ebf7b0e5f657",
+        "ledger": 5389566,
+        "feeCharged": "31537",
+        "resources": {
+          "instructions": 22728539,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 61,
+          "readWriteEntries": 7,
+          "ledgerEntries": 68,
+          "resourceFee": "39074"
+        }
+      }
+    ],
+    "ms": 7752,
+    "startedAt": "2026-10-25T23:36:50.162Z",
+    "error": "Error: The transaction failed on chain. Refresh state before trying again."
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "control rapid supply #1 (group without rewards)",
+    "status": "PASS",
+    "hashes": [
+      "ff486ed33ac42183232465b700fb9e03a84b0fe1d5fb5d31c4661c7f350038f4"
+    ],
+    "sims": [
+      {
+        "instructions": 18727719,
+        "readBytes": 144,
+        "writeBytes": 1356,
+        "readOnlyEntries": 43,
+        "readWriteEntries": 8,
+        "ledgerEntries": 51,
+        "resourceFee": "571443"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ff486ed33ac42183232465b700fb9e03a84b0fe1d5fb5d31c4661c7f350038f4",
+        "ledger": 5389568,
+        "feeCharged": "496188",
+        "resources": {
+          "instructions": 18727719,
+          "readBytes": 144,
+          "writeBytes": 1356,
+          "readOnlyEntries": 43,
+          "readWriteEntries": 8,
+          "ledgerEntries": 51,
+          "resourceFee": "571443"
+        }
+      }
+    ],
+    "ms": 7664,
+    "startedAt": "2026-10-25T23:37:00.813Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "control rapid supply #2 (group without rewards)",
+    "status": "PASS",
+    "hashes": [
+      "35ec9dc08157af23b0354b4ae0c947c33c60e81969dd79a9594606e0235a03ef"
+    ],
+    "sims": [
+      {
+        "instructions": 18675524,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 44,
+        "readWriteEntries": 7,
+        "ledgerEntries": 51,
+        "resourceFee": "89372"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "35ec9dc08157af23b0354b4ae0c947c33c60e81969dd79a9594606e0235a03ef",
+        "ledger": 5389570,
+        "feeCharged": "78095",
+        "resources": {
+          "instructions": 18675524,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 44,
+          "readWriteEntries": 7,
+          "ledgerEntries": 51,
+          "resourceFee": "89372"
+        }
+      }
+    ],
+    "ms": 6056,
+    "startedAt": "2026-10-25T23:37:11.197Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "control rapid supply #3 (group without rewards)",
+    "status": "PASS",
+    "hashes": [
+      "ce4c7479aa47f82a55ae26305c3db53f1d48841eab2e09fd528929074e3aa905"
+    ],
+    "sims": [
+      {
+        "instructions": 18666505,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 44,
+        "readWriteEntries": 7,
+        "ledgerEntries": 51,
+        "resourceFee": "33538"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ce4c7479aa47f82a55ae26305c3db53f1d48841eab2e09fd528929074e3aa905",
+        "ledger": 5389572,
+        "feeCharged": "29543",
+        "resources": {
+          "instructions": 18666505,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 44,
+          "readWriteEntries": 7,
+          "ledgerEntries": 51,
+          "resourceFee": "33538"
+        }
+      }
+    ],
+    "ms": 7427,
+    "startedAt": "2026-10-25T23:37:20.503Z"
+  },
+  {
+    "flow": "B-group/repro-footprint",
+    "step": "control rapid supply #4 (group without rewards)",
+    "status": "PASS",
+    "hashes": [
+      "810d38e34fbaf3bdaabeb446610a6a99295f3bdcb41c2a6220c64bb81aa4caa8"
+    ],
+    "sims": [
+      {
+        "instructions": 18666505,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 44,
+        "readWriteEntries": 7,
+        "ledgerEntries": 51,
+        "resourceFee": "33538"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "810d38e34fbaf3bdaabeb446610a6a99295f3bdcb41c2a6220c64bb81aa4caa8",
+        "ledger": 5389574,
+        "feeCharged": "29543",
+        "resources": {
+          "instructions": 18666505,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 44,
+          "readWriteEntries": 7,
+          "ledgerEntries": 51,
+          "resourceFee": "33538"
+        }
+      }
+    ],
+    "ms": 7688,
+    "startedAt": "2026-10-25T23:37:30.839Z"
+  }
+]

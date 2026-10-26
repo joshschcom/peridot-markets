@@ -1,0 +1,453 @@
+[
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "owner: USDT CF -> 40% staged",
+    "status": "PASS",
+    "hashes": [
+      "75e0f3f6db5daf980413686004f9d184b180d3848faf9bb5abe199de8c93f96d"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306516"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "75e0f3f6db5daf980413686004f9d184b180d3848faf9bb5abe199de8c93f96d",
+        "ledger": 5389938,
+        "feeCharged": "263939",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306516"
+        }
+      }
+    ],
+    "ms": 4467,
+    "startedAt": "2026-10-26T00:07:52.922Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "owner: apply + sync_pairs",
+    "status": "PASS",
+    "hashes": [
+      "891bf0b7d817b201d8b00a26a73e81ae1ea9c85daac3647a68ec2e5e00d3078a",
+      "a7822b8e1a1d8173b66a6b5ed7c8fc3d95cccee5c20bced804f4a673c8e09f29"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 46444552,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "27475"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "891bf0b7d817b201d8b00a26a73e81ae1ea9c85daac3647a68ec2e5e00d3078a",
+        "ledger": 5389953,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "a7822b8e1a1d8173b66a6b5ed7c8fc3d95cccee5c20bced804f4a673c8e09f29",
+        "ledger": 5389954,
+        "feeCharged": "22770",
+        "resources": {
+          "instructions": 46444552,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "27475"
+        }
+      }
+    ],
+    "ms": 11444,
+    "startedAt": "2026-10-26T00:09:07.428Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "app view: effective leverage for Long with USDT collateral",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:09:25.746Z",
+    "note": "limits={\"CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L\":3,\"CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776\":1}"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "raw begin_open_position_v3 3x Long (collateral USDT at CF 40%) bypassing the app quote guard",
+    "status": "PASS",
+    "hashes": [
+      "777315a6979d0ae59ac61791e34f0170134665045adb93141813abf8bb6d0d22"
+    ],
+    "sims": [
+      {
+        "instructions": 49577341,
+        "readBytes": 0,
+        "writeBytes": 5724,
+        "readOnlyEntries": 123,
+        "readWriteEntries": 15,
+        "ledgerEntries": 138,
+        "resourceFee": "2389850"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "777315a6979d0ae59ac61791e34f0170134665045adb93141813abf8bb6d0d22",
+        "ledger": 5389957,
+        "feeCharged": "2080659",
+        "resources": {
+          "instructions": 49577341,
+          "readBytes": 0,
+          "writeBytes": 5724,
+          "readOnlyEntries": 123,
+          "readWriteEntries": 15,
+          "ledgerEntries": 138,
+          "resourceFee": "2389850"
+        }
+      }
+    ],
+    "ms": 7657,
+    "startedAt": "2026-10-26T00:09:26.081Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "raw swap_open_position_v3",
+    "status": "PASS",
+    "hashes": [
+      "2997280e07ec02043e01a2d40e47a15095197a78b9453439b1b582fef320dc24"
+    ],
+    "sims": [
+      {
+        "instructions": 57559569,
+        "readBytes": 0,
+        "writeBytes": 6268,
+        "readOnlyEntries": 67,
+        "readWriteEntries": 28,
+        "ledgerEntries": 95,
+        "resourceFee": "1268473"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "2997280e07ec02043e01a2d40e47a15095197a78b9453439b1b582fef320dc24",
+        "ledger": 5389958,
+        "feeCharged": "1108893",
+        "resources": {
+          "instructions": 57559569,
+          "readBytes": 0,
+          "writeBytes": 6268,
+          "readOnlyEntries": 67,
+          "readWriteEntries": 28,
+          "ledgerEntries": 95,
+          "resourceFee": "1268473"
+        }
+      }
+    ],
+    "ms": 3979,
+    "startedAt": "2026-10-26T00:09:33.741Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "raw activate_open_position_v3 (does the chain reject an under-collateralised long?)",
+    "status": "PASS",
+    "hashes": [
+      "5e7c2b3eaae9e84ff6cedc2d55ca36357d8fc010c12a3c1ff4e747ecc800a906"
+    ],
+    "sims": [
+      {
+        "instructions": 71460199,
+        "readBytes": 0,
+        "writeBytes": 4084,
+        "readOnlyEntries": 111,
+        "readWriteEntries": 22,
+        "ledgerEntries": 133,
+        "resourceFee": "732176"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "5e7c2b3eaae9e84ff6cedc2d55ca36357d8fc010c12a3c1ff4e747ecc800a906",
+        "ledger": 5389959,
+        "feeCharged": "644828",
+        "resources": {
+          "instructions": 71460199,
+          "readBytes": 0,
+          "writeBytes": 4084,
+          "readOnlyEntries": 111,
+          "readWriteEntries": 22,
+          "ledgerEntries": 133,
+          "resourceFee": "732176"
+        }
+      }
+    ],
+    "ms": 5414,
+    "startedAt": "2026-10-26T00:09:37.721Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "position state after activation",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:09:45.856Z",
+    "note": "[{\"status\":\"Open\",\"health\":\"7367222\",\"debt\":\"999999997\",\"coll\":\"266189443\"}]"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "cleanup: close via app",
+    "status": "PASS",
+    "hashes": [
+      "9eb9042412ca06907748f79963858572b084dbd3a1f8c290720e546a3476e398",
+      "b87876524f4fd5ee0d4b79fd5e48d53ad05c14c8f96b4bbfe7df89627eac2621",
+      "7f46295a4de3c1f8d7a154bfe8f8d6e626952d1e3a3395f4caa6bd39f09e3c80"
+    ],
+    "sims": [
+      {
+        "instructions": 40600811,
+        "readBytes": 0,
+        "writeBytes": 2828,
+        "readOnlyEntries": 66,
+        "readWriteEntries": 15,
+        "ledgerEntries": 81,
+        "resourceFee": "418320"
+      },
+      {
+        "instructions": 36545768,
+        "readBytes": 0,
+        "writeBytes": 4332,
+        "readOnlyEntries": 78,
+        "readWriteEntries": 14,
+        "ledgerEntries": 92,
+        "resourceFee": "60933"
+      },
+      {
+        "instructions": 76105123,
+        "readBytes": 0,
+        "writeBytes": 4124,
+        "readOnlyEntries": 53,
+        "readWriteEntries": 38,
+        "ledgerEntries": 91,
+        "resourceFee": "107718"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "9eb9042412ca06907748f79963858572b084dbd3a1f8c290720e546a3476e398",
+        "ledger": 5389961,
+        "feeCharged": "365279",
+        "resources": {
+          "instructions": 40600811,
+          "readBytes": 0,
+          "writeBytes": 2828,
+          "readOnlyEntries": 66,
+          "readWriteEntries": 15,
+          "ledgerEntries": 81,
+          "resourceFee": "418320"
+        }
+      },
+      {
+        "hash": "b87876524f4fd5ee0d4b79fd5e48d53ad05c14c8f96b4bbfe7df89627eac2621",
+        "ledger": 5389963,
+        "feeCharged": "54310",
+        "resources": {
+          "instructions": 36545768,
+          "readBytes": 0,
+          "writeBytes": 4332,
+          "readOnlyEntries": 78,
+          "readWriteEntries": 14,
+          "ledgerEntries": 92,
+          "resourceFee": "60933"
+        }
+      },
+      {
+        "hash": "7f46295a4de3c1f8d7a154bfe8f8d6e626952d1e3a3395f4caa6bd39f09e3c80",
+        "ledger": 5389965,
+        "feeCharged": "100501",
+        "resources": {
+          "instructions": 76105123,
+          "readBytes": 0,
+          "writeBytes": 4124,
+          "readOnlyEntries": 53,
+          "readWriteEntries": 38,
+          "ledgerEntries": 91,
+          "resourceFee": "107718"
+        }
+      }
+    ],
+    "ms": 32848,
+    "startedAt": "2026-10-26T00:09:45.857Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "cleanup: return free margin",
+    "status": "PASS",
+    "hashes": [
+      "5ad2476065121399a7fd66b30a87d9f16a3722a5d07a87d31f48ea7744aa27f8"
+    ],
+    "sims": [
+      {
+        "instructions": 42202969,
+        "readBytes": 0,
+        "writeBytes": 3048,
+        "readOnlyEntries": 75,
+        "readWriteEntries": 21,
+        "ledgerEntries": 96,
+        "resourceFee": "71243"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "5ad2476065121399a7fd66b30a87d9f16a3722a5d07a87d31f48ea7744aa27f8",
+        "ledger": 5389967,
+        "feeCharged": "64704",
+        "resources": {
+          "instructions": 42202969,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 75,
+          "readWriteEntries": 21,
+          "ledgerEntries": 96,
+          "resourceFee": "71243"
+        }
+      }
+    ],
+    "ms": 9087,
+    "startedAt": "2026-10-26T00:10:18.871Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "owner: restore USDT CF 75% (staged)",
+    "status": "PASS",
+    "hashes": [
+      "4acb399f82aba9d4372bc3dae72c584a1a7d7022426d3b5312a4019fa4916828"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306513"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "4acb399f82aba9d4372bc3dae72c584a1a7d7022426d3b5312a4019fa4916828",
+        "ledger": 5389970,
+        "feeCharged": "263937",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306513"
+        }
+      }
+    ],
+    "ms": 4279,
+    "startedAt": "2026-10-26T00:10:33.437Z"
+  },
+  {
+    "flow": "D-margin/repro-collateral-cf",
+    "step": "owner: apply restore",
+    "status": "PASS",
+    "hashes": [
+      "a3b7a11bb1b9135ddc605e0f9b33a921f4644233ff07367dcc452174ff1af832",
+      "cbe126661836472297bfe6bc111f497d42d4ce0ddab20668637a725ed9479a01"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 48290617,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "28029"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "a3b7a11bb1b9135ddc605e0f9b33a921f4644233ff07367dcc452174ff1af832",
+        "ledger": 5389985,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "cbe126661836472297bfe6bc111f497d42d4ce0ddab20668637a725ed9479a01",
+        "ledger": 5389986,
+        "feeCharged": "23324",
+        "resources": {
+          "instructions": 48290617,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "28029"
+        }
+      }
+    ],
+    "ms": 9333,
+    "startedAt": "2026-10-26T00:11:48.101Z"
+  }
+]

@@ -1,0 +1,92 @@
+{
+  "ledgerNote": "state snapshot of the deployer (public address) on mainnet at run time",
+  "groups": {
+    "1": {
+      "name": "Meridian",
+      "owner": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+      "ownerIsDeployer": true,
+      "rewards": false,
+      "margin": true,
+      "markets": [
+        {
+          "symbol": "USDC",
+          "supplied": "0",
+          "borrowed": "0",
+          "liquidity": "0",
+          "walletBalance": "0",
+          "needsTrustline": true,
+          "receiptShares": "0",
+          "debt": "0",
+          "entered": false,
+          "price": {
+            "mode": "reflector",
+            "status": "ok"
+          }
+        },
+        {
+          "symbol": "XLM",
+          "supplied": "300000000",
+          "borrowed": "0",
+          "liquidity": "300000000",
+          "walletBalance": "1221483557",
+          "needsTrustline": false,
+          "receiptShares": "300000000",
+          "debt": "0",
+          "entered": true,
+          "price": {
+            "mode": "reflector",
+            "status": "ok"
+          }
+        }
+      ]
+    },
+    "2": {
+      "name": "Rewards",
+      "owner": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+      "ownerIsDeployer": true,
+      "rewards": true,
+      "margin": false,
+      "markets": [
+        {
+          "symbol": "XLM",
+          "supplied": "0",
+          "borrowed": "0",
+          "liquidity": "0",
+          "walletBalance": "1221483557",
+          "needsTrustline": false,
+          "receiptShares": "0",
+          "debt": "0",
+          "entered": true,
+          "price": {
+            "mode": "reflector",
+            "status": "ok"
+          }
+        }
+      ]
+    },
+    "3": {
+      "name": "BlendDemo",
+      "owner": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+      "ownerIsDeployer": true,
+      "rewards": false,
+      "margin": false,
+      "markets": [
+        {
+          "symbol": "XLM",
+          "supplied": "0",
+          "borrowed": "0",
+          "liquidity": "0",
+          "walletBalance": "1221483557",
+          "needsTrustline": false,
+          "receiptShares": "0",
+          "debt": "0",
+          "entered": true,
+          "price": {
+            "mode": "reflector",
+            "status": "ok"
+          }
+        }
+      ]
+    }
+  }
+}

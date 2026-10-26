@@ -1,0 +1,281 @@
+[
+  {
+    "flow": "D-margin/Z(DeFindex XLM)",
+    "step": "supply 1000 XLM (routed to DeFindex)",
+    "status": "PASS",
+    "hashes": [
+      "4322b70a4dfd2810f1c788589e4674ea75e9c2f053c3bfcf5db338c5dfc3c032"
+    ],
+    "sims": [
+      {
+        "instructions": 26051125,
+        "readBytes": 144,
+        "writeBytes": 3616,
+        "readOnlyEntries": 46,
+        "readWriteEntries": 15,
+        "ledgerEntries": 61,
+        "resourceFee": "974412"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "4322b70a4dfd2810f1c788589e4674ea75e9c2f053c3bfcf5db338c5dfc3c032",
+        "ledger": 5390386,
+        "feeCharged": "848224",
+        "resources": {
+          "instructions": 26051125,
+          "readBytes": 144,
+          "writeBytes": 3616,
+          "readOnlyEntries": 46,
+          "readWriteEntries": 15,
+          "ledgerEntries": 61,
+          "resourceFee": "974412"
+        }
+      }
+    ],
+    "ms": 6841,
+    "startedAt": "2026-10-26T00:45:10.833Z"
+  },
+  {
+    "flow": "D-margin/Z(DeFindex XLM)",
+    "step": "openPosition with a STALE health cache (no refresh)",
+    "status": "PASS",
+    "hashes": [
+      "e370e0db62070fc31eaa2ce2f0fbfd3b82cc9209cb19c7af6d11e709cdac3f23",
+      "b381f69babec3fa04c26a63b3cc11f1157f41a9c63c4963b3f26260014e4add9",
+      "7257898de5348e53ce3fe4a3c91d9d857ae4a4822874e71088ac68bc61e3a90a",
+      "5fed814b244d8f6f80000bb5189dce1e44c24224171e226aa7afe9562852b48a"
+    ],
+    "sims": [
+      {
+        "instructions": 34746572,
+        "readBytes": 0,
+        "writeBytes": 1088,
+        "readOnlyEntries": 68,
+        "readWriteEntries": 8,
+        "ledgerEntries": 76,
+        "resourceFee": "1082591"
+      },
+      {
+        "instructions": 54042387,
+        "readBytes": 0,
+        "writeBytes": 6400,
+        "readOnlyEntries": 129,
+        "readWriteEntries": 19,
+        "ledgerEntries": 148,
+        "resourceFee": "2645344"
+      },
+      {
+        "instructions": 58063304,
+        "readBytes": 0,
+        "writeBytes": 5500,
+        "readOnlyEntries": 66,
+        "readWriteEntries": 22,
+        "ledgerEntries": 88,
+        "resourceFee": "1586832"
+      },
+      {
+        "instructions": 65836860,
+        "readBytes": 0,
+        "writeBytes": 3592,
+        "readOnlyEntries": 105,
+        "readWriteEntries": 19,
+        "ledgerEntries": 124,
+        "resourceFee": "1265889"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "e370e0db62070fc31eaa2ce2f0fbfd3b82cc9209cb19c7af6d11e709cdac3f23",
+        "ledger": 5390456,
+        "feeCharged": "941422",
+        "resources": {
+          "instructions": 34746572,
+          "readBytes": 0,
+          "writeBytes": 1088,
+          "readOnlyEntries": 68,
+          "readWriteEntries": 8,
+          "ledgerEntries": 76,
+          "resourceFee": "1082591"
+        }
+      },
+      {
+        "hash": "b381f69babec3fa04c26a63b3cc11f1157f41a9c63c4963b3f26260014e4add9",
+        "ledger": 5390459,
+        "feeCharged": "2303768",
+        "resources": {
+          "instructions": 54042387,
+          "readBytes": 0,
+          "writeBytes": 6400,
+          "readOnlyEntries": 129,
+          "readWriteEntries": 19,
+          "ledgerEntries": 148,
+          "resourceFee": "2645344"
+        }
+      },
+      {
+        "hash": "7257898de5348e53ce3fe4a3c91d9d857ae4a4822874e71088ac68bc61e3a90a",
+        "ledger": 5390461,
+        "feeCharged": "1383359",
+        "resources": {
+          "instructions": 58063304,
+          "readBytes": 0,
+          "writeBytes": 5500,
+          "readOnlyEntries": 66,
+          "readWriteEntries": 22,
+          "ledgerEntries": 88,
+          "resourceFee": "1586832"
+        }
+      },
+      {
+        "hash": "5fed814b244d8f6f80000bb5189dce1e44c24224171e226aa7afe9562852b48a",
+        "ledger": 5390463,
+        "feeCharged": "1104266",
+        "resources": {
+          "instructions": 65836860,
+          "readBytes": 0,
+          "writeBytes": 3592,
+          "readOnlyEntries": 105,
+          "readWriteEntries": 19,
+          "ledgerEntries": 124,
+          "resourceFee": "1265889"
+        }
+      }
+    ],
+    "ms": 48984,
+    "startedAt": "2026-10-26T00:50:59.930Z"
+  },
+  {
+    "flow": "D-margin/Z(DeFindex XLM)",
+    "step": "NOTE: open succeeded without refresh (transfer_spot_to_margin or begin_open refreshed the cache)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:51:52.317Z",
+    "note": "stale cache did not block margin open"
+  },
+  {
+    "flow": "D-margin/Z(DeFindex XLM)",
+    "step": "closePosition",
+    "status": "PASS",
+    "hashes": [
+      "48b6dc5112394a424282ab739ec8e2d039a629e92b5493fa16068620d6ecb8c1",
+      "4ead42e6fb173b98eaf29cf81fd6e0b63d6762bbc476edbb168aff09b9912374",
+      "fb0d1e7697661f2d77f95da143202fab1bf76fde7bf2d04791454bcc9afa68c6"
+    ],
+    "sims": [
+      {
+        "instructions": 34489662,
+        "readBytes": 0,
+        "writeBytes": 2056,
+        "readOnlyEntries": 54,
+        "readWriteEntries": 10,
+        "ledgerEntries": 64,
+        "resourceFee": "405620"
+      },
+      {
+        "instructions": 36564644,
+        "readBytes": 0,
+        "writeBytes": 4332,
+        "readOnlyEntries": 78,
+        "readWriteEntries": 14,
+        "ledgerEntries": 92,
+        "resourceFee": "60939"
+      },
+      {
+        "instructions": 79438355,
+        "readBytes": 0,
+        "writeBytes": 3688,
+        "readOnlyEntries": 49,
+        "readWriteEntries": 35,
+        "ledgerEntries": 84,
+        "resourceFee": "102377"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "48b6dc5112394a424282ab739ec8e2d039a629e92b5493fa16068620d6ecb8c1",
+        "ledger": 5390466,
+        "feeCharged": "352968",
+        "resources": {
+          "instructions": 34489662,
+          "readBytes": 0,
+          "writeBytes": 2056,
+          "readOnlyEntries": 54,
+          "readWriteEntries": 10,
+          "ledgerEntries": 64,
+          "resourceFee": "405620"
+        }
+      },
+      {
+        "hash": "4ead42e6fb173b98eaf29cf81fd6e0b63d6762bbc476edbb168aff09b9912374",
+        "ledger": 5390468,
+        "feeCharged": "54316",
+        "resources": {
+          "instructions": 36564644,
+          "readBytes": 0,
+          "writeBytes": 4332,
+          "readOnlyEntries": 78,
+          "readWriteEntries": 14,
+          "ledgerEntries": 92,
+          "resourceFee": "60939"
+        }
+      },
+      {
+        "hash": "fb0d1e7697661f2d77f95da143202fab1bf76fde7bf2d04791454bcc9afa68c6",
+        "ledger": 5390470,
+        "feeCharged": "95376",
+        "resources": {
+          "instructions": 79438355,
+          "readBytes": 0,
+          "writeBytes": 3688,
+          "readOnlyEntries": 49,
+          "readWriteEntries": 35,
+          "ledgerEntries": 84,
+          "resourceFee": "102377"
+        }
+      }
+    ],
+    "ms": 30948,
+    "startedAt": "2026-10-26T00:51:52.318Z"
+  },
+  {
+    "flow": "D-margin/Z(DeFindex XLM)",
+    "step": "withdrawMargin leftovers",
+    "status": "PASS",
+    "hashes": [
+      "ab35d456069845efc57688cc5e07804d390cbd1a441c4e87ef2d67d332c20d02"
+    ],
+    "sims": [
+      {
+        "instructions": 31950768,
+        "readBytes": 0,
+        "writeBytes": 1396,
+        "readOnlyEntries": 65,
+        "readWriteEntries": 11,
+        "ledgerEntries": 76,
+        "resourceFee": "49605"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ab35d456069845efc57688cc5e07804d390cbd1a441c4e87ef2d67d332c20d02",
+        "ledger": 5390474,
+        "feeCharged": "43554",
+        "resources": {
+          "instructions": 31950768,
+          "readBytes": 0,
+          "writeBytes": 1396,
+          "readOnlyEntries": 65,
+          "readWriteEntries": 11,
+          "ledgerEntries": 76,
+          "resourceFee": "49605"
+        }
+      }
+    ],
+    "ms": 11241,
+    "startedAt": "2026-10-26T00:52:32.011Z"
+  }
+]

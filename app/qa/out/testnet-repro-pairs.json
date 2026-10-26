@@ -1,0 +1,279 @@
+[
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "pair limits at CF(USDT)=75% / CF(XLM)=70%",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1795,
+    "startedAt": "2026-10-25T23:59:37.054Z",
+    "note": "start: {\"XLM/USDT/Long\":3,\"XLM/USDT/Short\":3,\"USDT/XLM/Long\":3,\"USDT/XLM/Short\":3,\"effective_XLM\":3,\"effective_USDT\":3}"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "update_risk USDT CF -> 40% (staged)",
+    "status": "PASS",
+    "hashes": [
+      "b3a8b461734eb962fe400b13b02ba5963cd09691b17436f522232f14691bbb9b"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306524"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "b3a8b461734eb962fe400b13b02ba5963cd09691b17436f522232f14691bbb9b",
+        "ledger": 5389839,
+        "feeCharged": "263946",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306524"
+        }
+      }
+    ],
+    "ms": 4343,
+    "startedAt": "2026-10-25T23:59:38.852Z"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "applyPending (+sync_pairs)",
+    "status": "PASS",
+    "hashes": [
+      "c12cb0a0abfc7691f247974110ce0015f8cc1847ef8215f8fbfbd507c5db649a",
+      "7e1c86cc04fa42e9ffd37cb33393185275bb029d5478017d489790acb69618be"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 46444552,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "27475"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "c12cb0a0abfc7691f247974110ce0015f8cc1847ef8215f8fbfbd507c5db649a",
+        "ledger": 5389854,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "7e1c86cc04fa42e9ffd37cb33393185275bb029d5478017d489790acb69618be",
+        "ledger": 5389855,
+        "feeCharged": "22770",
+        "resources": {
+          "instructions": 46444552,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "27475"
+        }
+      }
+    ],
+    "ms": 10894,
+    "startedAt": "2026-10-26T00:00:52.078Z"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "pair limits after apply + sync (expect USDT-collateral pair <= 1x/2x)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2148,
+    "startedAt": "2026-10-26T00:01:02.973Z",
+    "note": "after CF 40%: {\"XLM/USDT/Long\":3,\"XLM/USDT/Short\":3,\"USDT/XLM/Long\":1,\"USDT/XLM/Short\":1,\"effective_XLM\":3,\"effective_USDT\":1}"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "syncLeverageLimits again",
+    "status": "PASS",
+    "hashes": [
+      "d58f9b6056833896707dfb43171b84d1ce1f568f68097333deec150deb41a561"
+    ],
+    "sims": [
+      {
+        "instructions": 46444552,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "27475"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "d58f9b6056833896707dfb43171b84d1ce1f568f68097333deec150deb41a561",
+        "ledger": 5389857,
+        "feeCharged": "22770",
+        "resources": {
+          "instructions": 46444552,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "27475"
+        }
+      }
+    ],
+    "ms": 7851,
+    "startedAt": "2026-10-26T00:01:05.122Z"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "pair limits after second sync",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2034,
+    "startedAt": "2026-10-26T00:01:12.974Z",
+    "note": "after 2nd sync: {\"XLM/USDT/Long\":3,\"XLM/USDT/Short\":3,\"USDT/XLM/Long\":1,\"USDT/XLM/Short\":1,\"effective_XLM\":3,\"effective_USDT\":1}"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "restore CF 75% (staged)",
+    "status": "PASS",
+    "hashes": [
+      "f03ebc20715310c7d36d6dfe32d94315b73ff47f2ee37fdb1f7fb6b035c31360"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306521"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f03ebc20715310c7d36d6dfe32d94315b73ff47f2ee37fdb1f7fb6b035c31360",
+        "ledger": 5389859,
+        "feeCharged": "263944",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306521"
+        }
+      }
+    ],
+    "ms": 4189,
+    "startedAt": "2026-10-26T00:01:19.076Z"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "apply restore",
+    "status": "PASS",
+    "hashes": [
+      "0d5e7da31dc5ae57151ed40f76ff896cf4d1bf4a1f455dc94286738db57eba85",
+      "7eeec37b33ebd0d8cb4767c4601f85925448b5afa6d4f1eb563879bf674cae23"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 48290617,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "28029"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0d5e7da31dc5ae57151ed40f76ff896cf4d1bf4a1f455dc94286738db57eba85",
+        "ledger": 5389874,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "7eeec37b33ebd0d8cb4767c4601f85925448b5afa6d4f1eb563879bf674cae23",
+        "ledger": 5389875,
+        "feeCharged": "23324",
+        "resources": {
+          "instructions": 48290617,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "28029"
+        }
+      }
+    ],
+    "ms": 10359,
+    "startedAt": "2026-10-26T00:02:32.961Z"
+  },
+  {
+    "flow": "C-control/repro-pair-limits",
+    "step": "pair limits after restore",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1504,
+    "startedAt": "2026-10-26T00:02:43.321Z",
+    "note": "restored: {\"XLM/USDT/Long\":3,\"XLM/USDT/Short\":3,\"USDT/XLM/Long\":3,\"USDT/XLM/Short\":3,\"effective_XLM\":3,\"effective_USDT\":3}"
+  }
+]

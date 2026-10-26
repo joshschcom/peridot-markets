@@ -1,0 +1,184 @@
+[
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "supplied",
+    "expected": "USDC 0 supplied",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "borrowed",
+    "expected": "0 borrowed",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "supplyCap",
+    "expected": "of 10K",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "borrowCap",
+    "expected": "of 5,000",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "cf",
+    "expected": "75%",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "USDC",
+    "field": "liquidBuffer",
+    "expected": "20% liquid buffer",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "supplied",
+    "expected": "XLM 30 supplied",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "borrowed",
+    "expected": "0 borrowed",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "supplyCap",
+    "expected": "of 100K",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "borrowCap",
+    "expected": "of 50K",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "cf",
+    "expected": "70%",
+    "found": true
+  },
+  {
+    "group": 1,
+    "market": "XLM",
+    "field": "liquidBuffer",
+    "expected": "20% liquid buffer",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "supplied",
+    "expected": "XLM 0 supplied",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "borrowed",
+    "expected": "0 borrowed",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "supplyCap",
+    "expected": "of 100K",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "borrowCap",
+    "expected": "of 50K",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "cf",
+    "expected": "70%",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "XLM",
+    "field": "liquidBuffer",
+    "expected": "20% liquid buffer",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "-",
+    "field": "distributorFunding",
+    "expected": "Distributor funding 19.9983XLM",
+    "found": true
+  },
+  {
+    "group": 2,
+    "market": "-",
+    "field": "rewardsPerDay",
+    "expected": "1.72 XLM/day",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "supplied",
+    "expected": "XLM 0 supplied",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "borrowed",
+    "expected": "0 borrowed",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "supplyCap",
+    "expected": "of 100K",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "borrowCap",
+    "expected": "of 50K",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "cf",
+    "expected": "70%",
+    "found": true
+  },
+  {
+    "group": 3,
+    "market": "XLM",
+    "field": "liquidBuffer",
+    "expected": "20% liquid buffer",
+    "found": true
+  }
+]

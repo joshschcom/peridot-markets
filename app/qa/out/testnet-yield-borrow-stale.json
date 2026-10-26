@@ -1,0 +1,235 @@
+[
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "supply 200 XLM (refreshes the health cache)",
+    "status": "PASS",
+    "hashes": [
+      "47408b37f0ebf4ecf28bedcbcdc906c6fc2b295b1ab0cce57d80e5946ae37310"
+    ],
+    "sims": [
+      {
+        "instructions": 25976693,
+        "readBytes": 144,
+        "writeBytes": 3476,
+        "readOnlyEntries": 47,
+        "readWriteEntries": 14,
+        "ledgerEntries": 61,
+        "resourceFee": "51793"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "47408b37f0ebf4ecf28bedcbcdc906c6fc2b295b1ab0cce57d80e5946ae37310",
+        "ledger": 5390046,
+        "feeCharged": "45773",
+        "resources": {
+          "instructions": 25976693,
+          "readBytes": 144,
+          "writeBytes": 3476,
+          "readOnlyEntries": 47,
+          "readWriteEntries": 14,
+          "ledgerEntries": 61,
+          "resourceFee": "51793"
+        }
+      }
+    ],
+    "ms": 5411,
+    "startedAt": "2026-10-26T00:16:53.230Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "borrow 5 XLM immediately after supply (cache fresh)",
+    "status": "PASS",
+    "hashes": [
+      "cb67523dee174111bb39bbea89e430222d16d3f683921f12235e3f2c61b0c1e2"
+    ],
+    "sims": [
+      {
+        "instructions": 28022456,
+        "readBytes": 144,
+        "writeBytes": 1608,
+        "readOnlyEntries": 59,
+        "readWriteEntries": 10,
+        "ledgerEntries": 69,
+        "resourceFee": "1429397"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "cb67523dee174111bb39bbea89e430222d16d3f683921f12235e3f2c61b0c1e2",
+        "ledger": 5390048,
+        "feeCharged": "1243064",
+        "resources": {
+          "instructions": 28022456,
+          "readBytes": 144,
+          "writeBytes": 1608,
+          "readOnlyEntries": 59,
+          "readWriteEntries": 10,
+          "ledgerEntries": 69,
+          "resourceFee": "1429397"
+        }
+      }
+    ],
+    "ms": 6750,
+    "startedAt": "2026-10-26T00:17:01.732Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "borrow 5 XLM after 5.5 minutes of inactivity -> expected to fail (stale cache)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1638,
+    "startedAt": "2026-10-26T00:22:47.561Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", borrow]\n   1: [Contract Event] contract:CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN, topics:[accrue_interest], data:{borrow_index: 1000000020000000000, interest_accumulated: 1, total_borrows: 50000001}\n   2: [Diagnostic Event] contract:CC5DSNHT3A66XIIR4DBJ55VMZ6QCAF3MLYHAZOOVCKVB7F3TIRCL44XT, topics:[fn_return, get_borrow_rate], data:2000\n   3: [Diagnostic Event] contract:CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN, topics:[fn_call, CC5DSNHT3A66XIIR4DBJ55VMZ6QCAF3MLYHAZOOVCKVB7F3TIRCL44XT, get_borrow_rate], data:[1950000000, 50000000, 0]\n   4: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, balance], data:350000000\n   5: [Diagnostic Event] contract:CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, balance], data:CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN\n   6: [Diagnostic Event] topics:[fn_call, CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN, borrow], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, 50000000]\n"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "permissionless refresh_boosted_underlying()",
+    "status": "PASS",
+    "hashes": [
+      "18668763f247e3765fd9b6e01f6a782c2837080b067b1dd5c01ab0b72deaf769"
+    ],
+    "sims": [
+      {
+        "instructions": 4028290,
+        "readBytes": 0,
+        "writeBytes": 676,
+        "readOnlyEntries": 12,
+        "readWriteEntries": 4,
+        "ledgerEntries": 16,
+        "resourceFee": "15073"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "18668763f247e3765fd9b6e01f6a782c2837080b067b1dd5c01ab0b72deaf769",
+        "ledger": 5390117,
+        "feeCharged": "10368",
+        "resources": {
+          "instructions": 4028290,
+          "readBytes": 0,
+          "writeBytes": 676,
+          "readOnlyEntries": 12,
+          "readWriteEntries": 4,
+          "ledgerEntries": 16,
+          "resourceFee": "15073"
+        }
+      }
+    ],
+    "ms": 3324,
+    "startedAt": "2026-10-26T00:22:49.200Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "borrow 5 XLM right after the refresh -> should succeed",
+    "status": "PASS",
+    "hashes": [
+      "9c28acdbeac33d9aed25d7a101632bd5e6183c1358af21d904af3a9f50819bc0"
+    ],
+    "sims": [
+      {
+        "instructions": 24083671,
+        "readBytes": 144,
+        "writeBytes": 1668,
+        "readOnlyEntries": 45,
+        "readWriteEntries": 12,
+        "ledgerEntries": 57,
+        "resourceFee": "46782"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "9c28acdbeac33d9aed25d7a101632bd5e6183c1358af21d904af3a9f50819bc0",
+        "ledger": 5390119,
+        "feeCharged": "40881",
+        "resources": {
+          "instructions": 24083671,
+          "readBytes": 144,
+          "writeBytes": 1668,
+          "readOnlyEntries": 45,
+          "readWriteEntries": 12,
+          "ledgerEntries": 57,
+          "resourceFee": "46782"
+        }
+      }
+    ],
+    "ms": 5763,
+    "startedAt": "2026-10-26T00:22:58.287Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "repay all",
+    "status": "PASS",
+    "hashes": [
+      "23755d32797f4762fd1d8a3d989d4f48420abfbf04aa2e429c216012c63ea5d2"
+    ],
+    "sims": [
+      {
+        "instructions": 29771451,
+        "readBytes": 144,
+        "writeBytes": 1668,
+        "readOnlyEntries": 37,
+        "readWriteEntries": 12,
+        "ledgerEntries": 49,
+        "resourceFee": "47699"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "23755d32797f4762fd1d8a3d989d4f48420abfbf04aa2e429c216012c63ea5d2",
+        "ledger": 5390122,
+        "feeCharged": "41843",
+        "resources": {
+          "instructions": 29771451,
+          "readBytes": 144,
+          "writeBytes": 1668,
+          "readOnlyEntries": 37,
+          "readWriteEntries": 12,
+          "ledgerEntries": 49,
+          "resourceFee": "47699"
+        }
+      }
+    ],
+    "ms": 9242,
+    "startedAt": "2026-10-26T00:23:08.349Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex) borrow staleness",
+    "step": "withdraw all",
+    "status": "PASS",
+    "hashes": [
+      "8d2ae081ee09ef97ab822aa0f69274351a6e47b03398836a1b160d9593c6854a"
+    ],
+    "sims": [
+      {
+        "instructions": 37780440,
+        "readBytes": 144,
+        "writeBytes": 3616,
+        "readOnlyEntries": 47,
+        "readWriteEntries": 15,
+        "ledgerEntries": 62,
+        "resourceFee": "59527"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8d2ae081ee09ef97ab822aa0f69274351a6e47b03398836a1b160d9593c6854a",
+        "ledger": 5390125,
+        "feeCharged": "53132",
+        "resources": {
+          "instructions": 37780440,
+          "readBytes": 144,
+          "writeBytes": 3616,
+          "readOnlyEntries": 47,
+          "readWriteEntries": 15,
+          "ledgerEntries": 62,
+          "resourceFee": "59527"
+        }
+      }
+    ],
+    "ms": 8501,
+    "startedAt": "2026-10-26T00:23:24.635Z"
+  }
+]
