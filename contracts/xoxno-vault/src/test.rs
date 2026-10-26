@@ -7,6 +7,12 @@ use mock_token::{MockToken, MockTokenClient};
 use mock_xoxno_lending::{MockXoxnoLending, MockXoxnoLendingClient};
 use soroban_sdk::testutils::Address as _;
 
+type Args = (Address, Address, Address, u32, u32, Address, i128, i128, u32);
+
+fn try_reg(env: &Env, args: Args) -> Result<Address, ()> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| env.register(XoxnoVault, args))).map_err(|_| ())
+}
+
 const E7: i128 = 10_000_000;
 
 struct Ctx {
@@ -30,7 +36,7 @@ fn make(env: &Env, owner: &Address, market: &Address, keeper: &Address, token: &
 
 fn setup_with(fee: u32) -> Ctx {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
     let owner = Address::generate(&env);
     let market = Address::generate(&env);
     let keeper = Address::generate(&env);
@@ -188,39 +194,29 @@ fn bounded_owner_powers() {
 #[test]
 fn constructor_bounds() {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
     let a = Address::generate(&env);
     let token_id = env.register(MockToken, ());
     env.register_at(&Address::from_str(&env, DEFAULT_CONTROLLER), MockXoxnoLending, ());
     // fee above the bound
-    assert!(env
-        .try_register(XoxnoVault, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 100i128, 1i128, MAX_FEE_BPS + 1))
-        .is_err());
+    assert!(try_reg(&env, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 100i128, 1i128, MAX_FEE_BPS + 1)).is_err());
     // zero cap
-    assert!(env
-        .try_register(XoxnoVault, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 0i128, 1i128, 0u32))
-        .is_err());
+    assert!(try_reg(&env, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 0i128, 1i128, 0u32)).is_err());
     // min deposit above cap
-    assert!(env
-        .try_register(XoxnoVault, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 10i128, 11i128, 0u32))
-        .is_err());
+    assert!(try_reg(&env, (a.clone(), a.clone(), token_id.clone(), 1u32, 1u32, a.clone(), 10i128, 11i128, 0u32)).is_err());
     // ok
-    assert!(env
-        .try_register(XoxnoVault, (a.clone(), a.clone(), token_id, 1u32, 1u32, a, 10i128, 1i128, 100u32))
-        .is_ok());
+    assert!(try_reg(&env, (a.clone(), a.clone(), token_id, 1u32, 1u32, a, 10i128, 1i128, 100u32)).is_ok());
 }
 
 #[test]
 fn constructor_rejects_frozen_market() {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
     let a = Address::generate(&env);
     let token_id = env.register(MockToken, ());
     let x = env.register_at(&Address::from_str(&env, DEFAULT_CONTROLLER), MockXoxnoLending, ());
     MockXoxnoLendingClient::new(&env, &x).set_frozen(&true);
-    assert!(env
-        .try_register(XoxnoVault, (a.clone(), a.clone(), token_id, 1u32, 1u32, a, 10i128, 1i128, 0u32))
-        .is_err());
+    assert!(try_reg(&env, (a.clone(), a.clone(), token_id, 1u32, 1u32, a, 10i128, 1i128, 0u32)).is_err());
 }
 
 #[test]
