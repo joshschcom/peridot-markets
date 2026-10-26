@@ -17,6 +17,7 @@ import { PayoffChart } from '@/components/charts/PayoffChart';
 import { RunwayBar } from '@/components/charts/RunwayBar';
 import { HealthGauge } from '@/components/charts/HealthGauge';
 import { routeLabel } from '@/components/markets/GroupOverview';
+import { AccountHealth } from '@/components/groups/AccountHealth';
 const readable=(e:unknown)=>e instanceof Error?e.message:String(e);
 const quantity=(amount:bigint,decimals:number)=>formatAmount(amount,decimals);
 const priceTone=(status?:string)=>status==='ok'?'success':status==='stale'||status==='deviation'?'warn':'danger';
@@ -111,6 +112,7 @@ export default function GroupDashboard({id}:{id:string}) {
       {wallet.address&&<section className="card">
         <div className="card-header"><div><h2>Your position</h2><p>Balances in this group for the connected wallet.</p></div>{positionList.length>0&&<Badge tone="info" icon={Scale}>{positionList.length} leveraged {positionList.length===1?'position':'positions'}</Badge>}</div>
         {held.length===0?<p className="muted">No supplied or borrowed balances yet. Choose a market below to supply.</p>:<div className="stat-grid">{held.map(m=><Stat key={m.address} label={`${m.token.symbol} supplied`} value={fmtAmount(m.receiptBalance*m.exchangeRate/1000000n,m.token.decimals,4)} hint={<>{m.debt>0n?`${fmtAmount(m.debt,m.token.decimals,4)} borrowed`:'No debt'}{' · '}{m.entered?'Collateral enabled':'Not enabled as collateral'}</>}/>)}</div>}
+        <AccountHealth group={group} markets={markets}/>
         <p className="subtle mt-4" style={{fontSize:12}}>Health: the controller checks borrowing power before every transaction. A lending account becomes liquidatable when its debt exceeds the value of enabled collateral times the collateral factor. Leveraged positions show their own health factor on the Leverage tab.</p>
       </section>}
       <div className={selected?'two-col manage-layout':''}>

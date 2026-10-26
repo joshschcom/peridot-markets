@@ -3,6 +3,9 @@ import { Inter } from 'next/font/google';
 import { WalletProvider } from '@/lib/peridot/wallet';
 import { AppShell } from '@/components/ui/AppShell';
 import { themeScript } from '@/components/ui/ThemeToggle';
+import { ToastProvider } from '@/components/ui/Toast';
+import { PageErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { RiskDisclaimer } from '@/components/ui/RiskDisclaimer';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
@@ -17,6 +20,6 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en" data-theme="dark" suppressHydrationWarning className={inter.variable}>
     <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
-    <body><WalletProvider><AppShell>{children}</AppShell></WalletProvider></body>
+    <body><WalletProvider><ToastProvider><AppShell><PageErrorBoundary>{children}</PageErrorBoundary></AppShell><RiskDisclaimer /></ToastProvider></WalletProvider></body>
   </html>;
 }
