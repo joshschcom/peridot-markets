@@ -458,6 +458,14 @@ impl XoxnoVault {
             return Err(Error::UnexpectedBalance);
         }
 
+        let xc = XoxnoClient::new(&env, &controller);
+        let stored = account(&env);
+        let acct_in = match stored {
+            Some(id) if xc.try_account_exists(&id).map(|r| r.unwrap_or(false)).unwrap_or(false) => id,
+            _ => NEW_ACCOUNT,
+        };
+        // Any contract call made between `authorize_as_current_contract` and the supply would consume the
+        // entry, so resolve the account first and authorize immediately before `supply`.
         // XOXNO pool pulls `transfer(this, pool, amount)`: pre-authorize at the root.
         let transfer_args: Vec<soroban_sdk::Val> = (this.clone(), pool, amount).into_val(&env);
         env.authorize_as_current_contract(vec![
@@ -471,12 +479,6 @@ impl XoxnoVault {
                 sub_invocations: Vec::new(&env),
             }),
         ]);
-        let xc = XoxnoClient::new(&env, &controller);
-        let stored = account(&env);
-        let acct_in = match stored {
-            Some(id) if xc.try_account_exists(&id).map(|r| r.unwrap_or(false)).unwrap_or(false) => id,
-            _ => NEW_ACCOUNT,
-        };
         let assets = vec![&env, (hub_key(&env), amount)];
         let acct = match xc.try_supply(&this, &acct_in, &get_u32(&env, DataKey::SpokeId), &assets) {
             Ok(Ok(id)) if id != 0 => id,
@@ -537,8 +539,17 @@ impl XoxnoVault {
             _ => return Err(Error::LiquidityShortfall),
         }
         let received = tok.balance(&this) - bal_before;
-        if received < out || (ask == out && received != out) {
-            return Err(Error::UnexpectedBalance);
+        if ask == out {
+            if received != out {
+                return Err(Error::UnexpectedBalance);
+            }
+        } else {
+            // Full exit: XOXNO rounds the position in its own favour, so allow at most 1 part per million
+            // (plus 2 units) below the quoted value; the caller's min_amounts_out is the real protection.
+            let tolerance = out / 1_000_000 + 2;
+            if received < out - tolerance || received > out + tolerance {
+                return Err(Error::UnexpectedBalance);
+            }
         }
         // Drop the stored account if XOXNO closed it (the NFT is burned when the position empties).
         if !xc.try_account_exists(&acct).map(|r| r.unwrap_or(false)).unwrap_or(true) {

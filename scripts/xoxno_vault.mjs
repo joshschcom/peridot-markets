@@ -36,7 +36,7 @@ async function send(signer, contractId, fn, params, { log = true } = {}) {
   const acct = await server.getAccount(signer.publicKey());
   let tx = new TransactionBuilder(acct, { fee: BASE_FEE, networkPassphrase: cfg.pass })
     .addOperation(new Contract(contractId).call(fn, ...params)).setTimeout(120).build();
-  const sim = await server.simulateTransaction(tx);
+  const sim = await server.simulateTransaction(tx, undefined, 'record_allow_nonroot');
   if (rpc.Api.isSimulationError(sim)) throw new Error(`${fn} simulation failed: ${sim.error}`);
   tx = rpc.assembleTransaction(tx, sim).build();
   tx.sign(signer);
