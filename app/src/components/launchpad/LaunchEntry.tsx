@@ -4,15 +4,16 @@ import { useState } from 'react';
 import { ArrowRight, Coins, Handshake, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/primitives';
 import LaunchTokenForm from './LaunchTokenForm';
+import IcoForm from './IcoForm';
 import SimpleTokenForm from './SimpleTokenForm';
 import { LaunchpadBadges, MainnetNotice, RiskNotice } from './LaunchpadFrame';
 
-type Mode = 'choose' | 'simple' | 'curve';
+type Mode = 'choose' | 'simple' | 'curve' | 'ico';
 
-/** First choice on /launch-token: a plain token with no curve and no ICO, or a bonding curve launch. The ICO is
- * not built yet and is listed as unavailable so nobody hunts for it. */
+/** Choose a simple token, bonding curve or fixed-price ICO. */
 export default function LaunchEntry() {
   const [mode, setMode] = useState<Mode>('choose');
+  if (mode === 'ico') return <IcoForm onBack={() => setMode('choose')} />;
   if (mode === 'simple') return <SimpleTokenForm onBack={() => setMode('choose')} />;
   if (mode === 'curve') return <LaunchTokenForm onBack={() => setMode('choose')} />;
   return <div className="page launch-page">
@@ -39,12 +40,12 @@ export default function LaunchEntry() {
         <span className="row" style={{ gap: 8 }}><Badge tone="accent">1 transaction</Badge><Badge>Graduates to a market</Badge></span>
         <span className="launch-choice-go">Set up a curve launch <ArrowRight size={15} aria-hidden /></span>
       </button>
-      <div className="launch-choice disabled" aria-disabled="true" aria-label="ICO (not available yet)">
+      <button type="button" className="launch-choice" onClick={() => setMode('ico')} aria-label="ICO fixed price sale">
         <span className="launch-choice-icon" aria-hidden><Handshake size={22} /></span>
         <strong>ICO (fixed price sale)</strong>
-        <span className="muted">A fixed-price sale with a goal and a deadline.</span><dl className="launch-choice-facts"><dt>Price</dt><dd>Fixed by you.</dd><dt>Who can buy</dt><dd>Anyone, during a set time window.</dd><dt>You pay</dt><dd>Network fees.</dd><dt>At the end</dt><dd>If the raise target is met it becomes a Peridot market. If not, buyers are refunded.</dd></dl>
-        <span className="row" style={{ gap: 8 }}><Badge>Coming later</Badge></span>
-      </div>
+        <span className="muted">A fixed price, a minimum goal and a maximum raise.</span><dl className="launch-choice-facts"><dt>Price</dt><dd>Fixed by you.</dd><dt>Who can buy</dt><dd>Anyone, during a set time window.</dd><dt>You pay</dt><dd>Network fees.</dd><dt>At the end</dt><dd>Soft cap reached: buyers claim tokens. Soft cap missed: full refunds. Hard cap limits the raise.</dd></dl>
+        <span className="row" style={{ gap: 8 }}><Badge tone="accent">Fixed price</Badge><Badge>Refund if it fails</Badge></span><span className="launch-choice-go">Set up an ICO <ArrowRight size={15} aria-hidden /></span>
+      </button>
     </div>
     <RiskNotice />
   </div>;

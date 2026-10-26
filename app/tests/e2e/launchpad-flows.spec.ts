@@ -100,7 +100,7 @@ test('simple token: choose the plain path, create it in one step and find it tag
   await page.goto('/launch-token');
   await expect(page.getByRole('button', { name: 'Simple token (no curve, no ICO)' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Bonding curve launch' })).toBeVisible();
-  await expect(page.getByText('Coming later')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'ICO fixed price sale' })).toBeEnabled();
   await expect(page.getByText('Rises automatically as people buy.')).toBeVisible();
   await expect(page.getByText('Fixed by you.')).toBeVisible();
   await expect(page.getByText('Nobody, until you share or list the token.')).toBeVisible();

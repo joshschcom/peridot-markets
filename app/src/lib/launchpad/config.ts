@@ -15,7 +15,8 @@ export const LAUNCHPAD_TESTNET = {
   wasm: {
     launchpad_token: 'aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550',
     launchpad_curve: 'bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c',
-    launchpad_factory: '385eac04f7f0755f1fa2f39fd136e332e8f4d6ea35cf5c1446028fdfdda61df6',
+    launchpad_factory: 'b371a8c37cb6a9cabd74b28c899f86114efa7a85e955042085f78c3261ee6d62',
+    launchpad_ico: '516dfcd5fab8c1abd28ccfa911f201463d11b4d9157919259b204c66fbdab306',
   },
   demo: {
     first: {
