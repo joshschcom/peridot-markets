@@ -658,3 +658,45 @@ fn plain_token_requires_the_creator_auth() {
     let auths = c.env.auths();
     assert!(auths.iter().any(|(addr, _)| *addr == creator));
 }
+
+fn ico_params(c: &Ctx) -> crate::IcoParams {
+    crate::IcoParams { quote_token: c.quote_id.clone(), supply: 1000 * X7, price: X7,
+        soft_cap: 10 * X7, hard_cap: 100 * X7, start: 100, end: 700, buyer_cap: 0 }
+}
+fn install_ico(c: &Ctx) {
+    let hash = c.env.deployer().upload_contract_wasm(Bytes::from_slice(&c.env, include_bytes!("../testdata/launchpad_ico.wasm")));
+    c.f.set_ico_wasm(&c.admin, &hash);
+}
+#[test]
+fn ico_deploys_funded_escrow_and_preserves_existing_registries() {
+    let c = setup(); install_ico(&c); let creator = Address::generate(&c.env);
+    let (curve_token, _) = c.launch(&creator, "Curve", "CURV", Preset::Fast);
+    let plain = c.f.create_plain_token(&creator, &String::from_str(&c.env, "Plain"), &String::from_str(&c.env, "PLAIN"), &1000, &String::from_str(&c.env, ""));
+    let (tok, ico) = c.f.create_ico(&creator, &String::from_str(&c.env, "Ico"), &String::from_str(&c.env, "ICO"), &String::from_str(&c.env, ""), &ico_params(&c));
+    assert_eq!(token::Client::new(&c.env, &tok).balance(&ico), 1000 * X7);
+    assert_eq!(c.f.get_ico(&tok).ico, ico); assert_eq!(c.f.ico_count(), 1);
+    assert_eq!(c.f.icos_of(&creator).get(0).unwrap().token, tok);
+    assert_eq!(c.f.list_icos(&0, &100).len(), 1); assert_eq!(c.f.list_icos(&1, &50).len(), 0);
+    assert_eq!(c.f.list_icos(&u32::MAX, &50).len(), 0);
+    assert_eq!(c.f.get_launch(&curve_token).token, curve_token);
+    assert_eq!(c.f.get_plain_token(&plain).token, plain);
+    assert_ne!(tok, plain); assert_ne!(tok, curve_token);
+}
+#[test]
+fn ico_guardrails_pause_wasm_quote_and_authorization() {
+    let c = setup(); let creator = Address::generate(&c.env);
+    let name = String::from_str(&c.env, "Ico"); let sym = String::from_str(&c.env, "ICO"); let uri = String::from_str(&c.env, "");
+    let p = ico_params(&c);
+    assert_eq!(c.f.try_create_ico(&creator, &name, &sym, &uri, &p), Err(Ok(FactoryError::WasmNotSet)));
+    install_ico(&c); c.f.set_paused(&c.admin, &true);
+    assert_eq!(c.f.try_create_ico(&creator, &name, &sym, &uri, &p), Err(Ok(FactoryError::Paused)));
+    c.f.set_paused(&c.admin, &false);
+    let mut bad = p.clone(); bad.end = 101;
+    assert_eq!(c.f.try_create_ico(&creator, &name, &sym, &uri, &bad), Err(Ok(FactoryError::BadIcoParams)));
+    let mut bad = p.clone(); bad.quote_token = Address::generate(&c.env);
+    assert_eq!(c.f.try_create_ico(&creator, &name, &sym, &uri, &bad), Err(Ok(FactoryError::PresetNotSet)));
+    assert_eq!(c.f.try_set_ico_wasm(&creator, &c.token_hash), Err(Ok(FactoryError::NotAdmin)));
+    c.env.mock_auths(&[]);
+    assert!(c.f.try_create_ico(&creator, &name, &sym, &uri, &p).is_err());
+    assert_eq!(c.f.ico_count(), 0);
+}

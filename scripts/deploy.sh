@@ -40,12 +40,14 @@ optimize() { # in.wasm out.wasm
 }
 
 NEW_CRATES=(market-factory:market_factory margin-factory:margin_factory price-router-ext:price_router_ext \
-  reward-distributor:reward_distributor blend-vault-adapter:blend_vault_adapter)
+  reward-distributor:reward_distributor blend-vault-adapter:blend_vault_adapter \
+  launchpad-token:launchpad_token launchpad-ico:launchpad_ico launchpad-factory:launchpad_factory)
 
 step_build_new() {
   for pair in "${NEW_CRATES[@]}"; do
     crate=${pair%%:*}; wasm=${pair##*:}
     if [[ -n "${CRATES_ONLY:-}" && " $CRATES_ONLY " != *" $crate "* ]]; then continue; fi
+    if [[ "$crate" == "launchpad-ico" ]]; then export ICO_INIT_ADMIN="$ADMIN"; fi
     echo "-> $crate"
     stellar contract build --package "$crate" --optimize=false --out-dir "$OUT/raw" >/dev/null
     optimize "$OUT/raw/$wasm.wasm" "$OUT/$wasm.wasm"

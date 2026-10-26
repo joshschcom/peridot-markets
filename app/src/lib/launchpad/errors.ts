@@ -7,8 +7,20 @@
  * (verified against a testnet simulation of `launch_curve` with an over-cap creator buy: factory, factory, then
  * the curve as a "Failed Diagnostic Event"). The mapper therefore reads the innermost frame only. */
 
-export type ContractRole = 'curve' | 'factory' | 'sac' | 'token';
+export type ContractRole = 'curve' | 'factory' | 'sac' | 'token' | 'ico';
 
+const ICO_ERRORS: Record<number, string> = {
+  101: 'Check the supply, price, caps and sale dates. Duration must be 10 minutes to 30 days.',
+  102: 'The ICO does not hold its full token supply.', 103: 'Only the ICO admin may do this.',
+  104: 'New purchases are paused. Claims and refunds remain available.',
+  105: 'This sale has not started yet.', 106: 'This sale is closed.', 107: 'Enter an amount above zero.',
+  108: 'This purchase exceeds the remaining hard cap. Lower the amount.', 109: 'This purchase exceeds your remaining wallet cap.',
+  110: 'This amount is too small to buy a token base unit.', 111: 'Wait until the sale ends.',
+  112: 'This sale did not succeed. Request a refund instead.', 113: 'This sale succeeded. Claim your tokens instead.',
+  114: 'You have no contribution to claim or refund.', 115: 'You already claimed your tokens.',
+  116: 'You already received your refund.', 117: 'Only the creator may withdraw the proceeds.',
+  118: 'The creator already withdrew.', 119: 'Upgrades are permanently locked after the first purchase.',
+};
 const CURVE_ERRORS: Record<number, string> = {
   1: 'A curve parameter must be positive.',
   2: 'A curve parameter is too large.',
@@ -54,6 +66,7 @@ const FACTORY_ERRORS: Record<number, string> = {
   14: 'Graduation targets are not configured on the factory.',
   15: 'No quote price is configured for this quote token.',
   16: 'The quote price must be a Reflector mapping.',
+  18: 'Check the ICO supply, price, caps and dates. Duration must be 10 minutes to 30 days.',
   17: 'Supply must be a whole number between 1 and 1,000,000,000,000 tokens.',
 };
 
@@ -107,6 +120,7 @@ export function describeLaunchpadError(error: unknown, roles: Record<string, Con
 }
 
 function describeCode(role: ContractRole | undefined, code: number): string | null {
+  if (role === 'ico') return ICO_ERRORS[code] ?? null;
   if (role === 'curve') return CURVE_ERRORS[code] ?? null;
   if (role === 'factory') return FACTORY_ERRORS[code] ?? null;
   if (role === 'sac') return SAC_ERRORS[code] ?? null;

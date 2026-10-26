@@ -11,6 +11,9 @@
 //! The factory is the `factory` (upgrade admin) of every curve it deploys; tokens are immutable.
 #![no_std]
 
+#[path = "../../launchpad-ico/src/types.rs"]
+pub mod ico_types;
+pub use ico_types::IcoParams;
 mod errors;
 mod events;
 #[path = "../../launchpad-curve/src/params.rs"]
@@ -117,6 +120,11 @@ enum DataKey {
     PlainToken(u32),
     PlainIndex(Address),
     PlainCreator(Address),
+    IcoWasm,
+    IcoCount,
+    IcoRecord(u32),
+    IcoIndex(Address),
+    IcoCreator(Address),
 }
 
 fn inst_bump(env: &Env) {
@@ -329,6 +337,76 @@ impl LaunchFactory {
         CurveClient::new(&env, &info.curve).upgrade(&env.current_contract_address(), &new_wasm_hash);
         events::LaunchUpgraded { curve: info.curve, wasm_hash: new_wasm_hash }.publish(&env);
         Ok(())
+    }
+
+    pub fn set_ico_wasm(env: Env, admin: Address, hash: BytesN<32>) -> Result<(), FactoryError> {
+        require_admin(&env, &admin)?;
+        env.storage().instance().set(&DataKey::IcoWasm, &hash);
+        inst_bump(&env);
+        Ok(())
+    }
+
+    /// Deploys an escrow and immutable token atomically. All amounts are in seven-decimal base units.
+    pub fn create_ico(env: Env, creator: Address, name: String, symbol: String,
+        metadata_uri: String, params: IcoParams) -> Result<(Address, Address), FactoryError> {
+        creator.require_auth();
+        if env.storage().instance().get(&DataKey::Paused).unwrap_or(false) { return Err(FactoryError::Paused); }
+        if !check_text(&name, 1, MAX_NAME_LEN, false) { return Err(FactoryError::InvalidName); }
+        if !check_text(&symbol, 2, MAX_SYMBOL_LEN, true) { return Err(FactoryError::InvalidSymbol); }
+        if metadata_uri.len() > MAX_URI_LEN { return Err(FactoryError::InvalidMetadataUri); }
+        if !params.valid(env.ledger().timestamp()) { return Err(FactoryError::BadIcoParams); }
+        // Same quote allowlist as curve launches, without requiring graduation configuration.
+        if !env.storage().persistent().has(&DataKey::Preset(params.quote_token.clone(), Preset::Standard)) {
+            return Err(FactoryError::PresetNotSet);
+        }
+        let token_hash: BytesN<32> = env.storage().instance().get(&DataKey::TokenWasm).ok_or(FactoryError::WasmNotSet)?;
+        let ico_hash: BytesN<32> = env.storage().instance().get(&DataKey::IcoWasm).ok_or(FactoryError::WasmNotSet)?;
+        let key = DataKey::IcoCreator(creator.clone());
+        let mut mine: Vec<u32> = env.storage().persistent().get(&key).unwrap_or(Vec::new(&env));
+        if mine.len() >= MAX_LAUNCHES_PER_CREATOR { return Err(FactoryError::TooManyLaunches); }
+        let id = Self::ico_count(env.clone());
+        let salt = deploy_salt(&env, id, 5);
+        let ico = env.deployer().with_current_contract(salt.clone()).deployed_address();
+        let token = env.deployer().with_current_contract(deploy_salt(&env, id, 4)).deploy_v2(token_hash,
+            (ico.clone(), name.clone(), symbol.clone(), params.supply, metadata_uri));
+        env.deployer().with_current_contract(salt).deploy_v2(ico_hash, (token.clone(), creator.clone(), params.clone()));
+        let info = types::IcoInfo { id, token: token.clone(), ico: ico.clone(), creator: creator.clone(), name,
+            symbol, quote_token: params.quote_token, created_at: env.ledger().timestamp() };
+        env.storage().persistent().set(&DataKey::IcoRecord(id), &info);
+        pbump(&env, &DataKey::IcoRecord(id));
+        env.storage().persistent().set(&DataKey::IcoIndex(token.clone()), &id);
+        pbump(&env, &DataKey::IcoIndex(token.clone()));
+        mine.push_back(id); env.storage().persistent().set(&key, &mine); pbump(&env, &key);
+        env.storage().instance().set(&DataKey::IcoCount, &id.checked_add(1).ok_or(FactoryError::Overflow)?);
+        inst_bump(&env);
+        events::IcoCreated { info }.publish(&env);
+        Ok((token, ico))
+    }
+
+    pub fn ico_count(env: Env) -> u32 { env.storage().instance().get(&DataKey::IcoCount).unwrap_or(0) }
+    pub fn list_icos(env: Env, start: u32, limit: u32) -> Vec<types::IcoInfo> {
+        let end = start.saturating_add(limit.min(MAX_LIST_LIMIT)).min(Self::ico_count(env.clone()));
+        let mut out = Vec::new(&env);
+        for id in start..end {
+            if let Some(info) = env.storage().persistent().get::<_, types::IcoInfo>(&DataKey::IcoRecord(id)) { out.push_back(info); }
+        }
+        out
+    }
+    pub fn get_ico(env: Env, token: Address) -> Result<types::IcoInfo, FactoryError> {
+        let key = DataKey::IcoIndex(token);
+        let id: u32 = env.storage().persistent().get(&key).ok_or(FactoryError::LaunchNotFound)?;
+        let info: types::IcoInfo = env.storage().persistent().get(&DataKey::IcoRecord(id)).ok_or(FactoryError::LaunchNotFound)?;
+        pbump(&env, &key); pbump(&env, &DataKey::IcoRecord(id));
+        pbump(&env, &DataKey::IcoCreator(info.creator.clone())); inst_bump(&env);
+        Ok(info)
+    }
+    pub fn icos_of(env: Env, creator: Address) -> Vec<types::IcoInfo> {
+        let ids: Vec<u32> = env.storage().persistent().get(&DataKey::IcoCreator(creator)).unwrap_or(Vec::new(&env));
+        let mut out = Vec::new(&env);
+        for id in ids.iter() {
+            if let Some(info) = env.storage().persistent().get::<_, types::IcoInfo>(&DataKey::IcoRecord(id)) { out.push_back(info); }
+        }
+        out
     }
 
     // ---------------- launching ----------------

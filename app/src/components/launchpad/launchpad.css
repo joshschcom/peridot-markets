@@ -75,3 +75,10 @@ button.launch-choice:focus-visible { box-shadow: var(--focus); outline: none; }
 .launch-choice-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; margin: 4px 0 0; font-size: 13px; line-height: 1.4; }
 .launch-choice-facts dt { color: var(--text-3); font-weight: 600; white-space: nowrap; }
 .launch-choice-facts dd { margin: 0; }
+
+/* ICO sale status and recording controls use the shared theme tokens. */
+.ico-countdown { display:flex; align-items:center; gap:12px; padding:16px 0; }
+.ico-countdown strong { display:block; font-size:1.4rem; font-variant-numeric:tabular-nums; }
+.ico-demo-controls { display:grid; gap:10px; border-top:1px solid var(--border); padding-top:16px; }
+.launch-page input[type="datetime-local"] { min-width:0; width:100%; max-width:100%; }
+@media (max-width: 600px) { .launch-page .field-grid { grid-template-columns:1fr; } .lp-title { overflow-wrap:anywhere; } }
