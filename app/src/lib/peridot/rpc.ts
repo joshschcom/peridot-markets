@@ -153,8 +153,14 @@ async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T
     persistPending(signer.address, { hash: submittedHash, contractId, method, maxTime: Number(prepared.timeBounds?.maxTime), submissionLedger });
     onProgress?.({ status: 'submitting', hash: submittedHash });
     let submission: Awaited<ReturnType<rpc.Server['sendTransaction']>>;
-    try { submission = await client.sendTransaction(signed); }
-    catch { throw new UnknownTransactionError(submittedHash); }
+    // A 429 means the provider never accepted the envelope. Re-sending the identical signed bytes is idempotent (same hash), so retry before declaring the outcome unknown.
+    for (let attempt = 0; ; attempt++) {
+      try { submission = await client.sendTransaction(signed); break; }
+      catch (error) {
+        if (!isRateLimited(error) || attempt >= 2) throw new UnknownTransactionError(submittedHash);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
     if (submission.status === 'ERROR') {
       clearPending(signer.address, submittedHash);
       throw new TransactionRejectedError(submittedHash, `Transaction rejected: ${submission.errorResult?.toXDR('base64') || 'Check balances, limits and permissions.'}`);

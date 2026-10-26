@@ -47,12 +47,10 @@ async function main(){
   await expect(provider).toBeEnabled();
   await popup.close();
   // Reproduce a browser that refuses the popup. Verify bounded recovery with virtual time.
-  await page.clock.install();
   await page.evaluate(()=>{window.open=()=>null;});
   await connect.click();
-  await expect(page.getByRole('button',{name:'Connecting',exact:true})).toBeDisabled();
-  await page.clock.fastForward(61_000);
-  await expect(page.locator('.wallet-alert')).toContainText('wallet did not respond');
+  // A refused popup now fails at once with the setting to change, not after a long timeout.
+  await expect(page.locator('.wallet-alert')).toContainText('Allow pop-ups');
   await expect(connect).toBeEnabled();
   await context.close();
   console.log('Connect, cancel and blocked-popup recovery passed.');
@@ -102,8 +100,14 @@ async function main(){
   await expect(dialog).toBeVisible({timeout:90_000});
   console.log('Unsigned transaction reached prepared-sign dialog.');
   await expect(dialog).toContainText('enter market');
-  const signPopupReady=flow.waitForEvent('popup');
+  // A refused signing popup keeps the reviewed transaction and offers a retry without re-simulating.
+  await flow.evaluate(()=>{const w=window as unknown as {restoreOpen:typeof window.open};w.restoreOpen=window.open;window.open=()=>null;});
   await dialog.getByRole('button',{name:'Open Albedo to sign',exact:true}).click();
+  await expect(dialog).toContainText('Allow pop-ups');
+  await expect(dialog.getByRole('button',{name:'Try again',exact:true})).toBeEnabled();
+  await flow.evaluate(()=>{window.open=(window as unknown as {restoreOpen:typeof window.open}).restoreOpen;});
+  const signPopupReady=flow.waitForEvent('popup');
+  await dialog.getByRole('button',{name:'Try again',exact:true}).click();
   const signPopup=await signPopupReady;
   await expect(signPopup.getByText('Unsigned test request received. No signing occurs.',{exact:true})).toBeVisible();
   assert.deepEqual(await flow.evaluate(()=>(window as unknown as {popupGestures:boolean[]}).popupGestures),[true,true]);
