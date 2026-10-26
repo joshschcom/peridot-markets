@@ -100,7 +100,7 @@ try {
     } catch (error) {
       status.lastError = error.fatal ? 'Signing stopped; transaction reconciliation or operator review required' : 'Read or simulation failed';
       const hash = /[a-f0-9]{64}/.exec(String(error.message))?.[0];
-      logger.error('group cycle failed', { error: status.lastError, ...(hash ? { hash } : {}) });
+      logger.error('group cycle failed', { error: status.lastError, detail: String(error.message).slice(0, 200), ...(hash ? { hash } : {}) });
       if (error.fatal) { status.fatal = true; process.exitCode = 1; break; }
     }
     if (config.runOnce) { if (status.lastSuccessfulCycle === null) process.exitCode = 1; break; }
