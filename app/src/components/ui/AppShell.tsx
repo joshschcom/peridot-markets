@@ -86,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="site-footer-col">
             <strong>On chain</strong>
-            {network.useMocks ? <span>Demo mode: no contracts are called.</span> : factoryUrl ? <a href={factoryUrl} target="_blank" rel="noreferrer"><Search size={13} aria-hidden /> Factory on stellar.expert <ArrowUpRight size={12} aria-hidden /></a> : <span>Factory contract: see the group pages.</span>}
+            {network.useMocks ? <span>Demo build. No contracts are called.</span> : factoryUrl ? <a href={factoryUrl} target="_blank" rel="noreferrer"><Search size={13} aria-hidden /> Factory on stellar.expert <ArrowUpRight size={12} aria-hidden /></a> : <span>Factory contract: see the group pages.</span>}
             {wallet.address && !network.useMocks && <button onClick={() => void reconcilePendingTransaction(wallet.address!).then(s => setRecovery(`Previous transaction: ${s}. Refresh the current page before continuing.`)).catch(e => setRecovery(e.message))}>Check pending transaction</button>}
             {recovery && <p role="status">{recovery}</p>}
           </div>
