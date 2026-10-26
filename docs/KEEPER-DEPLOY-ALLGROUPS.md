@@ -106,8 +106,9 @@ sudo systemctl daemon-reload
 The old service and the new one use the same signing account and the same database advisory lock, so they cannot run together. Stop the old one only between transactions (a SIGTERM mid-send leaves an unresolved INTENT row and the keeper then refuses to run).
 
 ```sh
-# 1. Wait for a line ending in "confirmed" (a transaction just finished; the next one is about a minute away), then stop at once.
-sudo journalctl -u peridot-keeper-group1 -f -o cat | cut -c1-160        # Ctrl-C after a "confirmed" line
+# 1. The three group-1 transactions fire back to back about every 2 minutes. Wait for "group cycle complete" (all done, roughly
+#    100 seconds of quiet follow), then stop at once.
+sudo journalctl -u peridot-keeper-group1 -f -o cat | cut -c1-160        # Ctrl-C right after "group cycle complete"
 sudo systemctl stop peridot-keeper-group1 && sleep 5 && systemctl is-active peridot-keeper-group1    # expect: inactive
 # 2. Confirm the journal has no unresolved intent (prints a table and "OK: no unresolved intents.").
 cd /opt/peridot-markets-upkeep/keeper/liquidator/margin && sudo "$NODE" --env-file=/etc/peridot-keeper/upkeep.env src/journal-status.mjs
@@ -130,14 +131,14 @@ sudo journalctl -u peridot-keeper-upkeep --since "10 min ago" -p warning -o cat 
 
 In `/status` expect `groups.active` to list groups 1, 2, 3, `groups.skipped` and `groups.deferred` empty, `feeBudget.sufficient: true`, and each of the 6 jobs under `interest` and `refresh` with `failures: 0`. The first minute sends 6 transactions (2 boosted, 4 interest). After it, group 3 borrows should stop failing on a stale cache.
 
-Spend check after a few hours (Horizon, no secrets): `curl -s "https://horizon.stellar.org/accounts/GAFJVD3TKIEMIUEBJPQVZNRCG7PF25XOX7QZDRGR7Y3MNQWYQR6C2S3W" | grep -A2 '"asset_type": "native"'` should fall by about 0.1 XLM per hour.
+Spend check after a few hours (Horizon, no secrets): `curl -s "https://horizon.stellar.org/accounts/GAFJVD3TKIEMIUEBJPQVZNRCG7PF25XOX7QZDRGR7Y3MNQWYQR6C2S3W" | jq -r '.balances[]|select(.asset_type=="native").balance'` should fall by about 0.1 XLM per hour.
 
 ## Rollback
 
 The old install `/opt/peridot-markets` and its unit are untouched.
 
 ```sh
-sudo systemctl stop peridot-keeper-upkeep            # after a "confirmed" line, as above
+sudo systemctl stop peridot-keeper-upkeep            # right after the last job of a cycle (watch the journal for `upkeep cycle complete`)
 sudo systemctl disable peridot-keeper-upkeep
 sudo systemctl enable --now peridot-keeper-group1
 ```

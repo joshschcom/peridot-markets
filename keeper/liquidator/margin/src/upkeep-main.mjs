@@ -138,7 +138,8 @@ async function main() {
       let cycleFailed = false;
       try {
         requireSafe((await server.getNetwork()).passphrase === settings.networkPassphrase, 'RPC network mismatch');
-        await base.reconcile();
+        // Discovery first: it only reads and simulates, and it fills the journal's allowed-controller list, which a
+        // restart needs in order to recognise and reconcile an intent left pending by the previous run.
         if (Date.now() >= nextDiscoveryAt) {
           try { await discover(); nextDiscoveryAt = Date.now() + settings.discoveryIntervalMs; }
           catch (error) {
@@ -148,6 +149,7 @@ async function main() {
             logger.warn('group discovery failed; keeping the previous set', { detail: String(error.message).slice(0, 200) });
           }
         }
+        await base.reconcile();
         for (const [run, clientsMap, jobStatus, intervalMs] of [
           [refreshBoostedMarkets, jobs.refreshClients, status.refresh, settings.boostedIntervalMs],
           [refreshInterestMarkets, jobs.interestClients, status.interest, settings.interestIntervalMs],

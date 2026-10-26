@@ -1,16 +1,20 @@
 import { readFile } from 'node:fs/promises';
 import pg from 'pg';
-import { databaseOptions } from './journal.mjs';
+import { Keypair, Networks } from '@stellar/stellar-sdk';
+import { databaseOptions, journalScope } from './journal.mjs';
 
 /** Read-only summary of the signing journal, for operators before a service hand-over. Prints no connection details. */
 async function main() {
   const ca = process.env.DATABASE_CA_PEM ?? (process.env.DATABASE_CA_FILE ? await readFile(process.env.DATABASE_CA_FILE, 'utf8') : undefined);
   const client = new pg.Client(databaseOptions(process.env.DATABASE_URL, ca));
+  // Same scope the keeper uses: network plus signing account. Rows of other keys or networks are not its business.
+  const publicKey = process.env.LIQUIDATOR_SECRET ? Keypair.fromSecret(process.env.LIQUIDATOR_SECRET.trim()).publicKey() : process.env.LIQUIDATOR_PUBLIC_KEY;
+  const scope = journalScope({ networkPassphrase: process.env.NETWORK_PASSPHRASE ?? (process.env.NETWORK === 'testnet' ? Networks.TESTNET : Networks.PUBLIC), publicKey });
   await client.connect();
   try {
     const { rows } = await client.query(`SELECT status, count(*)::int AS intents, max(created_at) AS latest,
       COALESCE(sum(max_fee) FILTER (WHERE created_at > clock_timestamp() - interval '24 hours'),0)::text AS reserved_24h_stroops
-      FROM margin_keeper_intents GROUP BY status ORDER BY status`);
+      FROM margin_keeper_intents WHERE scope = $1 GROUP BY status ORDER BY status`, [scope]);
     console.table(rows);
     const open = rows.filter(row => row.status !== 'SUCCESS');
     console.log(open.length ? 'UNRESOLVED intents exist: do not start a new keeper until each hash is reconciled.' : 'OK: no unresolved intents.');
