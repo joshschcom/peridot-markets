@@ -1,141 +1,215 @@
 # Peridot Markets
 
-Launch isolated lending markets on Stellar, configure each market, and route idle liquidity into supported yield venues.
+Isolated money markets for any Stellar token, created from a factory. A project launches a token (simple, bonding curve or ICO), gets its own lending and borrowing group with configurable rates, collateral factors, caps and optional leverage, routes idle liquidity into DeFindex, Blend, XOXNO, Zenex or Aquarius, and manages everything from a Control Panel inside factory guardrails. Built for HackMeridian 2026 on top of Peridot's audited lending core.
 
-**HackMeridian 2026: Scale + Stellar Composed.** Phase 1 contracts are live on mainnet. The frontend acceptance run, margin open/close and live liquidator coverage are still pending. Beta: unaudited new contracts, capped markets.
+| | |
+|---|---|
+| Mainnet app | https://markets.peridot.finance |
+| Testnet app | https://test-markets.peridot.finance (free test tokens, same code, network switch in the header) |
+| Contract IDs | [deployments/mainnet.json](deployments/mainnet.json), [deployments/testnet.json](deployments/testnet.json) |
+| Verified facts for the pitch | [docs/PITCH-FACTS.md](docs/PITCH-FACTS.md) |
+| Docs index | [docs/README.md](docs/README.md) |
 
-Mainnet beta: [Open Peridot Markets](https://peridot-markets-preview-8ipc1f9u1-peridot3.vercel.app) (Vercel login required; Albedo default, Freighter available). [Separate simulated demo](https://peridot-markets-preview-q1q53sbiz-peridot3.vercel.app). Video: pending. Deck: pending.
+Status as of 26 October 2026. Beta: the new contracts are unaudited and every market is capped. Mainnet balances are tiny demo amounts (about 30 XLM supplied in total).
 
-[Architecture](docs/ARCHITECTURE.md) · [Specifications](docs/SPECS.md) · [Milestones vs intake](docs/MILESTONES.md) · [Demo evidence](docs/DEMO.md) · [Prior work](docs/PRIOR_WORK.md)
+## The problem
 
-## Status
+A new token on Stellar has nowhere to be lent, borrowed or used as collateral. Existing money markets list assets by governance, in one shared risk pool, with parameters the token's community cannot set. Idle deposits earn nothing unless the market itself integrates every yield venue.
 
-| Phase | Scope | Status | Mainnet evidence |
-|---|---|---|---|
-| 1 | Factory, launch wizard, lending, rewards, margin, owner controls, liquidator | Contracts live; app acceptance and operations pending | [Mainnet contracts and transactions](docs/DEMO-MAINNET.md) |
-| 2 | Aquarius LP vault, capped loss reserve, self-hosted keeper | Not started | Pending |
-| 3 | Price guards, custom margin, Zenex, bonding-curve launchpad and graduation | Not started | Pending |
-| 4 | XOXNO, hosted keeper, yield switching, range management, ICO launchpad | Not started | Pending |
+## The solution
 
-A phase is complete only after mainnet deployment, connected frontend, fresh Albedo-account verification, read-only second opinion, evidence and a phase tag. Mock interactions are development tests, not mainnet evidence.
+One factory deploys a complete, isolated market group per token or community: its own controller, price router, markets, interest models and optional rewards and margin contracts. The group owner sets rates (0% is allowed), collateral factors, supply and borrow caps, a liquid buffer and a yield route per market, and changes them later through staged, guardrailed Control Panel transactions. Groups never share risk. The audited Peridot core does the lending; this repository adds the factories, the adapters, the launchpad, the frontend and the keeper.
 
-## Mainnet deployment
+![Groups directory on mainnet](docs/assets/pitch-groups.png)
 
-The source of truth is [deployments/mainnet.json](deployments/mainnet.json). Lead A's [transaction record](docs/DEMO-MAINNET.md) includes group creation, DeFindex and Blend supply/withdrawal, margin enablement and a funded reward claim.
+## What is built
 
-| Contract or group | Mainnet ID | Status |
+| Feature | Status | Evidence |
 |---|---|---|
-| Market factory | `CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S` | Live |
-| Margin factory | `CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH` | Live |
-| Group 1 Meridian controller | `CCIVCL6B5TNYC5PTJDFXD24AEJ5VQU5XUTZXFFGMIVRWQSSZFZPIPUES` | USDC and XLM; XLM uses DeFindex; no rewards, preserving add-market demo |
-| Group 1 margin controller | `CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY` | Enabled; app open/close evidence pending |
-| Group 2 Rewards controller | `CADHYBWKFNDE3LKNWCRD7F6FNHTNQAR4W3AT2G3TROO7V6RZ2VMUKZSZ` | Funded XLM rewards; claim verified by deployer |
-| Group 2 reward distributor | `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF` | Live |
-| Group 3 BlendDemo controller | `CBGLMNCDWF7GTSGWU5DT5ZGAVM6JABAMJH3G3SMNGKDQQ2NTIG3RU2O2` | XLM route; supply and withdrawal verified by deployer |
-| Blend fee vault | `CCHILGAYU4DQXLWSTOA5BQYZD7QJMWUU5PQLS4Z25FLI2WP6IVV3X337` | Allowlisted XLM and USDC reserves |
+| Market groups (factory, isolated controller, markets, rates, caps, buffer, rewards) | Live on mainnet: 3 groups, 4 markets, funded XLM rewards with a real claim | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| Margin and leverage (margin factory, per-group audited margin controller, Aquarius swap adapter) | Enabled on mainnet group 1 (3x max). Open and close transactions verified on testnet only; no mainnet position yet | [PITCH-FACTS.md section 6](docs/PITCH-FACTS.md) |
+| Reflector pricing | Live on mainnet: all 4 markets priced from the Reflector external feed | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| DeFindex route | Live on mainnet: group 1 XLM market, 80% of supply routed to the Peridot XLM DeFindex vault | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| Blend route (fee vault plus adapter) | Live on mainnet: group 3 XLM market, supply and withdrawal verified | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| Aquarius swaps | Mainnet: XLM/USDC pool allowlisted and bound as the margin swap venue, no swap executed yet. Testnet: graduation creates an Aquarius pool and locks the LP | [DEMO-TESTNET.md](docs/DEMO-TESTNET.md) |
+| Aquarius ladder vault (concentrated liquidity rungs, rebalance, wind-down) | Testnet only: deposit, three rebalances, withdrawal and unwind. Mainnet Wasm upload is waiting on a cost decision | [deployments/testnet.json](deployments/testnet.json) |
+| Zenex vault | Deployed on mainnet against the real Zenex (market unbound, no deposit). Deposit, sync and withdraw verified on testnet against a mock, since Zenex has no testnet | [deployments/mainnet.json](deployments/mainnet.json) |
+| XOXNO vault | Live on mainnet against the real XOXNO Lending controller: 5 XLM deposit and 2 XLM withdrawal | [deployments/mainnet.json](deployments/mainnet.json) |
+| Vault factory (one Wasm per vault kind, anyone creates a vault) | Live on mainnet with the Zenex and XOXNO kinds registered; Aquarius kind on testnet | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| Launchpad: simple token | Mainnet factory supports it (`create_plain_token`); demo token SIMPL launched on testnet | [deployments/testnet.json](deployments/testnet.json) |
+| Launchpad: bonding curve | Live on mainnet: PDEMO launched with a 5 XLM creator buy, still trading | [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) |
+| Launchpad: ICO (fixed price, soft and hard cap, refunds) | Mainnet factory upgraded with the ICO Wasm, no ICO created there yet. Success and refund flows complete on testnet | [deployments/testnet.json](deployments/testnet.json) |
+| Launchpad: graduation into an Aquarius pool and a new market group | Testnet only (PGRAD). Mainnet graduation needs the 300,000 AQUA pool fee | [DEMO-TESTNET.md](docs/DEMO-TESTNET.md) |
+| Control Panel (staged parameter changes, guardrails, add market, margin sync) | Live in the app on mainnet. Edits verified on testnet; guardrail rejection verified on mainnet by simulation; no mainnet edit sent yet | [docs/qa/FINDINGS.md](docs/qa/FINDINGS.md) |
+| Keeper (interest accrual, boosted-vault refresh, liquidation) | Running for mainnet group 1 on a droplet: hundreds of refresh and accrual transactions. Liquidation path tested, not exercised live | [KEEPER.md](docs/KEEPER.md) |
+| Wallet picker (Stellar Wallets Kit) | Built: Albedo, Freighter, xBull, LOBSTR and Hana | `app/src/wallet/catalog.ts` |
 
-The local `phase-1` contract tag is recorded on the coordination board. It does not establish fresh Albedo frontend acceptance or a running liquidator. Those gates remain explicit in [DEMO.md](docs/DEMO.md).
+Not built: hosted keeper subscriptions, Aquarius LP loss reserve, custom per-asset margin fees, switching a market's yield route after launch.
 
-## Problem and solution
+## Architecture at a glance
 
-New token communities need lending and borrowing markets with parameters that suit their own users. Peridot Markets gives each community an isolated group with configurable rates, collateral factors, caps, a liquid buffer, yield routes, rewards and optional margin.
+```mermaid
+flowchart LR
+  App[Next.js app: launch, groups, Control Panel, vaults, launchpad] --> MF[Market factory]
+  App --> XF[Margin factory]
+  App --> LP[Launchpad factory]
+  App --> VF[Vault factory]
+  MF --> G[Isolated group: controller, markets, interest models]
+  G --> PR[Group price router]
+  PR --> Reflector
+  PR --> AquariusPool[Aquarius pool price, graduated tokens]
+  G --> Rewards[Reward distributor]
+  G --> Route[Yield route per market]
+  Route --> DeFindex
+  Route --> Blend[Blend adapter and fee vault]
+  Route --> Zenex[Zenex vault]
+  Route --> XOXNO[XOXNO vault]
+  XF --> Margin[Group margin controller] --> Swap[Swap adapter] --> Aquarius
+  LP --> Token[Token, bonding curve or ICO] -- graduate --> MF
+  VF --> Vaults[Aquarius ladder, Zenex, XOXNO vaults]
+  Keeper -->|accrue, refresh, liquidate| G
+  Keeper --> Margin
+```
 
-The launch wizard creates the group in separate confirmed transactions. The group page supplies, borrows, repays, withdraws, claims funded rewards and manages margin positions. The owner Control Panel adds markets and changes parameters inside factory guardrails. Market creation uses deploy, activate and attach-yield transactions. With the currently pinned core, all markets must be added before rewards are enabled; adding markets after rewards is blocked pending a core decision.
+The factory stays contract admin of every group contract. The group owner acts through factory entry points that enforce guardrails and emit events. Details: [ARCHITECTURE.md](docs/ARCHITECTURE.md), contract specs: [SPECS.md](docs/SPECS.md).
 
-Peridot's existing lending, margin, dashboard and bot code predates the event. This repository adds factory-created groups, their configuration and frontend flows, integration wrappers and group operations. See the exact source commits in [PRIOR_WORK.md](docs/PRIOR_WORK.md).
+## Repository layout
 
-## Try the local demo
+```
+contracts/        New contracts (unaudited): market-factory, margin-factory, price-router-ext, reward-distributor,
+                  blend-vault-adapter, xoxno-vault, zenex-vault, aquarius-vault, vault-factory, launchpad-token,
+                  launchpad-curve, launchpad-factory, launchpad-ico, peridot-interfaces (shared types), mocks/
+core/             Peridot's audited lending core, imported at a pinned commit; only timelocks changed (core/CORE_DIFF.md)
+app/              Next.js 15 frontend (wallets, launch wizard, groups, Control Panel, vaults, launchpad), tests, QA harness
+keeper/           Group-aware keeper: interest accrual, boosted-vault refresh, margin and lending liquidation
+scripts/          Build and deploy scripts (stellar-cli), mainnet runbooks, droplet hosting, pitch tooling
+deployments/      Generated manifests with every contract ID and Wasm hash per network (source of truth)
+build/            Optimized Wasm used by deployments and by integration tests (build/test)
+docs/             Specs, architecture, mainnet and testnet evidence, handoff specs, QA results (docs/README.md)
+openzeppelin-stellar-contracts/  Vendored OpenZeppelin Stellar contracts v0.7.1, unmodified (MIT)
+```
 
-Use Node.js 22.12 or newer. Mock mode is explicit and displays a demo banner. It does not request wallet signatures or move funds.
+## Using it
+
+Open the mainnet app or the testnet app and connect a wallet. Testnet is the place to try everything with free tokens.
+
+| Do this | Where | What happens on chain |
+|---|---|---|
+| Browse groups and markets | `/groups`, `/groups/1` | Reads the factory and each group's controller |
+| Supply and withdraw | `/groups/[id]` market card | `deposit` and `withdraw` on the market receipt vault; part of the supply is routed to the market's yield venue |
+| Borrow and repay | `/groups/[id]` market card | Enter the market, `borrow` and `repay` on the group controller; health shown live |
+| Claim rewards | `/groups/2` | `claim` on the reward distributor (group 2 holds the funded XLM rewards) |
+| Open or close leverage | `/groups/1` Leverage tab | Staged margin V3 transactions through the group margin controller and the Aquarius swap adapter; state survives a refresh |
+| Create a group | `/launch` wizard | `create_group`, then per market `add_market`, `activate_market`, `attach_yield`, then margin and rewards, each a confirmed transaction |
+| Manage a group | `/groups/[id]/control` (owner only) | Staged `update_risk` and `update_rates`, `apply_pending` after 60 s, add market, pause, margin sync |
+| Launch a token | `/launch-token` | Simple token, bonding curve (with optional creator buy) or ICO; tokens listed at `/tokens`, each at `/token/[address]` |
+| Trade and graduate a curve | `/token/[address]` | `buy` and `sell` on the curve; at target, `graduate` creates an Aquarius pool, locks the LP and creates a market group |
+| Create a vault | `/vaults` | `create_vault` on the vault factory with the chosen kind (Aquarius ladder, Zenex, XOXNO) and parameters |
+
+Every write is simulated first, then signed in the wallet, then submitted and awaited; a submission hash alone is never treated as success.
+
+## Developing
+
+Prerequisites: Rust stable with the Wasm target used by stellar-cli, [stellar-cli](https://github.com/stellar/stellar-cli), `wasm-opt`, Node.js 22.12 or newer, Python 3 (deployment helpers).
+
+### Contracts
+
+```sh
+cargo test --workspace                     # all crates (new contracts and the imported core)
+cargo test -p market-factory               # one crate
+INIT_ADMIN=<market-factory id> OUT_LABEL=testnet scripts/build_core.sh   # core Wasm, admin baked in
+NETWORK=testnet IDENTITY=<stellar-cli identity> scripts/deploy.sh all    # build-new, factories, build-core, upload, externals
+```
+
+`scripts/deploy.sh` writes `deployments/<network>.json`; mainnet refuses to run without `CONFIRM_MAINNET=yes`. Further runbooks: `scripts/deploy_vault_factory.sh` (vault factory and kinds), `scripts/launchpad_mainnet.sh` and `scripts/ico_mainnet.sh` (launchpad), `scripts/zenex_vault_mainnet.sh`, `scripts/xoxno_vault.mjs`, `scripts/refresh_boosted_mainnet.sh`, `scripts/run_keeper_group1.sh`. Integration tests load the real core Wasm from `build/test/`.
+
+### App
 
 ```sh
 cd app
 npm ci
-NEXT_PUBLIC_USE_MOCKS=true npm run dev
-```
-
-Open `http://localhost:3000`, then `/launch`, `/groups/1` and `/groups/1/control`. The mock owner is a demo address, not a funded account. Data is saved in browser storage.
-
-## Configure a network
-
-Mainnet is the default. Testnet is selected at build time through `NEXT_PUBLIC_NETWORK=testnet`.
-
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_NETWORK` | `mainnet` or `testnet` |
-| `NEXT_PUBLIC_MAINNET_RPC_URL` | Browser-safe mainnet RPC endpoint |
-| `NEXT_PUBLIC_TESTNET_RPC_URL` | Testnet RPC endpoint; defaults to Stellar's public testnet RPC |
-| `NEXT_PUBLIC_READ_ONLY` | Set `true` for a chain-connected preview that disables all transaction submissions |
-| `NEXT_PUBLIC_USE_MOCKS` | Set `true` only for local demo/testing; production must use `false` |
-
-Copy `app/.env.example` to `app/.env.local` and set the required values. The example and current preview use `https://soroban-rpc.mainnet.stellar.gateway.fm`. Its mainnet passphrase and browser CORS were verified on 25 October. The previous public RPC intermittently timed out; read requests are now paced, have a 30 second timeout, and retry HTTP 429 at most twice. Signed submissions are never automatically retried. Browser environment variables are public. Never put a private API key, wallet secret, admin key or signing key in them.
-
-Lead A's deployment scripts produce `deployments/<network>.json`. After the readiness announcement, run `node scripts/sync-deployments.mjs mainnet` from `app/` with the public RPC environment set. The helper checks the RPC network and registered Wasm pins before copying public fields to the app manifest. Use `testnet` for that network. Placeholder manifests intentionally prevent live transactions. Changing a network or deployment requires a fresh build.
-
-```sh
-cd app
-npm run typecheck
-npm test
+cp .env.example .env.local                 # mainnet by default; NEXT_PUBLIC_NETWORK=testnet for testnet
+npm run dev                                # http://localhost:3000
+npm run typecheck && npm test              # unit tests (node --test)
+npm run test:e2e                           # Playwright, mock mode (npx playwright install chromium first)
 npm run build
 ```
 
-Vercel project root: `app/`. A generated canonical interface snapshot is bundled and checked in CI. Build command: `npm run build`. Connected mainnet preview: frontend commit `b896c82`, Vercel deployment `dpl_6f8m3ncTg9rJKkesW4j17yHiAp47`. This uses the private preview project; the organization production deployment remains pending. A fresh Albedo account must complete the evidence checklist before a phase is tagged.
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_NETWORK` | `mainnet` or `testnet` (the header switch changes it at runtime) |
+| `NEXT_PUBLIC_MAINNET_RPC_URL` | Browser-safe mainnet Soroban RPC |
+| `NEXT_PUBLIC_TESTNET_RPC_URL` | Testnet RPC, defaults to `https://soroban-testnet.stellar.org` |
+| `NEXT_PUBLIC_READ_ONLY` | `true` disables every transaction submission |
+| `NEXT_PUBLIC_USE_MOCKS` | `true` only for a local demo without a chain |
 
-The redesigned UI is merged as `82fcde0`; Safari signing and paced mainnet reads are in `b896c82`. Albedo opens from an explicit click after simulation. If cancelling, close the old Albedo window before retrying. Validation: 71 unit tests, typecheck, production build, 3 e2e flows, and a WebKit popup/cancellation check with zero submissions. Real fresh-wallet acceptance remains pending.
+Browser variables are public; never put a key in them. Contract IDs come from `deployments/<network>.json`, copied into the app with `node scripts/sync-deployments.mjs <network>` from `app/`. The app bundles a generated snapshot of the contract interface types (`npm run interfaces:check` in CI).
 
-## Fresh-wallet preflight
+### Keeper
 
-From `app/`, run `NEXT_PUBLIC_MAINNET_RPC_URL=https://soroban-rpc.mainnet.stellar.gateway.fm node --import tsx scripts/fresh-wallet-check.ts --account G...` with the fresh Albedo public address. The script reads account existence, balances, missing trustlines, market entry, liquidity and rewards across the three demo groups. It never signs or submits. Its checklist must still be completed in Albedo; a successful read-only report is not transaction evidence. See the [acceptance runbook](docs/DEMO.md#fresh-albedo-acceptance-runbook).
+```sh
+cd keeper/liquidator/margin
+npm ci && npm run check && npm test
+cp mainnet-group1.env.example .env         # dedicated keeper key, dry-run by default
+npm start
+```
 
-## Integrations
+Operations, fee caps and the droplet service are in [KEEPER.md](docs/KEEPER.md). CI (`.github/workflows/frontend-keeper.yml`) runs the app typecheck, unit and e2e tests and the keeper tests.
 
-| Integration | Role | Planned phase |
-|---|---|---|
-| Reflector | Asset prices with explicit token coverage | 1 |
-| DeFindex | Yield vaults attached to eligible markets | 1 |
-| Blend | Lending yield through a fee-vault adapter | 1 |
-| Aquarius | Swaps for margin; LP yield and AQUA harvest later | 1 swaps, 2 LP vault |
-| Zenex | USDC perps-vault route with asynchronous withdrawals | 3 |
-| XOXNO | Additional lending yield route | 4 |
-| Stellar Wallets Kit: Albedo and Freighter | Albedo default; user-reviewed Stellar transaction signing | 1 |
-| Soroban `deploy_v2` | Factory deployment of isolated group contracts | 1 |
+## Contracts (mainnet deployment)
 
-Routes are shown as available only when deployed and configured. These protocols are venues Peridot composes with, not competitors ranked by the UI.
+All IDs are copied from [deployments/mainnet.json](deployments/mainnet.json). Admin and deployer: `GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH`.
 
-## Contracts and transaction evidence
+| Contract | ID |
+|---|---|
+| Market factory | `CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S` |
+| Margin factory | `CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH` |
+| Group 1 "Meridian" controller | `CCIVCL6B5TNYC5PTJDFXD24AEJ5VQU5XUTZXFFGMIVRWQSSZFZPIPUES` |
+| Group 1 price router | `CBBZ2FPMJDFSGQD64Y6U4IKJ7YXO2RP5T5AQMXRNBYKFXZOTGMFTF3XD` |
+| Group 1 USDC market | `CCZHYRBCNKB5F3RPMD4VV747NIV6QFJ4EBZLPWDSQWHNNKYDO62OVIRM` |
+| Group 1 XLM market (DeFindex route, 0% borrow rate) | `CCK7R22G3HOZDJXU6DVDEXK4HZ6AS3DHHFCAFOMY22XQEA3DJHRRSNXI` |
+| Group 1 margin controller | `CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY` |
+| Group 2 "Rewards" controller | `CADHYBWKFNDE3LKNWCRD7F6FNHTNQAR4W3AT2G3TROO7V6RZ2VMUKZSZ` |
+| Group 2 XLM market | `CARDJEVXDP5RY3GAKRYSW4T5CKYY7Y4PQTS4CJSVQEBKP4JMHTDFPXNV` |
+| Group 2 reward distributor | `CA4AMJK54MZI2KDU5KJFPF5SD4KULJETIITPVVQH5WTEH2WH6IKOSYUF` |
+| Group 3 XLM market (Blend route) | `CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM` |
+| Group 3 Blend adapter | `CDLLNAM63H5BVYH4BCNIWY6AULTDO6H455M4NF3HIYUW4XBXW6TPOPIX` |
+| Peridot Blend fee vault | `CCHILGAYU4DQXLWSTOA5BQYZD7QJMWUU5PQLS4Z25FLI2WP6IVV3X337` |
+| Launchpad factory | `CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J` |
+| PDEMO token and bonding curve | `CDKHQPYSBULW3T2FNLPKKKXVKREDYZTI37KRURBNVNEUIZ5YDT4O4DYT`, `CDWJL4YJ4H546FFXNXSNREW27PFQFNMBQPXDIUHTN765Z52MRDUJH43A` |
+| Vault factory | `CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW` |
+| XOXNO demo vault | `CCXPXDV3VXQE2WHOQOBRO7XSQTPJXSYWRF4H3UHIEWNVGL2RRYDIHCDC` |
+| Zenex demo vault | `CD6ZTDY6MTACM5D3BY7OW3SXZDAQ322RQUOFEFXBWU44TLO4LXIZQRMP` |
 
-Contract IDs come from generated deployment manifests. [DEMO-MAINNET.md](docs/DEMO-MAINNET.md) records the deployer transaction evidence; [DEMO.md](docs/DEMO.md) tracks application acceptance separately. Existing Peridot deployments are prior work and are not substitutes for this build's evidence.
+External contracts used: Reflector feeds, the Aquarius router and XLM/USDC pool, the Blend Fixed V2 pool, the Peridot XLM DeFindex vault, XOXNO Lending and Zenex (all listed under `external` in the manifest). Testnet IDs are in [deployments/testnet.json](deployments/testnet.json).
 
-## Safety, guardrails and upgrades
+## Safety and guardrails
 
-Core lending contracts are Peridot's audited contracts with one change for the hackathon: upgrade and admin-parameter timelocks shortened from 24h to 60s. See [CORE_DIFF.md](core/CORE_DIFF.md). New contracts are unaudited.
+- Groups isolate risk: separate controller, router, markets, margin controller and swap adapter per group.
+- Factory guardrails (`contracts/market-factory/src/guardrails.rs`): collateral factor 1% to 75% with Reflector prices and at most 50% with pool prices; supply and borrow caps required; liquid buffer 10% to 100%; reserve factor at most 50%; at most 16 markets and 4 margin markets per group; group leverage 1x to 5x, 2x for pool-priced tokens; slippage at most 10%; no admin fallback prices.
+- Staged changes: collateral factor and price changes wait 60 s before `apply_pending`; the UI shows the countdown. Every owner action emits an event.
+- Margin V3 runs as staged transactions with persisted recovery; an unknown outcome is never retried automatically.
+- The keeper uses its own key, caps fees per transaction and per day, journals intents in PostgreSQL and defaults to dry-run.
+- Launchpad: 1% trade fee, creator buys capped at 5% of the curve, LP shares locked by transfer to the zero account, ICO funds held in escrow until finalize, refunds on a missed soft cap.
+- Mainnet scripts refuse to run without `CONFIRM_MAINNET=yes`; secrets never live in the repo or in browser variables.
 
-- Groups isolate lending risk. Supply and borrow caps are required and positive.
-- Reflector-priced collateral factors are capped at 75%; core also requires at least 1%.
-- Liquid buffers range from 10% to 100%; reserve factors from 0% to 50%.
-- Zero borrow rates are allowed. Rates and risk parameters use their actual core units.
-- Factory owners act through guardrails. Changes emit events for history.
-- No admin fallback prices are set. External feed symbols must map to trusted token addresses.
-- Rewards depend on distributor funding. The UI shows available funds.
-- Margin V3 uses staged operations with persisted recovery. An unknown transaction outcome is not automatically retried.
-- New contracts support immediate Peridot-admin upgrades. Core upgrades retain a two-step process with a 60-second delay. Longer delays and multisig administration are post-event work.
+## Known limitations and unaudited contracts
 
-Phase 2's loss reserve covers impermanent loss only up to the reserve balance. An empty reserve leaves normal LP risk. Zenex withdrawals take at least one hour and shares can lose value.
+- Everything under `contracts/`, `app/` and `keeper/` was written or adapted during the event and is unaudited. The audit covers only the imported core.
+- The core's upgrade and admin timelocks were shortened from 24 h to 60 s for the event ([core/CORE_DIFF.md](core/CORE_DIFF.md)); new contracts can be upgraded immediately by the admin. Production needs longer delays and multisig administration.
+- Once a group has a reward token, no market can be added to it (core re-entry limit). Enable rewards last.
+- Boosted-vault markets (DeFindex, Blend) need a health-cache refresh at least every 5 minutes or borrows revert; the keeper does this for group 1 only.
+- No mainnet borrow, margin open, Control Panel edit or third-party user yet; those flows are verified on testnet and by mainnet simulation.
+- Graduation on mainnet costs 300,000 AQUA (Aquarius pool fee), and pool-based pricing of graduated tokens can be manipulated; mitigated by the 50% collateral cap, depth floor and step guard, not solved.
+- Zenex withdrawals are asynchronous (at least one hour) and shares can lose value. Public token sales may need legal review (MiCA) before Peridot promotes them.
+- The Blend fee-vault Wasm is built from script3/fee-vault `1ab9835` and is not byte-identical to an upstream release.
 
-## Keeper and liquidation
+## Prior work and licence
 
-Phase 1 requires a running margin liquidator for the demo group and fresh boosted-vault values for Blend/DeFindex markets. Service installation, dry-run and live-signing requirements are in [KEEPER.md](docs/KEEPER.md). A copied or dry-run worker does not count as running mainnet coverage.
+Peridot's lending core, margin controller, price router, Aquarius LP vault, dashboard base and liquidator bots predate the event and were imported at pinned commits; the exact sources, commits and the only core change are listed in [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md) and [core/CORE_DIFF.md](core/CORE_DIFF.md). Everything else (factories, adapters, vaults, launchpad, frontend flows, keeper changes, scripts, docs) was built during HackMeridian 2026 and is visible in the commit history.
 
-Phase 2 adds self-hosted Aquarius harvest/range work. Phase 4 adds a funded hosted service. Workers use a dedicated identity; live execution with keys and spending funds require approval.
-
-## Roadmap and SCF
-
-Before opening public token launches: legal review of MiCA white paper and CASP questions, as recorded in the [launchpad handoff](docs/handoff/12-LAUNCHPAD.md). Launchpad work starts only after phase 1 is tagged on mainnet.
-
-After the event: audit new contracts, restore production timelocks, move administration to a multisig, onboard initial partner groups and prepare an SCF proposal with adoption milestones. Intake wording and measurable delivery evidence are maintained in [MILESTONES.md](docs/MILESTONES.md).
+This repository does not publish a licence of its own. `openzeppelin-stellar-contracts/` is vendored under its own MIT licence. The frontend prior work carries no licence, as recorded in `docs/PRIOR_WORK.md`.
 
 ## Team
 
-Built by the Peridot team for HackMeridian 2026. Code freeze: 26 October at 08:00 Lisbon. Submission closes at 12:00 Lisbon.
-
-Launchpad: testnet demo planned; mainnet after audit and legal review (MiCA).
+Built by the Peridot team for HackMeridian 2026, Lisbon.
