@@ -124,3 +124,12 @@ Correction to the estimate above: mainnet wasm rent is far higher than testnet. 
 
 Register kinds (run by the factory admin, `peridot-mainnet-admin`):
 `stellar contract invoke --id CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW --network mainnet-public --source peridot-mainnet-admin -- set_wasm --admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH --kind <kind> --hash <hash>` with `zenex` `99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399`, `xoxno` `61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23`, and `aquarius` `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76` (after the upload).
+
+### Aquarius ladder vault on mainnet: prepared, waiting for funding (2026-10-26)
+
+Not executed: `peridot-mainnet-vaults` held 70.46 XLM, and the upload alone simulates at about 70.3 XLM, so upload + create + seed + reserve needs about 85 XLM. The wasm was rebuilt from this checkout and matches `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76` (46,819 bytes). Codex pass on it: GO for an unbound demo of at most 10 XLM (`docs/qa/CODEX-VAULT-ALLOWLIST.md`). Once the vaults key holds at least 85 XLM, in order:
+
+1. `stellar contract upload --wasm build/mainnet/aquarius_vault.wasm --source-account peridot-mainnet-vaults --network mainnet-gateway --inclusion-fee 2000` (must print the hash above).
+2. `stellar contract invoke --id CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW --source-account peridot-mainnet-admin --network mainnet-gateway --inclusion-fee 2000 -- set_wasm --admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH --kind aquarius --hash 77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76`
+3. `NETWORK=mainnet CONFIRM_MAINNET=yes IDENTITY=peridot-mainnet-vaults node scripts/vault_run.mjs create CBBMQBNHB2FYVZYV7VNHOJHUMTFJLR4PUMRVQYNW6RHIKZO2NQMIBUCV CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA rungs=5 width=3 step=3 shape=1 recenter=5 cooldown=3600 fee=1000 cap=100 slippage=100`, then `deposit <vault> 10`.
+4. Record `vault_kinds.aquarius` and `aquarius_vault` in `deployments/mainnet.json`, and only `vault_kinds.aquarius` in `app/src/lib/peridot/deployments/mainnet.json`.
