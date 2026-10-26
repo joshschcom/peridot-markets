@@ -34,7 +34,7 @@ function kp(identity) { return Keypair.fromSecret(execFileSync('stellar', ['keys
 
 async function send(signer, contractId, fn, params, { log = true } = {}) {
   const acct = await server.getAccount(signer.publicKey());
-  let tx = new TransactionBuilder(acct, { fee: BASE_FEE, networkPassphrase: cfg.pass })
+  let tx = new TransactionBuilder(acct, { fee: process.env.INCLUSION_FEE || BASE_FEE, networkPassphrase: cfg.pass })
     .addOperation(new Contract(contractId).call(fn, ...params)).setTimeout(120).build();
   const sim = await server.simulateTransaction(tx, { cpuInstructions: 3_000_000 }, 'record_allow_nonroot');
   if (rpc.Api.isSimulationError(sim)) throw new Error(`${fn} simulation failed: ${sim.error}`);
