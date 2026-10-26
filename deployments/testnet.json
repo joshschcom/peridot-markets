@@ -15,7 +15,7 @@
     "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739",
     "launchpad_token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
     "launchpad_curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
-    "launchpad_factory": "385eac04f7f0755f1fa2f39fd136e332e8f4d6ea35cf5c1446028fdfdda61df6"
+    "launchpad_factory": "71944f62ff68f4f93e0a98fe111b7b51ca256677ffd778f206812815a91be511"
   },
   "launchpad_factory": "CBYQC54BS5HIWEO6KQNVGZ6XRNOTG3OMT6UZYBUD2NESGHBQMALGSBWC",
   "demo": {
@@ -35,6 +35,14 @@
         "token_market": "CACVHBJNML7WTR2S56WRAPA5KGIBGWLCXJI2KSRKK27DJDPV2QL6MTGX",
         "quote_market": "CA5Y5BWWRFP4H5THHNFAMET7JVOIO2MR4CS5KYJ6QUTGX5IRT6L4C55T",
         "target_xlm": 500
+      },
+      "plain": {
+        "token": "CDZ2IJSAFRCZRAZX3UFAIZQ5LB53IADDNJUCWFKFGMBQS6S3EMOSCQB2",
+        "symbol": "SIMPL",
+        "supply_whole": 1000000,
+        "creator": "GBHHXYYBOMQMMGZPETQUQEYKZHJCKDYK7O7DO4RGKFWFJ4YIL3RNUSWP",
+        "create_tx": "26184e1b2a0052073620883b473ea7831f9d9db9ef38fc10c062071fb15ad795",
+        "factory_upgrade_tx": "e89a956e0cf1022d205d6bfceeb8cd9b0a1a019c0032dc7f427438a6d00aec3d"
       }
     }
   },
