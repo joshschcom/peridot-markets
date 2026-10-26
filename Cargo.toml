@@ -22,10 +22,14 @@ members = [
   "contracts/reward-distributor",
   "contracts/price-router-ext",
   "contracts/blend-vault-adapter",
+  "contracts/zenex-vault",
+  "contracts/mocks/mock-zenex",
   "contracts/margin-factory",
   "contracts/launchpad-token",
   "contracts/launchpad-curve",
   "contracts/launchpad-factory",
+  "contracts/vault-factory",
+  "contracts/mocks/mock-kind-vault",
 ]
 
 [workspace.dependencies]
