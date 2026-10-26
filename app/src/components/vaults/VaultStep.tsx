@@ -133,7 +133,7 @@ export default function VaultStep({ id, value, onChange, disabled }: VaultStepPr
       <div className="row between"><strong>Default DeFindex vault for {defindex.symbol}</strong><ApprovalBadge state={approval.address === value.routeAddress ? approval.state : 'checking'} /></div>
       <div className="kv" style={{ fontSize: 12 }}>
         <div><span>Vault</span><span><Address value={defindex.vault} label="DeFindex vault address" head={6} tail={6} /></span></div>
-        <div><span>Name</span><span>{check?.name ? `${check.name} (${check.symbol})` : check?.error ? 'unavailable' : 'reading...'}</span></div>
+        <div><span>Name</span><span>{check?.name ? `${check.name}${check.symbol ? ` (${check.symbol})` : ''}` : check?.error ? 'unavailable' : 'reading...'}</span></div>
         <div><span>Asset check</span><span>{check?.error ? <Badge tone="danger">{check.error}</Badge> : assetOk === null ? 'simulating get_assets...' : assetOk ? <Badge tone="success" icon={CheckCircle2}>Manages {defindex.symbol}{check?.active ? ', strategy active' : ', no active strategy'}</Badge> : <Badge tone="danger">Vault asset does not match {defindex.symbol}</Badge>}</span></div>
         <div><span>Rate</span><span><YieldRate venue="defindex" token={value.token} facts /></span></div>
         <div><span>Source</span><span className="muted">{defindex.source}<Tooltip text="The address is fixed in app/src/lib/vaults/defindex-defaults.ts with the file it was taken from. Owners cannot substitute another vault; Peridot admin allow-lists vaults on the market factory." /></span></div>
