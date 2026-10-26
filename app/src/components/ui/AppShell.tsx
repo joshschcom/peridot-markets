@@ -5,6 +5,7 @@ import { ArrowUpRight, ChevronDown, Eye, FlaskConical, ShieldAlert, Wallet } fro
 import { useState, type ReactNode } from 'react';
 import { network } from '@/lib/peridot/network';
 import { useWallet } from '@/lib/peridot/wallet';
+import { shortAddress, walletInfo } from '@/wallet/catalog';
 import { reconcilePendingTransaction } from '@/lib/peridot/rpc';
 import { ThemeToggle } from './ThemeToggle';
 import { RecentTransactions } from './RecentTransactions';
@@ -35,10 +36,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="site-nav" aria-label="Main navigation">{nav}</nav>
         <div className="header-actions">
           <NetworkSwitch />
-          {!network.useMocks && <select aria-label="Wallet provider" value={wallet.walletId} disabled={wallet.isConnecting || !!wallet.address} onChange={e => wallet.selectWallet(e.target.value as 'albedo' | 'freighter')}><option value="albedo">Albedo</option><option value="freighter">Freighter</option></select>}
-          <button className={`button wallet-button${wallet.address ? ' connected' : ''}`} disabled={wallet.isConnecting||(!wallet.isReady&&!wallet.error)} onClick={() => wallet.address ? wallet.disconnect() : void wallet.connect()}>
+          <button className={`button wallet-button${wallet.address ? ' connected' : ''}`} disabled={wallet.isConnecting||(!wallet.isReady&&!wallet.error)} onClick={wallet.openModal} aria-haspopup="dialog">
             <Wallet size={15} aria-hidden />
-            {wallet.address ? network.useMocks ? 'Demo account' : `${wallet.address.slice(0, 4)}…${wallet.address.slice(-4)}` : wallet.isConnecting ? 'Connecting' : !wallet.isReady && !wallet.error ? 'Loading wallet...' : 'Connect wallet'}
+            {wallet.address ? network.useMocks ? 'Demo account' : <><span className="wallet-name">{walletInfo(wallet.walletId)?.name} </span>{shortAddress(wallet.address)}</> : wallet.isConnecting ? 'Connecting' : !wallet.isReady && !wallet.error ? 'Loading wallet...' : 'Connect wallet'}
             {wallet.address && <ChevronDown size={13} aria-hidden />}
           </button>
           {wallet.isConnecting && <button className="button ghost" onClick={wallet.disconnect}>Cancel</button>}
