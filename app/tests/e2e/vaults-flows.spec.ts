@@ -13,8 +13,8 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   // Every venue is listed; XOXNO and Zenex are honest about not being active.
   const venues = page.getByRole('group', { name: 'Yield venues' });
   for (const name of ['Keep in Peridot', 'Blend fee vault', 'DeFindex vault', 'Aquarius LP vault', 'XOXNO Lending', 'Zenex perps vault']) await expect(venues.getByText(name, { exact: true })).toBeVisible();
-  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
-  await expect(venues.getByText('Testnet, customizable')).toBeVisible();
+  await expect(venues.getByText('Coming soon, not active in this demo.')).toHaveCount(0);
+  await expect(venues.getByText('Testnet, customizable')).toHaveCount(2);
   await expect(venues.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(venues.locator('button')).toHaveCount(0);
 
@@ -52,7 +52,7 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   expect(errors).toEqual([]);
 });
 
-test('the launch wizard shows locked XOXNO and Zenex options and still lets live routes be chosen', async ({ page }) => {
+test('the launch wizard shows XOXNO and Zenex as testnet vaults that are not market routes yet and still lets live routes be chosen', async ({ page }) => {
   await page.goto('/launch');
   await page.getByLabel(/Group name/).fill('VaultCheck');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -60,7 +60,7 @@ test('the launch wizard shows locked XOXNO and Zenex options and still lets live
   await expect(all).toBeVisible();
   await expect(all.locator('[data-vault="xoxno"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(all.locator('[data-vault="zenex"]')).toHaveAttribute('aria-disabled', 'true');
-  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(1);
+  await expect(all.getByText('Coming soon, not active in this demo.')).toHaveCount(0);
   await all.getByRole('button', { name: /Blend fee vault/ }).click();
   await expect(all.getByRole('button', { name: /Blend fee vault/ })).toHaveAttribute('aria-pressed', 'true');
   await all.getByRole('button', { name: /Keep in Peridot/ }).click();
@@ -111,6 +111,37 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   await registry.fill('pdemo');
   await page.getByRole('group', { name: 'Registry tokens' }).first().getByRole('button', { name: /PDEMO/ }).click();
   await expect(page.getByTestId('token-intake').first().getByText('Priced by Reflector')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('create a customizable XOXNO vault: validation bounds, summary, and a labelled demo result', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/vaults');
+  const form = page.locator('#create-vault');
+  await form.locator('[data-kind="xoxno"]').click();
+  await expect(form.locator('[data-kind="xoxno"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(form.getByText('Testnet today')).toBeVisible();
+
+  await form.getByLabel('Asset (token contract)').fill('CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC');
+  // The fee is bounded at 20% and the cap must cover the minimum deposit.
+  await form.getByLabel('Performance fee').fill('25');
+  await expect(form.getByText(/Performance fee must be at most 20/).first()).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
+  await form.getByLabel('Performance fee').fill('5');
+  await form.getByLabel('Minimum deposit').fill('5000');
+  await expect(form.getByText('The minimum deposit cannot exceed the deposit cap.').first()).toBeVisible();
+  await form.getByLabel('Minimum deposit').fill('2');
+  await form.getByLabel('Deposit cap').fill('250');
+  await expect(form.getByText(/Deposits stop at 250 tokens/)).toBeVisible();
+  await expect(form.getByText(/You \(the owner\) take 5% of the yield/)).toBeVisible();
+  await expect(form.getByText(/Peridot admin can pause new deposits and upgrade the code/)).toBeVisible();
+  await form.screenshot({ path: '../docs/ui/xoxno-create-vault.png' });
+  await page.getByRole('group', { name: 'Yield venues' }).screenshot({ path: '../docs/ui/xoxno-venue-list.png' });
+
+  await form.getByRole('button', { name: 'Create demo vault' }).click();
+  await expect(page.getByText('Demo vault saved').first()).toBeVisible({ timeout: 30_000 });
+  await form.screenshot({ path: '../docs/ui/xoxno-create-vault-result.png' });
   expect(errors).toEqual([]);
 });
 
