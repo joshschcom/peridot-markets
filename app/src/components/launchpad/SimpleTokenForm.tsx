@@ -77,7 +77,7 @@ export default function SimpleTokenForm({ onBack }: { onBack: () => void }) {
       </section>
       <aside className="card sticky-aside" style={{ display: 'grid', gap: 14 }}>
         <div className="row" style={{ gap: 10 }}><span className="token-icon" aria-hidden>{(draft.symbol || '?').slice(0, 2)}</span><div><p className="kicker">Your token at a glance</p><h3 style={{ margin: 0 }}>{draft.name || 'New token'}</h3></div></div>
-        <KeyValue rows={[['Symbol', draft.symbol || 'n/a'], ['Supply', supply ? whole.format(Number(supply)) : 'n/a'], ['Decimals', '7'], ['Type', 'Plain'], ['Network', mode === 'mock' ? 'testnet demo' : 'testnet']]} />
+        <KeyValue rows={[['Symbol', draft.symbol || 'n/a'], ['Supply', supply ? whole.format(Number(supply)) : 'n/a'], ['Decimals', '7'], ['Type', 'Simple'], ['Network', mode === 'mock' ? 'testnet demo' : 'testnet']]} />
         <hr />
         <p className="kicker" style={{ marginBottom: 6 }}>Rules</p>
         <ul className="muted" style={{ fontSize: 12, paddingLeft: 16, display: 'grid', gap: 4 }}><li>Name 1 to 32 characters, symbol 2 to 12 letters or digits</li><li>Supply fixed at creation, 7 decimals</li><li>At most 100 launches per creator</li></ul>

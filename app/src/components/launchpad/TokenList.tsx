@@ -10,7 +10,7 @@ import { launchpadCanSign } from '@/lib/launchpad/config';
 import { FINE_SCALE, finePrice, fmtPrice, reservesFromState } from '@/lib/launchpad/math';
 import { Phase, type CurveConfig, type CurveInfo, type LaunchInfo, type PlainTokenInfo } from '@/lib/launchpad/types';
 import { LpAddress } from './LpAddress';
-import { LaunchpadBadges, MainnetNotice, PhaseBadge, RISK_COPY, TokenIcon } from './LaunchpadFrame';
+import { LaunchpadBadges, MainnetNotice, PhaseBadge, RISK_COPY, TokenIcon, TypeBadge } from './LaunchpadFrame';
 
 export interface TokenSummary { launch: LaunchInfo; state: CurveInfo | null; config: CurveConfig | null; error?: string }
 type Filter = 'all' | 'new' | 'graduated' | 'plain';
@@ -48,6 +48,7 @@ export function TokenCard({ summary, mine }: { summary: TokenSummary; mine: bool
     <div className="token-card-top">
       <TokenIcon symbol={launch.symbol} />
       <div style={{ minWidth: 0 }}><h3><Link href={`/token/${launch.token}`}>{launch.name}</Link></h3><span className="subtle" style={{ fontSize: 12 }}>{launch.symbol}{mine ? ' · your launch' : ''}</span></div>
+      <TypeBadge type="curve" />
       {state ? <PhaseBadge phase={state.phase} /> : error ? <Badge tone="danger">Unavailable</Badge> : <Skeleton width={72} height={22} style={{ borderRadius: 999 }} />}
     </div>
     {error && <p className="muted" style={{ fontSize: 13 }}>Curve data unavailable: {error}</p>}
@@ -65,11 +66,11 @@ export function TokenCard({ summary, mine }: { summary: TokenSummary; mine: bool
 }
 
 export function PlainTokenCard({ info, mine }: { info: PlainTokenInfo; mine: boolean }) {
-  return <article className="card group-card token-card" aria-label={`${info.name} (${info.symbol}), plain token`}>
+  return <article className="card group-card token-card" aria-label={`${info.name} (${info.symbol}), simple token`}>
     <div className="token-card-top">
       <TokenIcon symbol={info.symbol} />
       <div style={{ minWidth: 0 }}><h3><Link href={`/token/${info.token}`}>{info.name}</Link></h3><span className="subtle" style={{ fontSize: 12 }}>{info.symbol}{mine ? ' · your token' : ''}</span></div>
-      <Badge tone="info">Plain</Badge>
+      <TypeBadge type="simple" />
     </div>
     <div className="token-card-stats">
       <Stat label="Supply" value={fmtCompact(info.supply, 7)} unit={info.symbol} />
@@ -104,7 +105,7 @@ export function TokenList() {
     </div>
     <MainnetNotice />
     <div className="row between">
-      <Tabs ariaLabel="Filter tokens" value={filter} onChange={setFilter} items={[{ value: 'all', label: `All (${counts.all})` }, { value: 'new', label: `New (${counts.new})` }, { value: 'graduated', label: `Graduated (${counts.graduated})` }, { value: 'plain', label: `Plain (${counts.plain})` }]} />
+      <Tabs ariaLabel="Filter tokens" value={filter} onChange={setFilter} items={[{ value: 'all', label: `All (${counts.all})` }, { value: 'new', label: `New (${counts.new})` }, { value: 'graduated', label: `Graduated (${counts.graduated})` }, { value: 'plain', label: `Simple (${counts.plain})` }]} />
       <span className="subtle" style={{ fontSize: 12 }}>{RISK_COPY}</span>
     </div>
     {loading ? <div className="grid-3" aria-busy="true" aria-label="Loading tokens">{[0, 1, 2].map(i => <div key={i} className="card token-card"><div className="token-card-top"><Skeleton width={40} height={40} style={{ borderRadius: 12 }} /><Skeleton width={140} height={20} /></div><div className="token-card-stats"><Skeleton height={34} /><Skeleton height={34} /></div><Skeleton height={6} /><Skeleton width="50%" /></div>)}</div>

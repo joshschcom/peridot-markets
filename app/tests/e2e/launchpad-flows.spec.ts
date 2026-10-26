@@ -31,6 +31,7 @@ test('launch a test token, trade, reach a target, graduate in six steps and clai
   await page.getByRole('link', { name: 'Open token page' }).click();
   await expect(page).toHaveURL(/\/token\/mock-token-e2e$/);
   await expect(page.getByRole('heading', { level: 1, name: /Browser Fox/ })).toBeVisible();
+  await expect(page.locator('h1 [data-token-type="curve"]')).toBeVisible();
   await expect(page.getByText('Trading', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/Creator cap: your buys are limited/)).toBeVisible();
 
@@ -100,6 +101,9 @@ test('simple token: choose the plain path, create it in one step and find it tag
   await expect(page.getByRole('button', { name: 'Simple token (no curve, no ICO)' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Bonding curve launch' })).toBeVisible();
   await expect(page.getByText('Coming later')).toBeVisible();
+  await expect(page.getByText('Rises automatically as people buy.')).toBeVisible();
+  await expect(page.getByText('Fixed by you.')).toBeVisible();
+  await expect(page.getByText('Nobody, until you share or list the token.')).toBeVisible();
   await page.getByRole('button', { name: 'Simple token (no curve, no ICO)' }).click();
   await expect(page.getByRole('heading', { name: /Create a simple token/ })).toBeVisible();
   await expect(page.getByLabel('Decimals')).toBeDisabled();
@@ -121,12 +125,14 @@ test('simple token: choose the plain path, create it in one step and find it tag
   await page.getByRole('link', { name: 'Open token page' }).click();
   await expect(page).toHaveURL(/\/token\/mock-plain-pfox$/);
   await expect(page.getByRole('heading', { level: 1, name: /Plain Fox/ })).toBeVisible();
-  await expect(page.getByText('Plain token', { exact: true })).toBeVisible();
+  await expect(page.locator('h1 [data-token-type="simple"]')).toBeVisible();
   await expect(page.getByText('Later: add a Peridot market')).toBeVisible();
 
   await page.goto('/tokens');
-  await page.getByRole('button', { name: /^Plain \(1\)/ }).click();
-  await expect(page.getByRole('article', { name: 'Plain Fox (PFOX), plain token' })).toBeVisible();
+  await page.getByRole('button', { name: /^Simple \(1\)/ }).click();
+  await expect(page.getByRole('article', { name: 'Plain Fox (PFOX), simple token' }).locator('[data-token-type="simple"]')).toBeVisible();
+  await page.getByRole('button', { name: /^All \(/ }).click();
+  await expect(page.getByRole('article', { name: 'Meridian Moon (MOON)' }).locator('[data-token-type="curve"]')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

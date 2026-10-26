@@ -71,3 +71,7 @@ button.launch-choice:focus-visible { box-shadow: var(--focus); outline: none; }
 .launch-choice-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
 .launch-choice-go { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-text); font-weight: 600; font-size: 14px; margin-top: 4px; }
 @media (max-width: 900px) { .launch-choice-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.launch-choice-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; margin: 4px 0 0; font-size: 13px; line-height: 1.4; }
+.launch-choice-facts dt { color: var(--text-3); font-weight: 600; white-space: nowrap; }
+.launch-choice-facts dd { margin: 0; }

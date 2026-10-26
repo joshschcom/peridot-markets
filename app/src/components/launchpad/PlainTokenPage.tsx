@@ -8,7 +8,7 @@ import { fmtAmount, fmtDate } from '@/components/ui/format';
 import { getTokenBalance, getTokenMeta, type TokenBalance, type TokenMeta } from '@/lib/launchpad/client';
 import type { PlainTokenInfo } from '@/lib/launchpad/types';
 import { LpAddress } from './LpAddress';
-import { LaunchpadBadges, MainnetNotice, RiskNotice, TokenIcon } from './LaunchpadFrame';
+import { LaunchpadBadges, MainnetNotice, RiskNotice, TokenIcon, TypeBadge } from './LaunchpadFrame';
 
 /** Token page for a simple (no curve) token: facts, the wallet balance and a hint about a later Peridot market. */
 export default function PlainTokenPage({ info }: { info: PlainTokenInfo }) {
@@ -26,7 +26,7 @@ export default function PlainTokenPage({ info }: { info: PlainTokenInfo }) {
     <header className="page-heading">
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow"><Link href="/tokens" className="row" style={{ gap: 6 }}><ArrowLeft size={12} aria-hidden />Simple token #{info.id}</Link></p>
-        <h1 className="lp-title"><TokenIcon symbol={info.symbol} uri={meta?.metadataUri} large />{info.name} <Badge>{info.symbol}</Badge> <Badge tone="info">Plain</Badge> <LaunchpadBadges /></h1>
+        <h1 className="lp-title"><TokenIcon symbol={info.symbol} uri={meta?.metadataUri} large />{info.name} <Badge>{info.symbol}</Badge> <TypeBadge type="simple" /> <LaunchpadBadges /></h1>
         <div className="lp-meta"><span>Token <LpAddress value={info.token} label="token address" /></span><span>Creator <LpAddress value={info.creator} label="creator address" /></span><span>Created {fmtDate(info.created_at)}</span></div>
       </div>
     </header>
@@ -35,7 +35,7 @@ export default function PlainTokenPage({ info }: { info: PlainTokenInfo }) {
       <div className="token-stats">
         <Stat label="Total supply" value={fmtAmount(info.supply, 7, 0)} unit={info.symbol} hint="Fixed, nobody can mint more" />
         <Stat label="Decimals" value="7" />
-        <Stat label="Type" value="Plain token" hint="No curve, no ICO" />
+        <Stat label="Type" value="Simple token" hint="No curve, no ICO" />
         <Stat label="Your balance" value={balance ? fmtAmount(balance.balance, 7, 2) : wallet.address ? '...' : 'Connect wallet'} unit={balance ? info.symbol : undefined} />
       </div>
     </section>
