@@ -70,3 +70,12 @@ XLM market `CCUQUYBW3LJXPYB5U5QIDBDWPMKYVBPCIHQZSSXOSAV2SIXOBDNHSUDM`, Blend ada
 | `enter_market` | [6e2f9c20...](https://stellar.expert/explorer/public/tx/6e2f9c202133a430909f02db1ca91743e6a3394feb15d225aa2362279127b5fd) |
 | Supply 5 XLM (4 XLM sent to Blend, adapter value 39,999,999 stroops) | [9af448d3...](https://stellar.expert/explorer/public/tx/9af448d3603385adddacba91b103dbeda8c67946fd32c76090be8bb319658db9) |
 | Withdraw all | [0dafc04e...](https://stellar.expert/explorer/public/tx/0dafc04e651ff663e1a0b8bfe47823d29d7218110ba0c1e3e32a5b33e7fc991c) |
+
+
+## Vault factory and Aquarius ladder vault (branch `vault-factory`)
+
+Deployer: `GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP` (identity `peridot-mainnet-vaults`, shared funding of 75 XLM, cap for this job 60 XLM). Artifacts are reproducible and identical to the testnet ones: vault-factory wasm `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d`, aquarius-vault wasm `923b1dd7c5142c4488c7fccad494721a25201c1981f74f14dd6294a52e0f5381`. Neither crate has a baked admin; the factory admin is the constructor argument (the deployer key, see the trust note in `docs/ui/VAULTS-UI.md`).
+
+Cost estimate from the testnet fees charged for the same transactions (stroops converted to XLM): upload aquarius-vault about 3.5, upload vault-factory about 1.9, deploy factory about 0.02, set_wasm below 0.01, create_vault about 0.02, seed deposit about 0.02, three rebalance steps about 1.1 in total, a withdrawal about 0.01. Fees about 7 XLM plus the 10 XLM seed: about 17 XLM, well under the 60 XLM cap.
+
+Demo vault parameters: pool Aquarius XLM/USDC concentrated 0.1% `CBBMQBNHB2FYVZYV7VNHOJHUMTFJLR4PUMRVQYNW6RHIKZO2NQMIBUCV` (tick spacing 20, about 5.1 million XLM and 428k USDC deep), underlying XLM, owner and keeper the deployer, 5 rungs of 3 spacings (0.6% each) touching, pyramid weights, rebalance trigger 5 spacings (about 1%), cooldown 1 hour, performance fee 10%, deposit cap 100 XLM, swap slippage cap 1%.
