@@ -77,3 +77,50 @@
 .risk-box { font-size: 13px; color: var(--text-2); }
 .risk-box ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 @media (max-width: 760px) { .vault-preview-grid { grid-template-columns: 1fr; } }
+
+/* Token combobox (every token picker). Global tokens only, so dark and light follow the theme. */
+.token-combobox { position: relative; }
+.asset-icon { display: inline-grid; place-items: center; flex: 0 0 auto; border-radius: 999px; color: #fff; font-weight: 700; letter-spacing: 0.02em; line-height: 1; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25); }
+.asset-icon.ghost { width: 26px; height: 26px; background: var(--surface-3); color: var(--text-2); text-shadow: none; }
+.tc-trigger { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 7px 10px; text-align: left; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-md); cursor: pointer; }
+.tc-trigger:hover:not(:disabled) { border-color: var(--text-3); }
+.tc-trigger:focus-visible, .token-combobox.open .tc-trigger { outline: none; border-color: var(--accent); box-shadow: var(--focus); }
+.tc-trigger:disabled { opacity: 0.6; cursor: not-allowed; }
+.tc-value { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.tc-placeholder { color: var(--text-3); }
+.tc-chev { color: var(--text-3); flex: 0 0 auto; transition: transform .15s; }
+.token-combobox.open .tc-chev { transform: rotate(180deg); }
+.tc-sym { font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; }
+.tc-name { font-size: 12px; color: var(--text-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-addr, .tc-dec { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); white-space: nowrap; }
+.tc-popover { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 60; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--r-lg, 14px); box-shadow: var(--shadow-2); overflow: hidden; }
+.tc-search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text-3); }
+.tc-search input { flex: 1; min-width: 0; min-height: 36px; }
+.tc-list { list-style: none; margin: 0; padding: 4px; max-height: min(380px, 55vh); overflow-y: auto; overscroll-behavior: contain; }
+.tc-list ul { list-style: none; margin: 0; padding: 0; }
+.tc-group-title { display: block; padding: 8px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+.tc-option { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); cursor: pointer; color: var(--text); }
+.tc-option.active { background: var(--surface-2); }
+.tc-option[aria-selected="true"] { background: var(--accent-soft); }
+.tc-option.collision { opacity: 0.85; }
+.tc-main { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.tc-line { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.tc-check { color: var(--accent-text); flex: 0 0 auto; margin-top: 5px; }
+.tc-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.tc-badge { font-size: 10.5px; font-weight: 600; line-height: 1.5; padding: 0 6px; border-radius: 999px; background: var(--surface-3); color: var(--text-2); border: 1px solid transparent; }
+.tc-badge.ok { background: var(--accent-soft); color: var(--accent-text); }
+.tc-badge.pool { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
+.tc-badge.info { background: var(--info-soft); color: var(--info); }
+.tc-badge.accent { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent); }
+.tc-badge.warn { background: var(--warn-soft); color: var(--warn); }
+.tc-pools { display: flex; flex-wrap: wrap; gap: 4px; }
+.tc-pool { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); padding: 1px 6px; border: 1px dashed var(--border-strong); border-radius: 6px; }
+.tc-custom { border-top: 1px solid var(--border); border-radius: 0; margin-top: 4px; padding-top: 10px; }
+.tc-custom .tc-name { white-space: normal; }
+.tc-empty { padding: 12px 10px; font-size: 12px; color: var(--text-3); }
+.tc-note { margin: 0; padding: 6px 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-3); }
+@media (max-width: 760px) {
+  .tc-trigger .tc-name { display: none; }
+  .tc-list { max-height: 50vh; }
+  .tc-option { padding: 8px; }
+}

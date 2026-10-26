@@ -107,9 +107,13 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   await expect(page.getByText(/account address/).first()).toBeVisible();
 
   // Registry picker: search and pick a token, which verifies it.
-  const registry = page.getByLabel('Pick from the Aquarius registry').first();
-  await registry.fill('pdemo');
-  await page.getByRole('group', { name: 'Registry tokens' }).first().getByRole('button', { name: /PDEMO/ }).click();
+  await page.getByRole('button', { name: /^Token/ }).first().click();
+  const search = page.getByRole('combobox', { name: 'Search token' });
+  await search.fill('pdemo');
+  await expect(page.getByRole('option', { name: /PDEMO/ }).first()).toHaveAttribute('id', /opt-0$/);
+  await search.press('ArrowDown');
+  await search.press('ArrowUp');
+  await search.press('Enter');
   await expect(page.getByTestId('token-intake').first().getByText('Priced by Reflector')).toBeVisible();
   expect(errors).toEqual([]);
 });
