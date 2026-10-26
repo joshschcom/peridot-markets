@@ -27,18 +27,26 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   await expect(page.getByTestId('pool-row')).toHaveCount(1);
   await page.getByLabel('Search pools').fill('');
 
-  // Create a demo vault on USDC/EURC.
+  // Pick a pool, configure the ladder, create a demo vault (mock mode keeps it in the browser).
   await page.getByRole('button', { name: 'Create a vault for USDC/EURC' }).click();
-  await expect(page.getByRole('heading', { name: 'Create a vault for USDC/EURC' })).toBeVisible();
-  await expect(page.getByText('Demo flow: nothing is deployed')).toBeVisible();
-  await expect(page.getByText('Contract missing')).toHaveCount(3);
-  await page.getByLabel('Kept liquid (%)').fill('10');
-  await expect(page.getByText(/Keep at least 30% liquid/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Create a vault', exact: true })).toBeVisible();
+  await expect(page.locator('#vf-pool')).toHaveValue(/^C/);
+  await expect(page.getByTestId('ladder-preview')).toBeVisible();
+  await expect(page.getByText('Demo mode')).toBeVisible();
+
+  // Live validation: out-of-range values block submission and say why.
+  await page.locator('#vf-rungs').fill('9');
   await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
-  await page.getByLabel('Kept liquid (%)').fill('30');
+  await expect(page.getByText(/Rungs must be at most 7/).first()).toBeVisible();
+  await page.locator('#vf-rungs').fill('3');
+  await expect(page.getByRole('listitem').filter({ hasText: /^Rung 3/ })).toHaveCount(1);
+  await page.locator('#vf-shape').selectOption('2');
+  await page.locator('#vf-fee').fill('25');
+  await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
+  await page.locator('#vf-fee').fill('10');
   await page.getByRole('button', { name: 'Create demo vault' }).click();
-  await expect(page.getByText('Demo vault saved')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId('demo-vault')).toHaveCount(1);
+  await expect(page.getByText('Demo vault saved').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('my-vault')).toHaveCount(1);
   await expect(page.getByText('Demo, not deployed')).toBeVisible();
   expect(errors).toEqual([]);
 });

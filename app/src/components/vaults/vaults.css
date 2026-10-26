@@ -52,3 +52,28 @@
 .intake-panel { display: grid; gap: 10px; }
 .intake-panel .kv { font-size: 12px; }
 .intake-panel ul { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 4px; }
+
+/* Vault factory create form */
+.kind-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.kind-card { text-align: left; display: grid; gap: 4px; padding: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); cursor: pointer; }
+.kind-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+.kind-card:disabled { opacity: 0.6; cursor: not-allowed; }
+.vault-group { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px; margin: 0; min-width: 0; }
+.vault-group legend { padding: 0 6px; font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.field.invalid input, .field.invalid select { border-color: var(--danger); }
+.field-error { color: var(--danger); }
+.field-unit { color: var(--text-3); font-weight: 400; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); cursor: pointer; }
+.chip:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+.vault-preview-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.preview { margin: 0; display: grid; gap: 8px; padding: 12px; background: var(--surface-2); border-radius: var(--r-md); }
+.preview-title { margin: 0; font-size: 13px; font-weight: 600; }
+.preview-rows { margin: 0; display: grid; gap: 4px; font-size: 13px; }
+.preview-rows div { display: flex; justify-content: space-between; gap: 12px; }
+.ladder-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 12px; color: var(--text-2); }
+.ladder-legend li { display: grid; grid-template-columns: 56px 1fr auto; gap: 8px; }
+.summary-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; color: var(--text-2); }
+.risk-box { font-size: 13px; color: var(--text-2); }
+.risk-box ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+@media (max-width: 760px) { .vault-preview-grid { grid-template-columns: 1fr; } }
