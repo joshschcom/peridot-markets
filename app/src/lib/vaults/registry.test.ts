@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COMING_SOON_COPY, VAULT_OPTIONS, getVaultOption, groupByStatus, isSubmittable, statusLabel, statusOn, unavailableOptions } from './registry';
+import { APPROVAL_COPY, VAULT_OPTIONS, getVaultOption, groupByStatus, isSubmittable, statusLabel, statusOn, unavailableOptions, venueAvailability, venueForRoute } from './registry';
 
 test('registry ids are unique and cover every venue', () => {
   const ids = VAULT_OPTIONS.map(o => o.id);
@@ -8,25 +8,32 @@ test('registry ids are unique and cover every venue', () => {
   for (const id of ['idle', 'blend', 'defindex', 'aquarius', 'xoxno', 'zenex']) assert.ok(ids.includes(id as never), id);
 });
 
-test('the coming soon copy says it is not active in this demo', () => {
-  assert.match(COMING_SOON_COPY, /not active in this demo/);
+test('every venue is submittable through a factory route; created vaults go through the DeFindex-shaped route', () => {
+  assert.deepEqual(unavailableOptions(), []);
+  for (const id of ['aquarius', 'xoxno', 'zenex'] as const) {
+    const o = getVaultOption(id);
+    assert.equal(o.factoryRoute, 'Defindex');
+    assert.equal(o.kind, id);
+    assert.equal(o.status, 'live-mainnet');
+    assert.ok(isSubmittable(o));
+    assert.match(o.detail, /Vaults page/);
+  }
+  assert.equal(getVaultOption('zenex').underlying, 'USDC');
+  assert.match(getVaultOption('zenex').tagline, /async withdrawals/);
+  assert.match(APPROVAL_COPY, /set_yield_vault_allowed/);
 });
 
-test('Zenex is a testnet, customizable venue created on the Vaults page, not a market-wizard route', () => {
-  const o = getVaultOption('zenex');
-  assert.equal(o.status, 'testnet');
-  assert.equal(statusLabel(o, 'testnet'), 'Testnet, customizable');
-  assert.equal(statusLabel(o, 'mainnet'), 'Testnet, customizable');
-  assert.equal(o.factoryRoute, null);
-  assert.equal(isSubmittable(o), false);
-  assert.match(o.detail, /mock Zenex/);
-});
-
-test('only routes the factory accepts are submittable', () => {
-  const submittable = VAULT_OPTIONS.filter(isSubmittable).map(o => o.factoryRoute).sort();
-  assert.deepEqual(submittable, ['Blend', 'Defindex', 'None']);
-  assert.equal(isSubmittable(getVaultOption('aquarius')), false, 'the factory has no Aquarius route yet');
-  assert.deepEqual(unavailableOptions().map(o => o.id).sort(), ['aquarius', 'xoxno', 'zenex']);
+test('availability follows the manifest: unregistered kinds read as registering, registered kinds are selectable', () => {
+  const zenex = getVaultOption('zenex'), aquarius = getVaultOption('aquarius');
+  const mainnetKinds = ['zenex', 'xoxno'];
+  assert.deepEqual(venueAvailability(zenex, 'mainnet', mainnetKinds), { selectable: true, label: 'Live on mainnet, customizable', tone: 'success' });
+  const aq = venueAvailability(aquarius, 'mainnet', mainnetKinds);
+  assert.equal(aq.selectable, false);
+  assert.equal(aq.label, 'Registering on mainnet');
+  assert.match(aq.reason ?? '', /not registered with the vault factory on mainnet/);
+  assert.equal(venueAvailability(aquarius, 'testnet', ['aquarius', 'zenex', 'xoxno']).label, 'Testnet, customizable');
+  assert.deepEqual(venueAvailability(getVaultOption('idle'), 'mainnet', []), { selectable: true, label: 'Live on mainnet', tone: 'success' });
+  assert.equal(venueAvailability(getVaultOption('defindex'), 'mainnet', []).selectable, true, 'plain venues do not depend on vault kinds');
 });
 
 test('status labels follow the network', () => {
@@ -35,24 +42,28 @@ test('status labels follow the network', () => {
   assert.equal(statusOn(blend, 'testnet'), 'testnet');
   assert.equal(statusLabel(blend, 'mainnet'), 'Live on mainnet');
   assert.equal(statusLabel(blend, 'testnet'), 'Testnet');
-  assert.equal(statusLabel(getVaultOption('xoxno'), 'mainnet'), 'Testnet, customizable');
-  assert.equal(statusLabel(getVaultOption('aquarius'), 'testnet'), 'Demo flow');
+  assert.equal(statusLabel(getVaultOption('xoxno'), 'mainnet'), 'Live on mainnet, customizable');
+  assert.equal(statusLabel(getVaultOption('aquarius'), 'testnet'), 'Testnet, customizable');
 });
 
 test('groupByStatus partitions the registry', () => {
   const g = groupByStatus();
   assert.equal(Object.values(g).flat().length, VAULT_OPTIONS.length);
   assert.deepEqual(g['coming-soon'].map(o => o.id), []);
+  assert.deepEqual(g.testnet, []);
 });
 
-test('copy has no em dashes', () => {
-  for (const o of VAULT_OPTIONS) for (const s of [o.name, o.tagline, o.detail]) assert.ok(!s.includes(String.fromCharCode(0x2014)), s);
+test('copy has no em dashes and no stale testnet or coming soon wording', () => {
+  for (const o of VAULT_OPTIONS) for (const s of [o.name, o.tagline, o.detail]) {
+    assert.ok(!s.includes(String.fromCharCode(0x2014)), s);
+    assert.ok(!/coming soon|not active|testnet only/i.test(s), s);
+  }
 });
 
-test('XOXNO is a testnet, customizable vault that the market wizard cannot route to yet', () => {
-  const x = getVaultOption('xoxno');
-  assert.equal(x.status, 'testnet');
-  assert.equal(statusLabel(x, 'testnet'), 'Testnet, customizable');
-  assert.equal(x.factoryRoute, null);
-  assert.equal(isSubmittable(x), false);
+test('venueForRoute maps a draft back to its venue', () => {
+  assert.equal(venueForRoute('None'), 'idle');
+  assert.equal(venueForRoute('Blend'), 'blend');
+  assert.equal(venueForRoute('Defindex'), 'defindex');
+  assert.equal(venueForRoute('Defindex', 'zenex'), 'zenex');
+  assert.equal(venueForRoute('Defindex', 'other'), 'defindex');
 });

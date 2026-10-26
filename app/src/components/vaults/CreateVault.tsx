@@ -10,6 +10,7 @@ import { VAULT_KINDS, defaultValues, validateKind, isValid, type FieldSpec, type
 import { tickSpacingForFee } from '@/lib/vaults/kinds/aquarius';
 import { createVault, deployedKinds, vaultFactoryId } from '@/lib/vaults/factory-client';
 import { pairLabel, type AquariusPool } from '@/lib/vaults/aquarius-pools';
+import { APPROVAL_COPY } from '@/lib/vaults/registry';
 import { StrategyPreview } from './LadderPreview';
 import './vaults.css';
 
@@ -118,6 +119,7 @@ export function CreateVault({ pools, preset, onCreated }: { pools: AquariusPool[
       {error && <Notice tone="danger" role="alert">{error}</Notice>}
       {result && <Notice tone="success" role="status" title={result.demo ? 'Demo vault saved' : 'Vault created'}>
         <p>{result.demo ? 'Saved in "My vaults" below. Nothing was sent on chain.' : <>Vault <Address value={result.address} label="vault address" head={6} tail={6} /> is live. <a href={transactionUrl(result.hash)} target="_blank" rel="noreferrer">View transaction</a></>}</p>
+        <p style={{ marginTop: 6 }}><strong>Next:</strong> {APPROVAL_COPY} Then add a market with this vault in the launch wizard or the group control panel (step 4, pick {kind.name}).{kind.id === 'zenex' ? ' Zenex vaults also need one bind_market(owner, market) call with the market\'s receipt vault before the market can deposit.' : ''}</p>
       </Notice>}
       <div className="row">
         <button type="submit" className="button" disabled={!canSubmit}>{busy ? 'Creating vault...' : network.useMocks ? 'Create demo vault' : 'Create vault'}</button>

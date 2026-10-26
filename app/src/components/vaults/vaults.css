@@ -124,3 +124,22 @@
   .tc-list { max-height: 50vh; }
   .tc-option { padding: 8px; }
 }
+
+/* Yield rate badge (APY / APR est. / n/a) shown on venue cards and in the vault step */
+.yield-rate { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); }
+.yield-rate .yield-value { font-weight: 700; font-size: 14px; color: var(--text); }
+.yield-rate.est .yield-value { color: var(--warn); }
+.yield-rate.na .yield-value { color: var(--text-3); font-weight: 600; }
+.yield-rate .yield-label { display: inline-flex; align-items: center; gap: 2px; }
+.yield-facts { display: flex; flex-wrap: wrap; gap: 4px 12px; width: 100%; font-size: 11px; color: var(--text-2); }
+.vault-fixed .kv > div > span:first-child { min-width: 92px; }
+.chip.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
+.vault-option-top { flex-wrap: wrap; }
+.vault-fixed .kv > div { flex-wrap: wrap; }
+.vault-fixed .kv > div > span:last-child { min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 8px; }
+.vault-fixed .badge { white-space: normal; text-align: left; }
+@media (max-width: 760px) { .vault-fixed .kv > div > span:last-child { justify-content: flex-start; text-align: left; } }
+/* Hidden tooltip bubbles must not widen the page on phones: hide them fully until hovered or focused. */
+.yield-rate .tip-bubble, .vault-fixed .tip-bubble { display: none; max-width: min(280px, calc(100vw - 32px)); }
+.yield-rate .tip:hover .tip-bubble, .yield-rate .tip:focus-within .tip-bubble, .vault-fixed .tip:hover .tip-bubble, .vault-fixed .tip:focus-within .tip-bubble { display: block; }
+@media (max-width: 760px) { .yield-rate .tip-bubble, .vault-fixed .tip-bubble { left: auto; right: 0; transform: none; } }

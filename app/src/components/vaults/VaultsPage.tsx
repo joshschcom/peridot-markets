@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { Droplets, RefreshCw, Search, Vault } from 'lucide-react';
-import { network } from '@/lib/peridot/network';
+import { getDeployments, network } from '@/lib/peridot/network';
+import { APPROVAL_COPY } from '@/lib/vaults/registry';
 import { Badge, EmptyState, Notice, Skeleton, Tabs } from '@/components/ui/primitives';
 import { Address } from '@/components/ui/Address';
 import { VaultOptionList } from './VaultOptionList';
@@ -24,19 +25,31 @@ export default function VaultsPage() {
   const pools = useMemo(() => applyPoolFilter(result?.pools ?? [], filter, query), [result, filter, query]);
   const eligibleCount = (result?.pools ?? []).filter(isVaultEligible).length;
   const netLabel = network.useMocks ? 'Demo' : network.name === 'mainnet' ? 'Mainnet (read only)' : 'Testnet';
+  const ext = useMemo(() => { try { return getDeployments().external as Record<string, unknown>; } catch { return {} as Record<string, unknown>; } }, []);
+  const usdc = typeof ext.usdc === 'string' ? ext.usdc : '', xlm = typeof ext.xlm === 'string' ? ext.xlm : '';
 
   return <div className="page">
     <div className="page-heading">
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow">Vaults</p>
         <h1 className="vault-title">Where a market earns yield <Badge tone={network.name === 'mainnet' && !network.useMocks ? 'success' : 'info'}>{netLabel}</Badge></h1>
-        <p className="lead">Every yield venue Peridot knows about, and a vault factory: design your own Aquarius ladder vault (or another strategy), tune it, and deploy it from this page. Blend and DeFindex markets are live. Zenex vaults are customizable here (testnet runs against a mock Zenex); XOXNO is listed so you can see what is planned.</p>
+        <p className="lead">Every yield venue a Peridot market can route into, with its rate, and a vault factory: design your own Aquarius ladder vault, Zenex perps vault (USDC, async withdrawals) or XOXNO lending vault, tune it, deploy it from this page, and attach it to a market once Peridot allow-lists it. Blend and the fixed DeFindex vaults (XLM, USDC, EURC) need no vault of your own.</p>
       </div>
     </div>
 
     <section className="card" aria-labelledby="venues-h">
-      <div className="card-header"><div><h2 id="venues-h">Yield venues</h2><p>Pick one per market when you launch a group. Locked venues cannot be submitted.</p></div></div>
-      <VaultOptionList ariaLabel="Yield venues" />
+      <div className="card-header"><div><h2 id="venues-h">Yield venues</h2><p>Pick one per market when you launch a group. Rates: APY is computed from on-chain reads with the formula in the tooltip; APR est. uses an approximate input; n/a says why. Locked venues say why they cannot be chosen on {network.name}.</p></div></div>
+      <VaultOptionList ariaLabel="Yield venues" rateFor={o => o.id === 'idle' ? undefined : o.id === 'xoxno' ? { token: xlm } : o.id === 'blend' || o.id === 'defindex' ? { token: usdc } : {}} />
+      <p className="subtle" style={{ fontSize: 12, marginTop: 10 }}>Keep in Peridot pays each market&apos;s own supply rate (borrow APR times utilization, less the reserve factor), shown on the group pages. Blend and DeFindex rates above are for USDC; XOXNO is for XLM (hub 1); Aquarius uses the USDC/EURC concentrated pool as the example. The add-market step shows the rate for the token you pick.</p>
+    </section>
+
+    <section className="card" aria-labelledby="attach-h">
+      <div className="card-header"><div><h2 id="attach-h">From a created vault to a market</h2><p>Your own vaults plug into a market through the same route as a DeFindex vault. Three steps, two of them yours.</p></div></div>
+      <ol className="plan-list">
+        <li><span><span className="plan-title">Create the vault below</span><span className="plan-detail">The vault factory deploys it with your limits. Zenex vaults take USDC only and exits from Zenex wait at least an hour; XOXNO vaults supply one asset; the Aquarius ladder spans concentrated ranges of one pool.</span></span><Badge tone="accent">You</Badge></li>
+        <li><span><span className="plan-title">Peridot allow-lists it</span><span className="plan-detail">{APPROVAL_COPY} The add-market step shows &quot;Approved by Peridot&quot; in green or &quot;Needs Peridot approval&quot; in amber for the vault you pick.</span></span><Badge tone="neutral">Peridot admin</Badge></li>
+        <li><span><span className="plan-title">Add the market with the vault</span><span className="plan-detail">In the launch wizard or the group control panel pick the venue in step 4 and choose your vault; add_market carries the vault address and attach_yield wires it. Zenex vaults then need one bind_market call with the market&apos;s receipt vault.</span></span><Badge tone="accent">You</Badge></li>
+      </ol>
     </section>
 
     <section className="card" aria-labelledby="pools-h" aria-busy={loading}>

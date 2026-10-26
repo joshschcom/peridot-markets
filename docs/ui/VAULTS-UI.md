@@ -4,16 +4,23 @@ Branch `vaults-ui`. Page `/vaults`, plus changes to the add-market form (`Market
 
 ## What is live, demo and coming soon
 
-| Venue | Status in the app | Submittable |
-|---|---|---|
-| Keep in Peridot | Live | yes (`YieldRoute::None`) |
-| Blend fee vault | Live on mainnet | yes (`Blend`) |
-| DeFindex vault | Live on mainnet | yes (`Defindex`) |
-| Aquarius LP vault | Demo flow | no |
-| XOXNO Lending | Coming soon, not active in this demo | no |
-| Zenex perps vault | Coming soon, not active in this demo | no |
+| Venue | Status in the app (mainnet) | Submittable | Rate shown |
+|---|---|---|---|
+| Keep in Peridot | Live | yes (`YieldRoute::None`) | APR from the draft's own rate curve at fixed utilizations (wizard); per market on group pages |
+| Blend fee vault | Live on mainnet | yes (`Blend`, fee vault from the manifest) | APY from the Blend pool reserve (on chain), before the fee vault take (no getter) |
+| DeFindex vault | Live on mainnet, fixed vault per token (XLM, USDC, EURC) | yes (`Defindex`, address from `lib/vaults/defindex-defaults.ts`) | APR est. from the underlying Blend rate; share price drift APY once the browser holds two samples |
+| Aquarius LP ladder vault | Registering on mainnet (selectable as soon as `vault_kinds.aquarius` is in the manifest) | yes once registered (`Defindex`-shaped route with the created vault) | APR est., AQUA rewards only (on-chain tps, AQUA/USDC spot, approximate TVL) |
+| XOXNO lending vault | Live on mainnet, customizable | yes (`Defindex`-shaped route with the created vault) | APY from the XOXNO pool `get_deposit_rate` (on chain), after the vault fee when a vault is chosen |
+| Zenex perps vault | Live on mainnet, customizable (USDC, async withdrawals) | yes (`Defindex`-shaped route with the created vault, plus `bind_market`) | n/a until share price drift is available (Zenex publishes no rate); share price and TVL shown |
 
-Single source: `app/src/lib/vaults/registry.ts` (`VAULT_OPTIONS`, `isSubmittable`, `statusLabel`). `MarketConfigEditor` step 4 shows the same list under the route select. Locked cards cannot be clicked.
+Single source: `app/src/lib/vaults/registry.ts` (`VAULT_OPTIONS`, `isSubmittable`, `venueAvailability(option, net, registeredKinds)`). Availability of created-vault kinds is driven by `vault_kinds` in `app/src/lib/peridot/deployments/<network>.json` through `deployedKinds()`, never by a hard-coded flag. `MarketConfigEditor` step 4 is `components/vaults/VaultStep.tsx`; it shows the same list under the route select. Locked cards say why.
+
+## Vault step (branch `vault-defaults`)
+
+- No free-form vault address for DeFindex or Blend. DeFindex uses the Peridot vault for the token from `lib/vaults/defindex-defaults.ts` (XLM `CCB2AR5X...E6GK`, USDC `CAB4JOLS...PYFH`, EURC `CBP2R5KY...DZM3`, taken from `peridot-contracts/addresses.md` and `scripts/execute_receipt_vault_borrow_fix_mainnet.sh`, XLM also in `deployments/mainnet.json`). The card is read only: name and symbol, `get_assets` asset check by simulation, allow-list state (`is_yield_vault_allowed`: green "Approved by Peridot" or amber "Needs Peridot approval"), rate, source. Other tokens see DeFindex disabled with the reason. The draft still carries `route: 'Defindex'` and `routeAddress`, so `add_market` and `attach_yield` are unchanged.
+- Created vaults (Aquarius ladder, Zenex, XOXNO) are selectable on mainnet when their kind is registered. The step lists the connected wallet's vaults of that kind (`vaults_of`) and also takes the address of a vault created on the Vaults page; `kind()` and `get_assets` are simulated, the allow-list state is shown, and Zenex shows the extra `bind_market` step.
+- Rates: `lib/vaults/apy.ts` (pure math, tests) and `lib/vaults/yield-client.ts` (read-only simulations, one-minute cache, demo mode answers n/a). `components/vaults/YieldRate.tsx` shows the number with the formula and inputs in a tooltip. On 2026-10-26 mainnet: the XLM DeFindex vault is allow-listed, USDC and EURC are not; the two factory vaults on mainnet (`CD6ZTDY6...` zenex, `CCXPXDV3...` xoxno) are not allow-listed yet.
+- Screenshots: `vaultstep-desktop-dark.png`, `vaultstep-desktop-light.png`, `vaultstep-mobile.png`, `vaultstep-venues-mobile.png` (demo mode, so every rate reads n/a with "Demo mode: no chain reads").
 
 ## Files
 
