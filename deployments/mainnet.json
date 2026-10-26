@@ -67,7 +67,11 @@
     "upload_tx": "259c941990dcec9a9ff9353de3bcedaa4e011b4b70e048fc71837c272adcc64d",
     "uploader": "GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP",
     "upload_fee_xlm": 32.39,
-    "constructor_simulation": "succeeded against real Zenex CAOZCITW.../CB2MX4WX... on 2026-10-26 (create_contract simulate, fee 0.19 XLM, nothing sent)"
+    "constructor_simulation": "succeeded against real Zenex CAOZCITW.../CB2MX4WX... on 2026-10-26 (create_contract simulate, fee 0.19 XLM, nothing sent)",
+    "vault": "CD6ZTDY6MTACM5D3BY7OW3SXZDAQ322RQUOFEFXBWU44TLO4LXIZQRMP",
+    "create_tx": "8118c8cd1fc751c5f94d1919fb320dc94a7d4ef4e67b30b71ef99cc0c424977e",
+    "set_wasm_tx": "72eddbed6d1a9c86d359e52b2cc973e25b2ac38af629d68472002846f022d53f",
+    "vault_note": "demo vault: owner=keeper=GDLVO6BC..., market unbound (deposits refused until bind_market), cap 1000 USDC; no USDC deposited"
   },
   "launchpad_log": {
     "note": "All sent by peridot-mainnet-admin. Times are UTC; Lisbon is WET (UTC+0) on this date, so identical. fee_xlm includes Soroban rent. Plus 5 XLM creator buy paid into the curve.",
@@ -253,5 +257,8 @@
   },
   "vault_factory": "CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW",
   "vault_factory_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
-  "vault_factory_deploy_tx": "079627868c13673bc029ec2e133b35f6f0c704b87816fce47e1c9524def0c2db"
+  "vault_factory_deploy_tx": "079627868c13673bc029ec2e133b35f6f0c704b87816fce47e1c9524def0c2db",
+  "vault_kinds": {
+    "zenex": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399"
+  }
 }

@@ -36,7 +36,7 @@ case "${1:?upload | admin-cmds | create}" in
     # demo vault: owner = keeper = the vaults key, market = owner (unbound; deposits stay refused until bind_market), cap 1000 USDC
     A=$(args "$ME" "$ME" "$ME" 10000000000)
     SALT=$(printf '%064x' "$(date +%s)")
-    FLAGS=(--id "$VF" --source-account "$IDENTITY" --network mainnet-public)
+    FLAGS=(--id "$VF" --source-account "$IDENTITY" --network mainnet-gateway --inclusion-fee 2000)
     [[ "${SEND:-}" == "yes" ]] || FLAGS+=(--send=no)
     stellar contract invoke "${FLAGS[@]}" -- create_vault --owner "$ME" --kind zenex --salt "$SALT" --init_args "$A" ;;
 esac
