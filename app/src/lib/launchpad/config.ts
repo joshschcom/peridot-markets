@@ -10,6 +10,8 @@ export interface LaunchpadConfig {
   market_factory: string;
   aquarius_router: string;
   wasm: { launchpad_token: string; launchpad_curve: string; launchpad_factory: string; launchpad_ico?: string };
+  /** True once `create_ico` and `set_ico_wasm` are live on this network's launchpad factory (the ICO UI is hidden otherwise). */
+  ico_live?: boolean;
   demo: {
     first: { token: string; curve: string; target_xlm: number };
     graduated?: { token: string; symbol: string; curve: string; pool: string; group_id: number; target_xlm: number };
@@ -19,6 +21,7 @@ export interface LaunchpadConfig {
 export const LAUNCHPAD_TESTNET: LaunchpadConfig = {
   network: 'testnet',
   /** `launchpad_factory` in deployments/testnet.json. */
+  ico_live: true,
   launchpad_factory: 'CBYQC54BS5HIWEO6KQNVGZ6XRNOTG3OMT6UZYBUD2NESGHBQMALGSBWC',
   /** `factory` in deployments/testnet.json: graduated groups live here. */
   market_factory: 'CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M',
@@ -53,10 +56,14 @@ export const LAUNCHPAD_MAINNET: LaunchpadConfig = {
   launchpad_factory: 'CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J',
   market_factory: 'CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S',
   aquarius_router: 'CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK',
+  /** Flip to true only after the factory upgrade and `set_ico_wasm` are confirmed on mainnet (see deployments/mainnet.json `launchpad_ico`). */
+  ico_live: false,
   wasm: {
     launchpad_token: 'aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550',
     launchpad_curve: 'bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c',
+    /** Live factory Wasm. After the in-place upgrade this becomes `b371a8c3...6d62` (built, not yet uploaded), together with the manifest snapshot. */
     launchpad_factory: 'e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d',
+    launchpad_ico: '7596bd473fa4d036b65a5b05ea2a65e273ca14a9f6ca1822f397b245b0b82284',
   },
   demo: {
     first: {
@@ -86,6 +93,8 @@ export const AQUARIUS_MAINNET_SWAP_URL = 'https://aqua.network/swap/';
 export const MAINNET_GRADUATION_AQUA = 300_000;
 /** Rough network fee of the mainnet demo launch with a creator buy (0.53 XLM including Soroban rent). The wallet shows the exact fee. */
 export const MAINNET_LAUNCH_FEE_ESTIMATE_XLM = 0.6;
+/** Rough fee of `create_ico`: deploys a token and an escrow contract (testnet fee 0.5 XLM, mainnet rent is higher). The wallet shows the exact fee. */
+export const MAINNET_ICO_FEE_ESTIMATE_XLM = 0.8;
 /** Plain-token deploy is one contract creation: a little cheaper than a curve launch. The wallet shows the exact fee. */
 export const MAINNET_PLAIN_FEE_ESTIMATE_XLM = 0.3;
 
@@ -104,6 +113,9 @@ export function launchpadExplorer(): string { return isLaunchpadMainnet() ? MAIN
 export function launchpadSwapUrl(): string { return isLaunchpadMainnet() ? AQUARIUS_MAINNET_SWAP_URL : AQUARIUS_TESTNET_SWAP_URL; }
 /** "mainnet" or "testnet" for UI copy. */
 export function launchpadNetworkLabel(): LaunchpadNetwork { return launchpadNetwork(); }
+
+/** True when ICOs can be listed and created on the active network (demo mode, testnet, or a mainnet factory that was upgraded). */
+export function icoAvailable(): boolean { return network.useMocks || launchpadConfig().ico_live === true; }
 
 export type LaunchpadMode = 'mock' | 'live';
 /** Pure mode rule, exported for tests: mocks win; otherwise the launchpad is live on whichever network is active. */

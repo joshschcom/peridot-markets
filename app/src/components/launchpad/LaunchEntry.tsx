@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/primitives';
 import LaunchTokenForm from './LaunchTokenForm';
 import IcoForm from './IcoForm';
 import SimpleTokenForm from './SimpleTokenForm';
+import { icoAvailable } from '@/lib/launchpad/config';
 import { LaunchpadBadges, MainnetNotice, RiskNotice } from './LaunchpadFrame';
 
 type Mode = 'choose' | 'simple' | 'curve' | 'ico';
@@ -41,11 +42,11 @@ export default function LaunchEntry() {
         <span className="row" style={{ gap: 8 }}><Badge tone="accent">1 transaction</Badge><Badge>Graduates to a market</Badge></span>
         <span className="launch-choice-go">Set up a curve launch <ArrowRight size={15} aria-hidden /></span>
       </button>
-      <button type="button" className="launch-choice" onClick={() => choose('ico')} aria-label="ICO fixed price sale">
+      <button type="button" className="launch-choice" onClick={() => choose('ico')} disabled={!icoAvailable()} aria-label="ICO fixed price sale">
         <span className="launch-choice-icon" aria-hidden><Handshake size={22} /></span>
         <strong>ICO (fixed price sale)</strong>
         <span className="muted">A fixed price, a minimum goal and a maximum raise.</span><dl className="launch-choice-facts"><dt>Price</dt><dd>Fixed by you.</dd><dt>Who can buy</dt><dd>Anyone, during a set time window.</dd><dt>You pay</dt><dd>Network fees.</dd><dt>At the end</dt><dd>Soft cap reached: buyers claim tokens. Soft cap missed: full refunds. Hard cap limits the raise.</dd></dl>
-        <span className="row" style={{ gap: 8 }}><Badge tone="accent">Fixed price</Badge><Badge>Refund if it fails</Badge></span><span className="launch-choice-go">Set up an ICO <ArrowRight size={15} aria-hidden /></span>
+        <span className="row" style={{ gap: 8 }}><Badge tone="accent">Fixed price</Badge><Badge>Refund if it fails</Badge></span><span className="launch-choice-go">{icoAvailable() ? 'Set up an ICO' : 'Not live on this network yet'} <ArrowRight size={15} aria-hidden /></span>
       </button>
     </div>
     <RiskNotice />

@@ -11,8 +11,8 @@ import { parseAmount } from '@/lib/peridot/amount';
 import { quoteToken } from '@/lib/launchpad/client';
 import { createIco } from '@/lib/launchpad/ico-client';
 import { validateIco, type IcoParams } from '@/lib/launchpad/ico-types';
-import { launchpadCanSign, launchpadMode } from '@/lib/launchpad/config';
-import { LaunchpadBadges, MainnetNotice, RiskNotice, TxStatus, TypeBadge } from './LaunchpadFrame';
+import { icoAvailable, isLaunchpadMainnet, launchpadCanSign, launchpadMode, launchpadNetworkLabel } from '@/lib/launchpad/config';
+import { LaunchpadBadges, MainnetCost, MainnetNotice, RiskNotice, TxStatus, TypeBadge } from './LaunchpadFrame';
 import { LpAddress } from './LpAddress';
 
 const localTime = (ms: number) => { const d = new Date(ms); return new Date(ms - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
@@ -35,7 +35,7 @@ export default function IcoForm({ onBack }: { onBack: () => void }) {
     } catch (e) { errors.push(e instanceof RangeError ? 'Choose valid start and end times.' : e instanceof Error ? e.message : 'Check sale terms.'); }
     return { params, errors };
   }, [draft]);
-  const canSign = launchpadCanSign(); const blocked = !canSign || !wallet.address || wallet.networkMismatch;
+  const net = launchpadNetworkLabel(); const canSign = launchpadCanSign() && icoAvailable(); const blocked = !canSign || !wallet.address || wallet.networkMismatch;
   async function create() {
     if (busy || blocked || !wallet.address || !parsed.params || parsed.errors.length || !ack) return;
     setBusy(true); setError(''); setProgress(null);
@@ -48,7 +48,7 @@ export default function IcoForm({ onBack }: { onBack: () => void }) {
     <MainnetNotice />
     {error && <Notice tone="danger" role="alert">{error}</Notice>}
     <div className="two-col launch-token-layout"><section className="card launch-content">
-      {result ? <div className="launch-token-success"><CheckCircle2 size={42} /><h2>Your ICO is live on testnet</h2><p>{draft.name} ({draft.symbol})</p><p className="muted">{launchpadMode() === 'mock' ? 'Demo sale saved in this browser. No funds moved.' : 'The full token supply is held in the sale contract until settlement.'}</p><LpAddress value={result.token} label="token address" /><TxStatus progress={progress} /><Link className="button" href={`/token/${result.token}`}>Open ICO page <ArrowRight size={16} /></Link></div>
+      {result ? <div className="launch-token-success"><CheckCircle2 size={42} /><h2>Your ICO is live on {net}</h2><p>{draft.name} ({draft.symbol})</p><p className="muted">{launchpadMode() === 'mock' ? 'Demo sale saved in this browser. No funds moved.' : 'The full token supply is held in the sale contract until settlement.'}</p><LpAddress value={result.token} label="token address" /><TxStatus progress={progress} /><Link className="button" href={`/token/${result.token}`}>Open ICO page <ArrowRight size={16} /></Link></div>
       : <div className="stack"><div><p className="kicker">Token & sale terms</p><h2>Set your fixed-price sale</h2><p className="muted">All tokens have 7 decimals. Buyers receive their allocation after a successful sale ends.</p></div>
         <div className="field-grid">{field('name', 'Name', '1 to 32 letters, digits, spaces, dots, hyphens or underscores.')}{field('symbol', 'Symbol', '2 to 12 letters or digits.')}</div>
         <div className="field-grid">{field('supply', 'Total token supply', 'Fixed at launch. Unsold tokens return to you.')}{field('price', 'Price per token (XLM)', 'The same price for every buyer, rounded down to token base units.')}</div>
@@ -58,14 +58,16 @@ export default function IcoForm({ onBack }: { onBack: () => void }) {
         {field('metadata', 'Image URI (optional)', 'Public https or ipfs URL, at most 256 bytes.')}
         <RiskNotice />
         {(draft.name || draft.symbol) && parsed.errors.length > 0 && <Notice tone="warn" title="Check these details"><ul>{parsed.errors.map(e => <li key={e}>{e}</li>)}</ul></Notice>}
-        <label className="check"><input type="checkbox" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} />I understand this is a testnet experiment and Peridot does not vet projects.</label>
+        <label className="check"><input type="checkbox" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} />{isLaunchpadMainnet() ? 'I understand this is an unaudited beta on mainnet, that buyers and I use real XLM, and that Peridot does not vet projects.' : 'I understand this is a testnet experiment and Peridot does not vet projects.'}</label>
+        <MainnetCost buy={0n} kind="ico" />
+        {!icoAvailable() && <Notice tone="warn">ICOs are not live on {net} yet.</Notice>}
         <TxStatus progress={progress} />
-        {wallet.networkMismatch && <Notice tone="warn">Switch your wallet to testnet before signing.</Notice>}
+        {wallet.networkMismatch && <Notice tone="warn">Switch your wallet to {net} before signing.</Notice>}
         {!wallet.address && canSign ? <button className="button" onClick={() => void wallet.connect()} disabled={wallet.isConnecting}>Connect wallet to create</button> : <button className="button large" onClick={create} disabled={busy || blocked || !ack || parsed.errors.length > 0}>{busy ? 'Creating ICO...' : launchpadMode() === 'mock' ? 'Create demo ICO' : 'Create ICO'} <ArrowRight size={16} /></button>}
       </div>}
     </section><aside className="card sticky-aside stack"><p className="kicker">Sale preview</p><h2>{draft.name || 'Your new token'} <TypeBadge type="ico" /></h2><KeyValue rows={[
       ['Price', `${draft.price || '0'} XLM / ${draft.symbol || 'token'}`], ['Minimum raise', `${draft.soft} XLM`], ['Maximum raise', `${draft.hard} XLM`],
-      ['Supply', `${draft.supply} ${draft.symbol || 'tokens'}`], ['Tokens at hard cap', parsed.params && parsed.params.price > 0n ? fmtAmount(parsed.params.hard_cap * 10000000n / parsed.params.price, 7, 7) : 'Check price'], ['Network', 'Stellar testnet'],
+      ['Supply', `${draft.supply} ${draft.symbol || 'tokens'}`], ['Tokens at hard cap', parsed.params && parsed.params.price > 0n ? fmtAmount(parsed.params.hard_cap * 10000000n / parsed.params.price, 7, 7) : 'Check price'], ['Network', `Stellar ${net}`],
     ]} /><hr /><h3>When the sale ends</h3><p className="muted">If the soft cap is reached, buyers claim tokens and you withdraw the raise plus unsold tokens. Otherwise, buyers reclaim all their XLM and you reclaim the token supply.</p><p className="muted">This sale does not create a liquidity pool or lending market. There is no vesting or launch fee, only network fees.</p><p className="muted">An admin can pause new purchases. Claims and refunds stay available. Upgrades are locked after the first purchase.</p></aside></div>
   </div>;
 }

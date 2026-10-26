@@ -117,7 +117,7 @@ export function TokenList() {
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow">Launchpad</p>
         <h1 className="lp-title">{isLaunchpadMainnet() ? 'Launchpad tokens' : 'Test tokens'} <LaunchpadBadges /></h1>
-        <p className="lead">Explore fixed-price ICOs (testnet), bonding curves and simple tokens. When a curve raises its target, anyone can graduate it into an Aquarius pool with locked liquidity and its own lending market.</p>
+        <p className="lead">Explore fixed-price ICOs, bonding curves and simple tokens. When a curve raises its target, anyone can graduate it into an Aquarius pool with locked liquidity and its own lending market.</p>
       </div>
       <div className="page-actions">{launchpadCanSign() ? <Link className="button" href="/launch-token"><Plus size={16} aria-hidden /> Launch a token</Link> : <Link className="button secondary" href="/launch-token">How launching works</Link>}</div>
     </div>

@@ -3,7 +3,7 @@ import { AlertTriangle, FlaskConical } from 'lucide-react';
 import { network } from '@/lib/peridot/network';
 import type { TxProgress } from '@/lib/peridot/rpc';
 import { Badge, Notice } from '@/components/ui/primitives';
-import { MAINNET_LAUNCH_FEE_ESTIMATE_XLM, MAINNET_PLAIN_FEE_ESTIMATE_XLM, isLaunchpadMainnet, launchpadMode } from '@/lib/launchpad/config';
+import { MAINNET_ICO_FEE_ESTIMATE_XLM, MAINNET_LAUNCH_FEE_ESTIMATE_XLM, MAINNET_PLAIN_FEE_ESTIMATE_XLM, isLaunchpadMainnet, launchpadMode } from '@/lib/launchpad/config';
 import { fmtAmount } from '@/components/ui/format';
 import { phaseLabel } from '@/lib/launchpad/math';
 import type { Phase } from '@/lib/launchpad/types';
@@ -29,9 +29,9 @@ export function MainnetNotice({ compact = false }: { compact?: boolean }) {
 }
 
 /** Mainnet only: the XLM this signature costs, before the wallet opens. `buy` is the creator buy in stroops (0n for none). */
-export function MainnetCost({ buy, kind }: { buy: bigint; kind: 'curve' | 'plain' }) {
+export function MainnetCost({ buy, kind }: { buy: bigint; kind: 'curve' | 'plain' | 'ico' }) {
   if (!isLaunchpadMainnet()) return null;
-  const fee = kind === 'curve' ? MAINNET_LAUNCH_FEE_ESTIMATE_XLM : MAINNET_PLAIN_FEE_ESTIMATE_XLM;
+  const fee = kind === 'curve' ? MAINNET_LAUNCH_FEE_ESTIMATE_XLM : kind === 'ico' ? MAINNET_ICO_FEE_ESTIMATE_XLM : MAINNET_PLAIN_FEE_ESTIMATE_XLM;
   const feeStroops = BigInt(Math.round(fee * 10_000_000));
   return <Notice tone="warn" role="status" title="What this costs in real XLM">
     <ul className="muted" style={{ paddingLeft: 16, display: 'grid', gap: 2 }}>

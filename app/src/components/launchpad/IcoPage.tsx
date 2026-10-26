@@ -9,7 +9,7 @@ import { Badge, KeyValue, Meter, Notice, Skeleton } from '@/components/ui/primit
 import { fmtAmount } from '@/components/ui/format';
 import { actOnIco, endIcoDemo, getIcoDetails, type IcoAction } from '@/lib/launchpad/ico-client';
 import { icoBuyQuote, type IcoInfo } from '@/lib/launchpad/ico-types';
-import { launchpadCanSign, launchpadMode } from '@/lib/launchpad/config';
+import { launchpadCanSign, launchpadMode, launchpadNetworkLabel } from '@/lib/launchpad/config';
 import { LaunchpadBadges, MainnetNotice, RiskNotice, TokenIcon, TxStatus, TypeBadge } from './LaunchpadFrame';
 import { LpAddress } from './LpAddress';
 
@@ -67,7 +67,7 @@ export default function IcoPage({ info }: { info: IcoInfo }) {
       {ended && state.phase === 0 && <button className="button secondary" disabled={!!locked} onClick={() => void action('finalize')}>Finalize sale</button>}
       {ended && wallet.address === info.creator && <button className="button secondary" disabled={!!locked || state.withdrawn} onClick={() => void action('withdraw')}>{state.withdrawn ? 'Creator withdrawal complete' : succeeded ? 'Withdraw raise and unsold tokens' : 'Reclaim token supply'}</button>}
       {!wallet.address && launchpadCanSign() && <button className="button secondary" onClick={() => void wallet.connect()}>Connect wallet</button>}
-      {wallet.networkMismatch && <Notice tone="warn">Switch your wallet to testnet before signing.</Notice>}
+      {wallet.networkMismatch && <Notice tone="warn">Switch your wallet to {launchpadNetworkLabel()} before signing.</Notice>}
       {busy && <p role="status">Confirming your transaction...</p>}<TxStatus progress={progress} />
       {launchpadMode() === 'mock' && !ended && <div className="ico-demo-controls"><Badge tone="info">Demo controls</Badge><p className="muted">Skip the wait for this browser demo. No onchain time or funds change.</p><button className="button secondary sm" disabled={busy} onClick={() => { endIcoDemo(info.ico, started ? 'end' : 'start'); void refresh(); }}>{started ? 'End sale now (demo)' : 'Start sale now (demo)'}</button></div>}
     </aside></div>
