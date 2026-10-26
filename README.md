@@ -1,6 +1,6 @@
 # Peridot Markets
 
-Isolated money markets for any Stellar token, created from a factory. A project launches a token (simple, bonding curve or ICO), gets its own lending and borrowing group with configurable rates, collateral factors, caps and optional leverage, routes idle liquidity into DeFindex, Blend, XOXNO, Zenex or Aquarius, and manages everything from a Control Panel inside factory guardrails. Built for HackMeridian 2026 on top of Peridot's audited lending core.
+Everything a Stellar token needs, under one roof: launch it, lend and borrow it, earn yield on it and trade it with leverage, from one app. A project launches a token (simple, bonding curve or ICO), gets its own isolated lending and borrowing group with configurable rates, collateral factors, caps and optional leverage, routes idle liquidity into DeFindex, Blend, XOXNO, Zenex or Aquarius, and manages everything from a Control Panel inside factory guardrails. Built for HackMeridian 2026 on top of Peridot's audited lending core.
 
 | | |
 |---|---|
