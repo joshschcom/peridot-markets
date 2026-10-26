@@ -1,0 +1,33 @@
+# Peridot Markets
+
+> Peridot Markets is a lending, leverage and token-launch platform on Stellar (Soroban). Any project gets its own isolated lending market group with a safe price oracle, optional yield vaults and optional leverage. Tokens launched on the Aquarius-only launchpad can graduate into a real lending market. Built for HackMeridian 2026 on top of the audited Peridot lending core (timelocks set to 60 seconds for the event). Beta: the new contracts are unaudited.
+
+## Live app
+- [Mainnet app](https://markets.peridot.finance/): markets, groups, vaults, launchpad (connected to Stellar mainnet, beta).
+- [Testnet app](https://test-markets.peridot.finance/): same app on Stellar testnet with free test tokens (switch networks with the pill in the header).
+- [Launch a token](https://markets.peridot.finance/launch-token): simple token, bonding curve or ICO.
+- [Token list](https://markets.peridot.finance/tokens)
+- [Vaults](https://markets.peridot.finance/vaults): Aquarius ladder, Blend, DeFindex, XOXNO and Zenex vault options created from a vault factory.
+- [About, prior work and architecture](https://markets.peridot.finance/about)
+
+## Source and docs
+- [Repository](https://github.com/joshschcom/peridot-markets)
+- [README](https://github.com/joshschcom/peridot-markets/blob/main/README.md): what it is, how to run it, integrations.
+- [Architecture](https://github.com/joshschcom/peridot-markets/blob/main/docs/ARCHITECTURE.md)
+- [Specifications](https://github.com/joshschcom/peridot-markets/blob/main/docs/SPECS.md)
+- [Prior work and provenance](https://github.com/joshschcom/peridot-markets/blob/main/docs/PRIOR_WORK.md)
+- [Changes to the audited core](https://github.com/joshschcom/peridot-markets/blob/main/core/CORE_DIFF.md)
+- [Mainnet deployment record](https://github.com/joshschcom/peridot-markets/blob/main/deployments/mainnet.json)
+- [Pitch facts with verified transactions](https://github.com/joshschcom/peridot-markets/blob/main/docs/PITCH-FACTS.md)
+
+## Key facts
+- Network: Stellar Soroban, contracts written in Rust (soroban-sdk 25.3).
+- Isolated market groups deployed by a factory (deploy_v2); one bad token cannot endanger other groups.
+- Price sources: Reflector, or Aquarius pool pricing with a step guard for launchpad tokens.
+- Yield routes: Blend fee vault, DeFindex, Aquarius LP ladder vault, XOXNO, Zenex.
+- Leverage: owner-enabled per token, staged parameter changes with a 60 second timelock.
+- Launchpad: Aquarius-only; graduation locks liquidity and opens a lending market.
+- Wallets: Stellar Wallets Kit (Albedo, Freighter, xBull, LOBSTR, Hana).
+
+## Optional
+- [Coordination log](https://github.com/joshschcom/peridot-markets/blob/main/docs/COORDINATION.md)
