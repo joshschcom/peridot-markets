@@ -61,3 +61,28 @@ It exports `app/` of that ref, rsyncs it, then `peridot-web-build` runs `npm ci`
 - Restart: `systemctl restart peridot-web peridot-web-testnet`
 - Rebuild only one network: `peridot-web-build testnet`
 - Cloudflare note: the app never receives secrets; all `NEXT_PUBLIC_*` values are public RPC endpoints.
+
+## Group image uploads (writable directory)
+
+Group pictures are uploaded through `/api/group-image` and stored on the droplet's disk, outside the code directory so redeploys never delete them. The units run with `ProtectSystem=strict`, so the directory must exist and be listed in `ReadWritePaths` or every upload fails with a 500.
+
+| Item | Value |
+|---|---|
+| Directory | `/var/lib/peridot-web/uploads` (env `GROUP_IMAGE_DIR`; local dev default `./.uploads`) |
+| Layout | `<dir>/<network>/files/<sha256>.<png\|jpg\|webp>` and `<dir>/<network>/profiles/<groupId>.json`; mainnet and testnet are separate subfolders |
+| Units | both `peridot-web.service` and `peridot-web-testnet.service` set `Environment=GROUP_IMAGE_DIR=/var/lib/peridot-web/uploads` and `ReadWritePaths=/opt/peridot-web/app /var/lib/peridot-web/uploads` |
+| Limits | PNG, JPEG or WebP, 512 KB, 1024 by 1024 pixels, 10 uploads per IP per 10 minutes (in memory) |
+
+On an existing droplet, before the first deploy that contains this feature (a unit with a missing `ReadWritePaths` directory fails to start):
+
+```
+ssh -i ~/.ssh/peridot-keeper-droplet root@165.22.89.201 'install -d -o web -g web -m 750 /var/lib/peridot-web/uploads'
+```
+
+Then `scripts/ship_web.sh` as usual; the updated unit files are installed by the deploy. If it does not reinstall units, run `systemctl daemon-reload && systemctl restart peridot-web peridot-web-testnet` after copying `scripts/web/*.service` to `/etc/systemd/system/`. `provision.sh` creates the directory on fresh droplets.
+
+Back up `/var/lib/peridot-web/uploads` with the rest of the host state; losing it only loses group pictures (the groups themselves are on chain). Images are not on chain: the factory stores only the group name, so ownership is proven with a free wallet signature (a never-submitted transaction) that the server checks against the group's current on-chain owner.
+
+### Client IP and rate limiting
+
+The upload rate limit keys on the first `X-Forwarded-For` value. Caddy must therefore overwrite that header with the real peer address, otherwise a client could send its own and dodge the limit. `peridot-set-domain` now writes `header_up X-Forwarded-For {remote_host}` in every site block. Re-run `peridot-set-domain` (same arguments) once after deploying to regenerate `/etc/caddy/Caddyfile`, then `systemctl reload caddy`. Do not put Cloudflare's orange cloud in front without switching this to `{http.request.header.CF-Connecting-IP}`.

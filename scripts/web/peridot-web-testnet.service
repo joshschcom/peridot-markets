@@ -7,6 +7,7 @@ Wants=network-online.target
 User=web
 Group=web
 WorkingDirectory=/opt/peridot-web/app
+Environment=GROUP_IMAGE_DIR=/var/lib/peridot-web/uploads
 EnvironmentFile=/etc/peridot-web/testnet.env
 ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3001
 Restart=always
@@ -19,7 +20,7 @@ PrivateDevices=true
 ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
-ReadWritePaths=/opt/peridot-web/app
+ReadWritePaths=/opt/peridot-web/app /var/lib/peridot-web/uploads
 LimitNOFILE=4096
 MemoryMax=700M
 

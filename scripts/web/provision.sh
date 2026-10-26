@@ -22,6 +22,7 @@ if ! command -v caddy >/dev/null; then
 fi
 id web >/dev/null 2>&1 || useradd --system --create-home --home-dir /home/web --shell /usr/sbin/nologin web
 mkdir -p /opt/peridot-web/app /etc/peridot-web
+install -d -o web -g web -m 750 /var/lib/peridot-web/uploads
 chown -R web:web /opt/peridot-web /home/web
 install -m 0755 "$SRC/peridot-set-domain" /usr/local/bin/peridot-set-domain
 install -m 0755 "$SRC/peridot-web-build" /usr/local/bin/peridot-web-build

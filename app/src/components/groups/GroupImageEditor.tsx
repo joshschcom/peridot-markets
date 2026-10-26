@@ -119,15 +119,15 @@ export function GroupImageEditor({ groupId, owner, groupName, pending, onPending
 }
 
 /** Shown on the launch success screen: publishes the image picked in step 1 to the new group. */
-export function GroupImagePublisher({ groupId, owner, pending, onDone }: { groupId: number; owner: string; pending: PendingImage; onDone: () => void }) {
+export function GroupImagePublisher({ groupId, owner, pending }: { groupId: number; owner: string; pending: PendingImage }) {
   const wallet = useWallet();
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState(false);
   const auto = useRef(false);
   const run = useCallback(async () => {
     setBusy(true); setError('');
-    try { await publishGroupImage({ groupId, owner, signTransaction: wallet.signTransaction, pending }); setSaved(true); onDone(); }
+    try { await publishGroupImage({ groupId, owner, signTransaction: wallet.signTransaction, pending }); setSaved(true); }
     catch (e) { setError(errorText(e)); } finally { setBusy(false); }
-  }, [groupId, owner, pending, wallet.signTransaction, onDone]);
+  }, [groupId, owner, pending, wallet.signTransaction]);
   useEffect(() => { if (network.useMocks && !auto.current) { auto.current = true; void run(); } }, [run]);
   if (saved) return <Notice tone="success" role="status">Group image saved.</Notice>;
   return <div className="stack-sm" style={{ justifyItems: 'center' }}>
