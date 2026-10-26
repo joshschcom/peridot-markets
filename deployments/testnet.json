@@ -109,6 +109,25 @@
           "verified_empty_quote_escrow": true
         }
       }
+    },
+    "aquarius_vault": {
+      "vault": "CBWUPVVIIN3ZGQYRF3FYAP4FKAIKX5WFAZKZWST3WSQ2I73JBSYNUWTD",
+      "pool": "CA6DAGOMK5D7GKBNWVCIEAYSTPJXLQUFWFKSZOMNEM6BVOTUBDCTIT5I",
+      "underlying": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      "wasm": "77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76",
+      "config": "5 rungs, width 2, step 2, pyramid, recenter 3, cooldown 300s, fee 10%, slippage 3%, cap 100000",
+      "txs": {
+        "deposit_40_xlm": "4c437611e02c4a7d7f85c686e7e46aa3d0f05b0bac4806383e4d1b8191f5d24c",
+        "rebalance_1_swap_and_two_rungs": "70e1d52a2c0266285c857b9ddbf2fe9eedd197e95d74742003162840ec4b15f3",
+        "rebalance_2_two_rungs": "a97de7dc743292f5a7a8a8dd83b645ba98a4565313bf0f1c5cbeebd7bd6f4032",
+        "rebalance_3_last_rung": "35410cc7d9e6a5d9dcf4c2036b1ab90a8517de02fd8e2b5c24e6b26a72076605",
+        "deposit_5_xlm_into_live_ladder": "8ddb7f8efbdbf220de9a23c19f97e64bcaf112be452bcbb9d64123c5ede50502",
+        "withdraw_25_percent": "08bc9c41dd8e1f861f8637eb256409fe9ca078d0b1a0b8fcb59ced71e53f0976",
+        "wind_down": "1b5abdebac428ac4fd56dd86b9f78f59c372efd5794a43ad76758356c407b5ae",
+        "unwind_step_1": "79027846f27872d8235ed8f85b3c939e30e20194e1e77a454bc0418460ff7889",
+        "unwind_step_2": "53aa47244b3537a34bc6be1c0c0c288cac1a82da561a56297f53fe69e04f6182",
+        "withdraw_rest": "2d72ba2e02336fb061330ec1d1c70c7d449931227f5fdca907f6304209b5d1d5"
+      }
     }
   },
   "external": {
@@ -146,7 +165,8 @@
   "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE",
   "vault_kinds": {
     "zenex": "bbd1bac2966b841f710ca7cf1497c710473b482e25234b957fa8fa673b3af903",
-    "xoxno": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342"
+    "xoxno": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342",
+    "aquarius": "77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76"
   },
   "xoxno_vault": {
     "wasm_hash": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342",

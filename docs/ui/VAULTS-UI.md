@@ -117,3 +117,36 @@ Sequence (sequential, from `peridot-mainnet-vaults`, after the vault-factory age
 ### Zenex mainnet status (branch `zenex-vault-mainnet`)
 
 Zenex wasm uploaded on mainnet by `peridot-mainnet-vaults` (tx `259c9419...c64d`, 32.39 XLM), hash `99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399`, reproducible, baked admin `GC3FLITV...7CXH`. A `create_contract` simulation with the real Zenex market and vault ids succeeds (constructor checks pass against the live protocol). No vault instance and no USDC deposit yet. Admin commands: `scripts/zenex_vault_mainnet.sh admin-cmds` (set_wasm on the mainnet vault factory once it exists, then `set_yield_vault_allowed` on the market factory per vault). `scripts/zenex_vault_mainnet.sh create` simulates by default; `SEND=yes` submits.
+
+
+### Aquarius ladder vault: what it does
+
+Depositors give ONE token (the pool's `underlying`). The vault lays it across a ladder of adjacent Aquarius concentrated-liquidity ranges ("rungs", 1 to 7) around the price, earning swap fees and AQUA emissions. The owner chooses, at creation and within hard bounds enforced by the constructor: pool, deposit token, keeper, rung count, rung width and spacing (in tick spacings), weighting (flat, pyramid, wings), rebalance trigger, cooldown, performance fee (max 20%, can only go down), deposit cap, swap slippage cap (0.5% to 5%).
+
+Maintenance is a keeper loop: call `rebalance(keeper)` while `needs_rebalance()` is true. Pool operations on concentrated liquidity cost about 40 to 85 million CPU instructions each, so one transaction can only do 3 withdrawals (unwind) or 1 guarded swap plus 2 deposits (fund). A full rebuild of a five rung ladder therefore takes 5 transactions (about 1 XLM of fees in total on testnet). Withdrawals pay from idle funds first and then burn at most 2 rungs (the ones holding the most underlying, which also avoids a swap), so one withdrawal can take roughly a third of the vault; larger exits go in parts, or the owner calls `set_wind_down(true)`, the keeper unwinds, and everyone leaves atomically.
+
+### Trust model (summary; the full text is the header of `contracts/aquarius-vault/src/lib.rs`)
+
+- No function lets the owner or keeper send depositor funds to an address of their choice. Outflows are share redemptions to the redeemer, pool operations on the configured pool, and `sweep_extra` for tokens that are not the pool pair (AQUA rewards, airdrops).
+- No upgrade path (immutable). After creation the owner can only change keeper, cap, lower the fee, pause deposits and rebalances, start a wind-down, and bind the vault to one market once.
+- Pause and wind-down never block withdrawals. The vault-factory is not an admin of any vault; its admin can only register wasm hashes for future vaults and upgrade the factory.
+- NAV is marked at the pool's spot price: a manipulated pool price moves the share price. Mitigations: deposit cap, 0.5% to 5% slippage guard on every swap, dead shares on the first deposit (no donation inflation, tracked balances), withdrawals priced on the same NAV.
+- Known limits: AQUA emissions stay in the vault and are only sweepable by the owner (routing them to depositors is future work); performance fee shares are minted on deposits, withdrawals and rebalances; share tokens are not transferable.
+
+### Testnet record (network `testnet`)
+
+- vault-factory `CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE`, wasm sha256 `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d` (reproducible), admin `GBZ7C3N43KURCM3DWN4LOOKR5XWHNU6EZEJQT5VGRLHKUUQQYL7UXFMJ`.
+- kind `aquarius` registered with wasm hash `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76` (`aquarius-vault`, reproducible; this build contains the fixes from two Codex second-opinion passes, see below).
+- Real run on the final wasm, all on testnet, vault `CBWUPVVIIN3ZGQYRF3FYAP4FKAIKX5WFAZKZWST3WSQ2I73JBSYNUWTD` (testnet XLM/USDT concentrated pool `CA6DAGOMK5D7GKBNWVCIEAYSTPJXLQUFWFKSZOMNEM6BVOTUBDCTIT5I`, underlying XLM, 5 rungs): deposit 40 XLM `4c437611e02c4a7d7f85c686e7e46aa3d0f05b0bac4806383e4d1b8191f5d24c`; ladder built in three rebalance transactions `70e1d52a2c0266285c857b9ddbf2fe9eedd197e95d74742003162840ec4b15f3`, `a97de7dc743292f5a7a8a8dd83b645ba98a4565313bf0f1c5cbeebd7bd6f4032`, `35410cc7d9e6a5d9dcf4c2036b1ab90a8517de02fd8e2b5c24e6b26a72076605` (swap plus 5 pool deposits); deposit 5 XLM into the live ladder `8ddb7f8efbdbf220de9a23c19f97e64bcaf112be452bcbb9d64123c5ede50502`; 25% withdrawal `08bc9c41dd8e1f861f8637eb256409fe9ca078d0b1a0b8fcb59ced71e53f0976`; wind-down `1b5abdebac428ac4fd56dd86b9f78f59c372efd5794a43ad76758356c407b5ae`; two unwind steps `79027846f2...7ff889`, `53aa47244b...f6182`; final withdrawal `2d72ba2e02336fb061330ec1d1c70c7d449931227f5fdca907f6304209b5d1d5`. Net: 45 XLM in, 44.91 XLM out (pool fees of the ladder swap and exit swap; the testnet pool is thin, so the swap impact is large). Full hashes: `deployments/testnet.json` `demo.aquarius_vault`.
+- Earlier wasm iterations left test vaults on testnet that can be ignored (`CCLMKV7K...`, `CBGQUG5I...`, `CADXEUCF...`, `CAOITD53...` and older).
+- CLI: `NETWORK=testnet IDENTITY=<identity> node scripts/vault_run.mjs create|deposit|rebalance|withdraw|winddown|harvest|state ...`; `scripts/deploy_vault_factory.sh factory|kind`.
+
+### How siblings add a vault kind (Zenex, XOXNO)
+
+1. Contract crate with a constructor whose FIRST argument is the owner address and which validates every bound itself. Build it with `scripts/deploy_vault_factory.sh kind <kind_id> <wasm_name>` (uploads and calls `set_wasm`; needs the factory admin key).
+2. `app/src/lib/vaults/kinds/<id>.ts`: a `VaultKind` (fields with labels, help, min/max, defaults; `encode` for argument order; optional `validate`, `preview`, `summary`, `risks`). Register it in `kinds/index.ts` (`VAULT_KINDS`) and add a unit test like `kinds.test.ts`.
+3. Record the wasm hash in `app/src/lib/peridot/deployments/<network>.json` under `vault_kinds.<id>`; the form enables submit once the factory and the kind are present for the selected network.
+
+### Second opinion (Codex) before mainnet
+
+A read-only Codex review of the first build found: accrued fees counted twice in NAV (the pool's `estimate_withdraw_position` already includes them, verified against the live mainnet pool), exhausted rungs breaking later unwinds (pool error 2018 on a zero-liquidity withdrawal), wind-down not clearing a pending funding plan, the redeemer not bearing their own conversion loss, a stale cached NAV used as a quote, and spot-price manipulability. All but the last were fixed in the final wasm and re-run on testnet. A second pass on the fixes found one more P1 (deposits must wait while the ladder is staged, because the other token then sits idle valued at spot), fixed in the final wasm and re-run on testnet (that last fix was not reviewed again). Spot-price manipulability remains a documented limit: deposit cap, 0.5% to 5% swap guard, deposits refused while the price is outside the ladder, and a small demo cap; in-kind exits are also priced at spot (not price-free).

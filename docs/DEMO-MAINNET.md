@@ -105,3 +105,22 @@ What to click (in the app, once it reads this manifest): open the Launchpad page
 Read-only checks done after launch: `get_state` (price, 0.99% progress, 49.5 XLM raised), `quote_buy` 1 XLM and `quote_sell` of 10M tokens, `is_curve` is true, the market-factory `get_launchpad`, `get_wasm` (new price router), and three existing groups still read. Graduation was NOT run: `graduation_cost()` reads 300,000 AQUA on mainnet, and `graduate` correctly refuses a curve below target. A simulated `create_group(owner = curve)` on the market-factory succeeds (it would be group 4 with a new AquariusOnly-capable price router), so the market-factory half of graduation is accepted; the Aquarius pool-creation half is exercised on testnet only.
 
 Caveats (details in `docs/qa/CODEX-LAUNCHPAD-MAINNET.md`): a 500 XLM raise gives a pool below the price router's 500 USD per side floor, so a graduated 500 XLM token would have supply but no borrowing price; AquariusOnly pricing has a manipulation window after 300 s that must be fixed before real graduations; the factory admin can upgrade curves immediately (house rule); the rollback for the market-factory is `upgrade(admin, a5442cae...)` and restores code only.
+
+## Vault factory and Aquarius ladder vault (branch `vault-factory`)
+
+Deployer: `GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP` (identity `peridot-mainnet-vaults`, shared funding of 75 XLM, cap for this job 60 XLM). Artifacts are reproducible and identical to the testnet ones: vault-factory wasm `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d`, aquarius-vault wasm `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76`. Neither crate has a baked admin; the factory admin is the constructor argument (the deployer key, see the trust note in `docs/ui/VAULTS-UI.md`).
+
+Cost estimate from the testnet fees charged for the same transactions (stroops converted to XLM): upload aquarius-vault about 3.5, upload vault-factory about 1.9, deploy factory about 0.02, set_wasm below 0.01, create_vault about 0.02, seed deposit about 0.02, three rebalance steps about 1.1 in total, a withdrawal about 0.01. Fees about 7 XLM plus the 10 XLM seed: about 17 XLM, well under the 60 XLM cap.
+
+Demo vault parameters: pool Aquarius XLM/USDC concentrated 0.1% `CBBMQBNHB2FYVZYV7VNHOJHUMTFJLR4PUMRVQYNW6RHIKZO2NQMIBUCV` (tick spacing 20, about 5.1 million XLM and 428k USDC deep), underlying XLM, owner and keeper the deployer, 5 rungs of 3 spacings (0.6% each) touching, pyramid weights, rebalance trigger 5 spacings (about 1%), cooldown 1 hour, performance fee 10%, deposit cap 100 XLM, swap slippage cap 1%.
+
+### Done on mainnet
+
+| Step | Result |
+|---|---|
+| Upload and deploy vault-factory | `CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW`, tx [07962786...](https://stellar.expert/explorer/public/tx/079627868c13673bc029ec2e133b35f6f0c704b87816fce47e1c9524def0c2db), wasm sha256 `231f72c4ace3f355668dff53f08694f61a890748c7e8bcdeb27c584f88677a7d`, admin `GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH` (peridot-mainnet-admin, verified on chain), cost 10.45 XLM |
+
+Correction to the estimate above: mainnet wasm rent is far higher than testnet. Simulated upload fees on mainnet: vault-factory 11.96 XLM (paid 10.45 with deploy), aquarius-vault (46,819 bytes) 70.3 XLM. Zenex and XOXNO paid 32.4 and 26.9 XLM for theirs. The Aquarius wasm is NOT uploaded yet: it needs about 83 XLM in total with the seed deposit, which exceeds the 60 XLM cap, and it waits for a decision.
+
+Register kinds (run by the factory admin, `peridot-mainnet-admin`):
+`stellar contract invoke --id CBWWQGA6ZURTB5IVZO3Q2EQBOSO4FDGLKNUNUWX5Q57TWKHHYFGRAJTW --network mainnet-public --source peridot-mainnet-admin -- set_wasm --admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH --kind <kind> --hash <hash>` with `zenex` `99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399`, `xoxno` `61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23`, and `aquarius` `77ead300da294e48c04199d9e873d70283f59ea9309ee9ef92944fbf5345dd76` (after the upload).
