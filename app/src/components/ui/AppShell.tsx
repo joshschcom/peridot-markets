@@ -14,6 +14,7 @@ import { RecentTransactions } from './RecentTransactions';
 const links = [
   { href: '/groups', label: 'Explore', match: (p: string) => p.startsWith('/groups') },
   { href: '/launch', label: 'Launch', match: (p: string) => p === '/launch' },
+  { href: '/vaults', label: 'Vaults', match: (p: string) => p.startsWith('/vaults') },
   { href: '/tokens', label: 'Launchpad', match: (p: string) => p.startsWith('/tokens') || p.startsWith('/token/') || p === '/launch-token' },
   { href: '/about', label: 'How it works', match: (p: string) => p === '/about' },
 ];
