@@ -30,6 +30,7 @@ members = [
   "contracts/launchpad-factory",
   "contracts/vault-factory",
   "contracts/mocks/mock-kind-vault",
+  "contracts/aquarius-vault",
 ]
 
 [workspace.dependencies]

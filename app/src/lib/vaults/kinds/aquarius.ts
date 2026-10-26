@@ -109,7 +109,7 @@ export const aquariusKind: VaultKind = {
     { key: 'cooldown', label: 'Rebalance cooldown', help: 'Minimum time between rebalances. Short cooldowns follow the price closely and pay more swap fees.', group: 'Operations', input: 'number', encoding: 'u32', unit: 'minutes', min: AQ_BOUNDS.cooldownMinSecs / 60, max: AQ_BOUNDS.cooldownMaxSecs / 60, step: 1, scale: 60, default: '60' },
     { key: 'fee', label: 'Performance fee', help: 'Share of earned fees paid to the owner as vault shares. Hard maximum 20%.', group: 'Safety', input: 'number', encoding: 'u32', unit: '%', min: 0, max: AQ_BOUNDS.feeMaxBps / 100, step: 0.1, scale: 100, default: '10' },
     { key: 'cap', label: 'Deposit cap', help: 'Total deposits the vault accepts, in the deposit token. Keep it small while the vault is new.', group: 'Safety', input: 'amount', encoding: 'i128', unit: 'tokens', min: 1, step: 1, default: '1000' },
-    { key: 'slippage', label: 'Max swap slippage', help: 'Rebalance and exit swaps revert if they would lose more than this versus the pool price. Hard maximum 5%.', group: 'Safety', input: 'number', encoding: 'u32', unit: '%', min: 0.1, max: AQ_BOUNDS.slippageMaxBps / 100, step: 0.1, scale: 100, default: '1' },
+    { key: 'slippage', label: 'Max swap slippage', help: 'Rebalance and exit swaps revert if they would lose more than this versus the pool price. Between 0.5% and 5% (pool fees alone cost about 0.15% of a rebalance).', group: 'Safety', input: 'number', encoding: 'u32', unit: '%', min: 0.5, max: AQ_BOUNDS.slippageMaxBps / 100, step: 0.1, scale: 100, default: '1' },
   ],
   validate,
   preview,
