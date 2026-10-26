@@ -44,7 +44,6 @@ How to read this file (for the deck and video LLM):
 - Do not say "audited" for the factories, adapters, launchpad, vaults, frontend or keeper; only the imported core is audited, and its timelocks were changed.
 - Do not claim TVL, users or volume: one depositor (the deployer), about 5 USD.
 - Do not claim CI is green (red on all runs) or that Albedo signing works for Soroban transactions (unverified).
-- Update 11:56 UTC: `/llms.txt`, `/robots.txt` and `/sitemap.xml` are now served with HTTP 200 on both https://markets.peridot.finance and https://test-markets.peridot.finance (redeployed from commit 6b43fbd; verified by curl). The droplet's `/etc/peridot-web/deployed-commit` reads `6b43fbd`. The /vaults page copy may still say "testnet" for Zenex and XOXNO although demo vaults exist on mainnet.
 - Do not use the 1 hour-ahead `[A]` times in `docs/COORDINATION.md`; use chain times.
 
 ## 0. One-paragraph truth
