@@ -1,0 +1,777 @@
+[
+  {
+    "flow": "D-margin/X",
+    "step": "marginContext: status, effective leverage per market",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:35:50.215Z",
+    "note": "enabled=2 limits={\"CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L\":3,\"CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776\":3} maxLev=3 slippage=100000"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "pair config exists for (XLM,USDT,Long) after launch (sync_pairs/set_market_margin)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 353,
+    "startedAt": "2026-10-26T00:35:50.219Z",
+    "note": "pair max_leverage=3 open_slip=100000 close_slip=100000 max_open_dev=100000"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quote: leverage 1x refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 307,
+    "startedAt": "2026-10-26T00:35:50.574Z",
+    "error": "Error: Leverage must be an integer between 2 and 3."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quote: leverage 9x refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 158,
+    "startedAt": "2026-10-26T00:35:50.882Z",
+    "error": "Error: Leverage must be an integer between 2 and 3."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quote: same asset refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:35:51.041Z",
+    "error": "Error: Choose two different assets."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quote: margin larger than supplied balance refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 3449,
+    "startedAt": "2026-10-26T00:35:51.042Z",
+    "error": "Error: Supply more margin collateral before opening this position."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quoteOpen 100 XLM 2x long USDT, slippage 10%",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2868,
+    "startedAt": "2026-10-26T00:35:54.492Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "quote contents",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:35:57.361Z",
+    "note": "route=CCMNSENXDBNJSY72BDIPH5CCXLLHBKZ4LXTRKDLKZN4UI2NJFQLWTLD6 expectedOut=355370940 minOut=319833846 feeShares=0 total=1000000000 free=0 maxLev=3 closeFeeBps=0"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "openPosition (fee quote, transfer, begin_open, swap, activate)",
+    "status": "PASS",
+    "hashes": [
+      "20a6b5fbc98a55b654b82fb22923c98f15534a4faad95067309eacee774b837c",
+      "43516b3a2303c9f12d67b8835d74fe168cf95ac7ece691c0f930d96bd23ba71f",
+      "67fd1411bb5ba2b5aa3d759fb1e1af465faf512dab091d4251d638d8654f4d82",
+      "6a4363cc2ea349dccadfee3ece8399fe3914be0d1347dda6fac63490d747169a"
+    ],
+    "sims": [
+      {
+        "instructions": 52726300,
+        "readBytes": 0,
+        "writeBytes": 3048,
+        "readOnlyEntries": 109,
+        "readWriteEntries": 21,
+        "ledgerEntries": 130,
+        "resourceFee": "86227"
+      },
+      {
+        "instructions": 49638643,
+        "readBytes": 0,
+        "writeBytes": 5724,
+        "readOnlyEntries": 123,
+        "readWriteEntries": 15,
+        "ledgerEntries": 138,
+        "resourceFee": "2389865"
+      },
+      {
+        "instructions": 58752146,
+        "readBytes": 0,
+        "writeBytes": 6268,
+        "readOnlyEntries": 67,
+        "readWriteEntries": 28,
+        "ledgerEntries": 95,
+        "resourceFee": "1270287"
+      },
+      {
+        "instructions": 71636487,
+        "readBytes": 0,
+        "writeBytes": 4084,
+        "readOnlyEntries": 111,
+        "readWriteEntries": 22,
+        "ledgerEntries": 133,
+        "resourceFee": "736619"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "20a6b5fbc98a55b654b82fb22923c98f15534a4faad95067309eacee774b837c",
+        "ledger": 5390278,
+        "feeCharged": "78431",
+        "resources": {
+          "instructions": 52726300,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 109,
+          "readWriteEntries": 21,
+          "ledgerEntries": 130,
+          "resourceFee": "86227"
+        }
+      },
+      {
+        "hash": "43516b3a2303c9f12d67b8835d74fe168cf95ac7ece691c0f930d96bd23ba71f",
+        "ledger": 5390282,
+        "feeCharged": "2080674",
+        "resources": {
+          "instructions": 49638643,
+          "readBytes": 0,
+          "writeBytes": 5724,
+          "readOnlyEntries": 123,
+          "readWriteEntries": 15,
+          "ledgerEntries": 138,
+          "resourceFee": "2389865"
+        }
+      },
+      {
+        "hash": "67fd1411bb5ba2b5aa3d759fb1e1af465faf512dab091d4251d638d8654f4d82",
+        "ledger": 5390285,
+        "feeCharged": "1109245",
+        "resources": {
+          "instructions": 58752146,
+          "readBytes": 0,
+          "writeBytes": 6268,
+          "readOnlyEntries": 67,
+          "readWriteEntries": 28,
+          "ledgerEntries": 95,
+          "resourceFee": "1270287"
+        }
+      },
+      {
+        "hash": "6a4363cc2ea349dccadfee3ece8399fe3914be0d1347dda6fac63490d747169a",
+        "ledger": 5390287,
+        "feeCharged": "644883",
+        "resources": {
+          "instructions": 71636487,
+          "readBytes": 0,
+          "writeBytes": 4084,
+          "readOnlyEntries": 111,
+          "readWriteEntries": 22,
+          "ledgerEntries": 133,
+          "resourceFee": "736619"
+        }
+      }
+    ],
+    "ms": 70482,
+    "startedAt": "2026-10-26T00:35:57.362Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert position Open with debt>0, collateral>0, perps set",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:37:10.862Z",
+    "note": "#6 Long health=10495936 debt=999999995 collateral=355370940 liqPrice=2.9620642973345275"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "closePosition (prepare, swap, finish)",
+    "status": "PASS",
+    "hashes": [
+      "ff77f742e2037285a84b3c3724361625330d5f22a607d2a8c26c06ce05edfc82",
+      "8f64329227ac71aac43ced5cc2441fd6267fdec1ffdd01da004cfe653aef5c65",
+      "8c2abb03720449a91bad5506af6972b93f30e89ad4c8055e321d8f9e0acb14a8"
+    ],
+    "sims": [
+      {
+        "instructions": 40600811,
+        "readBytes": 0,
+        "writeBytes": 2828,
+        "readOnlyEntries": 66,
+        "readWriteEntries": 15,
+        "ledgerEntries": 81,
+        "resourceFee": "418320"
+      },
+      {
+        "instructions": 36519743,
+        "readBytes": 0,
+        "writeBytes": 4332,
+        "readOnlyEntries": 78,
+        "readWriteEntries": 14,
+        "ledgerEntries": 92,
+        "resourceFee": "60925"
+      },
+      {
+        "instructions": 75602594,
+        "readBytes": 0,
+        "writeBytes": 3980,
+        "readOnlyEntries": 54,
+        "readWriteEntries": 37,
+        "ledgerEntries": 91,
+        "resourceFee": "106256"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ff77f742e2037285a84b3c3724361625330d5f22a607d2a8c26c06ce05edfc82",
+        "ledger": 5390290,
+        "feeCharged": "365278",
+        "resources": {
+          "instructions": 40600811,
+          "readBytes": 0,
+          "writeBytes": 2828,
+          "readOnlyEntries": 66,
+          "readWriteEntries": 15,
+          "ledgerEntries": 81,
+          "resourceFee": "418320"
+        }
+      },
+      {
+        "hash": "8f64329227ac71aac43ced5cc2441fd6267fdec1ffdd01da004cfe653aef5c65",
+        "ledger": 5390293,
+        "feeCharged": "54303",
+        "resources": {
+          "instructions": 36519743,
+          "readBytes": 0,
+          "writeBytes": 4332,
+          "readOnlyEntries": 78,
+          "readWriteEntries": 14,
+          "ledgerEntries": 92,
+          "resourceFee": "60925"
+        }
+      },
+      {
+        "hash": "8c2abb03720449a91bad5506af6972b93f30e89ad4c8055e321d8f9e0acb14a8",
+        "ledger": 5390295,
+        "feeCharged": "99040",
+        "resources": {
+          "instructions": 75602594,
+          "readBytes": 0,
+          "writeBytes": 3980,
+          "readOnlyEntries": 54,
+          "readWriteEntries": 37,
+          "ledgerEntries": 91,
+          "resourceFee": "106256"
+        }
+      }
+    ],
+    "ms": 38483,
+    "startedAt": "2026-10-26T00:37:10.864Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert position gone after close",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:37:49.533Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "free margin remaining after close (returned to margin account)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:37:50.125Z",
+    "note": "free margin ptokens XLM=988023423"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "withdrawMargin: return free margin to supply",
+    "status": "PASS",
+    "hashes": [
+      "48533d4f5bd5214abdf176cd17389678fef538d7841600d1cff4e6fa96bec453"
+    ],
+    "sims": [
+      {
+        "instructions": 41753804,
+        "readBytes": 0,
+        "writeBytes": 2904,
+        "readOnlyEntries": 76,
+        "readWriteEntries": 20,
+        "ledgerEntries": 96,
+        "resourceFee": "69792"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "48533d4f5bd5214abdf176cd17389678fef538d7841600d1cff4e6fa96bec453",
+        "ledger": 5390298,
+        "feeCharged": "63254",
+        "resources": {
+          "instructions": 41753804,
+          "readBytes": 0,
+          "writeBytes": 2904,
+          "readOnlyEntries": 76,
+          "readWriteEntries": 20,
+          "ledgerEntries": 96,
+          "resourceFee": "69792"
+        }
+      }
+    ],
+    "ms": 13488,
+    "startedAt": "2026-10-26T00:37:50.126Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "interrupted open: wallet popup closed at signature 3 (swap) -> leaves pending open",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [
+      "4a29b0f63fa9d4293d60e91e766e13ad7b3e1e44ee2822ea8406e5b406e2fdb6",
+      "4fade3c9420bc5230cbfd83e13276700593f33e4db9930555867bb0a51a43749"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "4a29b0f63fa9d4293d60e91e766e13ad7b3e1e44ee2822ea8406e5b406e2fdb6",
+        "ledger": 5390305,
+        "feeCharged": "78228",
+        "resources": {
+          "instructions": 52726300,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 109,
+          "readWriteEntries": 21,
+          "ledgerEntries": 130,
+          "resourceFee": "85994"
+        }
+      },
+      {
+        "hash": "4fade3c9420bc5230cbfd83e13276700593f33e4db9930555867bb0a51a43749",
+        "ledger": 5390309,
+        "feeCharged": "2080658",
+        "resources": {
+          "instructions": 49585620,
+          "readBytes": 0,
+          "writeBytes": 5724,
+          "readOnlyEntries": 123,
+          "readWriteEntries": 15,
+          "ledgerEntries": 138,
+          "resourceFee": "2389849"
+        }
+      }
+    ],
+    "ms": 37662,
+    "startedAt": "2026-10-26T00:38:22.618Z",
+    "error": "Error: User closed wallet popup at signature 3"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert a PendingOpen position exists after interruption",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:39:02.169Z",
+    "note": "#7 expires_at=1792976932 (now 1792975142) ttl=1790s"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "second open while a pending open exists is refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1559,
+    "startedAt": "2026-10-26T00:39:02.170Z",
+    "error": "Error: Resume or cancel the existing pending open before creating another position."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "resumeOpen (swap + activate)",
+    "status": "PASS",
+    "hashes": [
+      "f3259155e49bb566cf09f0150c5ce287f4159836c27013d749e3991ff14facca",
+      "4092c870c3a72e0cd574272e88520a61027acb8e18feaff4a33737fa58575172"
+    ],
+    "sims": [
+      {
+        "instructions": 58752146,
+        "readBytes": 0,
+        "writeBytes": 6268,
+        "readOnlyEntries": 67,
+        "readWriteEntries": 28,
+        "ledgerEntries": 95,
+        "resourceFee": "1270287"
+      },
+      {
+        "instructions": 71612463,
+        "readBytes": 0,
+        "writeBytes": 4084,
+        "readOnlyEntries": 111,
+        "readWriteEntries": 22,
+        "ledgerEntries": 133,
+        "resourceFee": "736574"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f3259155e49bb566cf09f0150c5ce287f4159836c27013d749e3991ff14facca",
+        "ledger": 5390312,
+        "feeCharged": "1109245",
+        "resources": {
+          "instructions": 58752146,
+          "readBytes": 0,
+          "writeBytes": 6268,
+          "readOnlyEntries": 67,
+          "readWriteEntries": 28,
+          "ledgerEntries": 95,
+          "resourceFee": "1270287"
+        }
+      },
+      {
+        "hash": "4092c870c3a72e0cd574272e88520a61027acb8e18feaff4a33737fa58575172",
+        "ledger": 5390314,
+        "feeCharged": "644843",
+        "resources": {
+          "instructions": 71612463,
+          "readBytes": 0,
+          "writeBytes": 4084,
+          "readOnlyEntries": 111,
+          "readWriteEntries": 22,
+          "ledgerEntries": 133,
+          "resourceFee": "736574"
+        }
+      }
+    ],
+    "ms": 19773,
+    "startedAt": "2026-10-26T00:39:03.730Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert resumed position is Open",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:39:25.517Z",
+    "note": "health 10498783"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "close resumed position",
+    "status": "PASS",
+    "hashes": [
+      "c57dfc958d3079f3d38f4c309fd6e266375d86c77a43f87060926aa715ae3b31",
+      "39683a7fbba1df0c2845901e4ac737b821adbf0226b0c5f911bacc9514a6d987",
+      "bf58ff66f8518eff8d02bf4975a8c4394a05b4f50eea7400d150d5e8b29f49d0"
+    ],
+    "sims": [
+      {
+        "instructions": 40600811,
+        "readBytes": 0,
+        "writeBytes": 2828,
+        "readOnlyEntries": 66,
+        "readWriteEntries": 15,
+        "ledgerEntries": 81,
+        "resourceFee": "418320"
+      },
+      {
+        "instructions": 36526719,
+        "readBytes": 0,
+        "writeBytes": 4332,
+        "readOnlyEntries": 78,
+        "readWriteEntries": 14,
+        "ledgerEntries": 92,
+        "resourceFee": "60928"
+      },
+      {
+        "instructions": 75491251,
+        "readBytes": 0,
+        "writeBytes": 3980,
+        "readOnlyEntries": 54,
+        "readWriteEntries": 37,
+        "ledgerEntries": 91,
+        "resourceFee": "106223"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "c57dfc958d3079f3d38f4c309fd6e266375d86c77a43f87060926aa715ae3b31",
+        "ledger": 5390317,
+        "feeCharged": "365278",
+        "resources": {
+          "instructions": 40600811,
+          "readBytes": 0,
+          "writeBytes": 2828,
+          "readOnlyEntries": 66,
+          "readWriteEntries": 15,
+          "ledgerEntries": 81,
+          "resourceFee": "418320"
+        }
+      },
+      {
+        "hash": "39683a7fbba1df0c2845901e4ac737b821adbf0226b0c5f911bacc9514a6d987",
+        "ledger": 5390320,
+        "feeCharged": "54306",
+        "resources": {
+          "instructions": 36526719,
+          "readBytes": 0,
+          "writeBytes": 4332,
+          "readOnlyEntries": 78,
+          "readWriteEntries": 14,
+          "ledgerEntries": 92,
+          "resourceFee": "60928"
+        }
+      },
+      {
+        "hash": "bf58ff66f8518eff8d02bf4975a8c4394a05b4f50eea7400d150d5e8b29f49d0",
+        "ledger": 5390322,
+        "feeCharged": "99007",
+        "resources": {
+          "instructions": 75491251,
+          "readBytes": 0,
+          "writeBytes": 3980,
+          "readOnlyEntries": 54,
+          "readWriteEntries": 37,
+          "ledgerEntries": 91,
+          "resourceFee": "106223"
+        }
+      }
+    ],
+    "ms": 39413,
+    "startedAt": "2026-10-26T00:39:25.519Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "interrupted open #2 (signature 3)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [
+      "d9992b6e43487693cb181f72c65fe50366c7a7b2181ca4e6b5b48b62488fc506",
+      "0a31b80ef89574a1ee122e8a36ed7d266bd285bc9dc4407d921ecd714b97d53a"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "d9992b6e43487693cb181f72c65fe50366c7a7b2181ca4e6b5b48b62488fc506",
+        "ledger": 5390331,
+        "feeCharged": "78228",
+        "resources": {
+          "instructions": 52726300,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 109,
+          "readWriteEntries": 21,
+          "ledgerEntries": 130,
+          "resourceFee": "85996"
+        }
+      },
+      {
+        "hash": "0a31b80ef89574a1ee122e8a36ed7d266bd285bc9dc4407d921ecd714b97d53a",
+        "ledger": 5390335,
+        "feeCharged": "2080651",
+        "resources": {
+          "instructions": 49560098,
+          "readBytes": 0,
+          "writeBytes": 5724,
+          "readOnlyEntries": 123,
+          "readWriteEntries": 15,
+          "ledgerEntries": 138,
+          "resourceFee": "2389842"
+        }
+      }
+    ],
+    "ms": 45247,
+    "startedAt": "2026-10-26T00:40:29.201Z",
+    "error": "Error: User closed wallet popup at signature 3"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "cancelOpen recovers margin",
+    "status": "PASS",
+    "hashes": [
+      "57461ca9b8212732fe3b7109c148c1a88979190f8776a977ee5439405c89bf96"
+    ],
+    "sims": [
+      {
+        "instructions": 13569330,
+        "readBytes": 0,
+        "writeBytes": 704,
+        "readOnlyEntries": 52,
+        "readWriteEntries": 16,
+        "ledgerEntries": 68,
+        "resourceFee": "46297"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "57461ca9b8212732fe3b7109c148c1a88979190f8776a977ee5439405c89bf96",
+        "ledger": 5390339,
+        "feeCharged": "40669",
+        "resources": {
+          "instructions": 13569330,
+          "readBytes": 0,
+          "writeBytes": 704,
+          "readOnlyEntries": 52,
+          "readWriteEntries": 16,
+          "ledgerEntries": 68,
+          "resourceFee": "46297"
+        }
+      }
+    ],
+    "ms": 11194,
+    "startedAt": "2026-10-26T00:41:16.845Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert pending open gone after cancel",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:41:28.492Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "withdrawMargin after cancel",
+    "status": "PASS",
+    "hashes": [
+      "59aa11416e4bd683d989ffd103a7c4ce3497238fd257c3f83febc32373e6d304"
+    ],
+    "sims": [
+      {
+        "instructions": 41753804,
+        "readBytes": 0,
+        "writeBytes": 2904,
+        "readOnlyEntries": 76,
+        "readWriteEntries": 20,
+        "ledgerEntries": 96,
+        "resourceFee": "69791"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "59aa11416e4bd683d989ffd103a7c4ce3497238fd257c3f83febc32373e6d304",
+        "ledger": 5390342,
+        "feeCharged": "63254",
+        "resources": {
+          "instructions": 41753804,
+          "readBytes": 0,
+          "writeBytes": 2904,
+          "readOnlyEntries": 76,
+          "readWriteEntries": 20,
+          "ledgerEntries": 96,
+          "resourceFee": "69791"
+        }
+      }
+    ],
+    "ms": 13792,
+    "startedAt": "2026-10-26T00:41:29.181Z"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "interrupted open #3 (signature 2: after transfer_spot_to_margin, before begin_open)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [
+      "5e53e51b16f9b3565ecc4c9cea2a67eae29026212faaf7b69083069755fba3cc"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "5e53e51b16f9b3565ecc4c9cea2a67eae29026212faaf7b69083069755fba3cc",
+        "ledger": 5390348,
+        "feeCharged": "78223",
+        "resources": {
+          "instructions": 52726300,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 109,
+          "readWriteEntries": 21,
+          "ledgerEntries": 130,
+          "resourceFee": "85988"
+        }
+      }
+    ],
+    "ms": 23192,
+    "startedAt": "2026-10-26T00:41:56.239Z",
+    "error": "Error: User closed wallet popup at signature 2 The confirmed transfer remains recoverable: refresh positions first; if no pending open exists, use Return margin to supply below."
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "assert funds are stranded as free margin after transfer-only interruption",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:42:19.766Z",
+    "note": "free margin ptokens=500000000"
+  },
+  {
+    "flow": "D-margin/X",
+    "step": "withdrawMargin returns stranded margin to supply",
+    "status": "PASS",
+    "hashes": [
+      "3a78bb58fac5aab11b3352f6f52c65cdc309ce1853ebf56da56485667611768f"
+    ],
+    "sims": [
+      {
+        "instructions": 41753804,
+        "readBytes": 0,
+        "writeBytes": 2904,
+        "readOnlyEntries": 76,
+        "readWriteEntries": 20,
+        "ledgerEntries": 96,
+        "resourceFee": "69790"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "3a78bb58fac5aab11b3352f6f52c65cdc309ce1853ebf56da56485667611768f",
+        "ledger": 5390352,
+        "feeCharged": "63252",
+        "resources": {
+          "instructions": 41753804,
+          "readBytes": 0,
+          "writeBytes": 2904,
+          "readOnlyEntries": 76,
+          "readWriteEntries": 20,
+          "ledgerEntries": 96,
+          "resourceFee": "69790"
+        }
+      }
+    ],
+    "ms": 13370,
+    "startedAt": "2026-10-26T00:42:19.768Z"
+  }
+]

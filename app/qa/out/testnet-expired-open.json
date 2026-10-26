@@ -1,0 +1,273 @@
+[
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "enter_market XLM",
+    "status": "PASS",
+    "hashes": [
+      "8c61f0a7616b6b20993af75a7ef9366f08cc7b20b5bf8b9ba0cb8f8009b1aa00"
+    ],
+    "sims": [
+      {
+        "instructions": 2384320,
+        "readBytes": 0,
+        "writeBytes": 476,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "183971"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8c61f0a7616b6b20993af75a7ef9366f08cc7b20b5bf8b9ba0cb8f8009b1aa00",
+        "ledger": 5389700,
+        "feeCharged": "156829",
+        "resources": {
+          "instructions": 2384320,
+          "readBytes": 0,
+          "writeBytes": 476,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "183971"
+        }
+      }
+    ],
+    "ms": 5878,
+    "startedAt": "2026-10-25T23:48:02.672Z"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "supply 300 XLM",
+    "status": "PASS",
+    "hashes": [
+      "5610d60b8cb5115e0833bf5d0c42793c8b66555ffcc8966472f395e882770371"
+    ],
+    "sims": [
+      {
+        "instructions": 25177380,
+        "readBytes": 144,
+        "writeBytes": 2776,
+        "readOnlyEntries": 50,
+        "readWriteEntries": 18,
+        "ledgerEntries": 68,
+        "resourceFee": "841451"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "5610d60b8cb5115e0833bf5d0c42793c8b66555ffcc8966472f395e882770371",
+        "ledger": 5389703,
+        "feeCharged": "733108",
+        "resources": {
+          "instructions": 25177380,
+          "readBytes": 144,
+          "writeBytes": 2776,
+          "readOnlyEntries": 50,
+          "readWriteEntries": 18,
+          "ledgerEntries": 68,
+          "resourceFee": "841451"
+        }
+      }
+    ],
+    "ms": 7883,
+    "startedAt": "2026-10-25T23:48:15.941Z"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "enter_market USDT",
+    "status": "PASS",
+    "hashes": [
+      "b1e91b9c278cb43d67110a48fe67fe60fc972d90a48178bf4a6a33bb39dc13b4"
+    ],
+    "sims": [
+      {
+        "instructions": 2401010,
+        "readBytes": 0,
+        "writeBytes": 516,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "49430"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "b1e91b9c278cb43d67110a48fe67fe60fc972d90a48178bf4a6a33bb39dc13b4",
+        "ledger": 5389704,
+        "feeCharged": "39839",
+        "resources": {
+          "instructions": 2401010,
+          "readBytes": 0,
+          "writeBytes": 516,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "49430"
+        }
+      }
+    ],
+    "ms": 4161,
+    "startedAt": "2026-10-25T23:48:23.825Z"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "open interrupted before swap (pending open left)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [
+      "fe2c9f16469547144961fcb78a2d51f3563c195c781e3a3046701799f6e0f044",
+      "41148782b20980d4ec6c3d2d268a68559391b3533701e90aeac8113183f1b36e"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "fe2c9f16469547144961fcb78a2d51f3563c195c781e3a3046701799f6e0f044",
+        "ledger": 5389708,
+        "feeCharged": "567383",
+        "resources": {
+          "instructions": 52414831,
+          "readBytes": 0,
+          "writeBytes": 3048,
+          "readOnlyEntries": 110,
+          "readWriteEntries": 21,
+          "ledgerEntries": 131,
+          "resourceFee": "648525"
+        }
+      },
+      {
+        "hash": "41148782b20980d4ec6c3d2d268a68559391b3533701e90aeac8113183f1b36e",
+        "ledger": 5389711,
+        "feeCharged": "2200888",
+        "resources": {
+          "instructions": 49579258,
+          "readBytes": 0,
+          "writeBytes": 5724,
+          "readOnlyEntries": 123,
+          "readWriteEntries": 15,
+          "ledgerEntries": 138,
+          "resourceFee": "2528114"
+        }
+      }
+    ],
+    "ms": 33969,
+    "startedAt": "2026-10-25T23:48:37.685Z",
+    "error": "Error: User closed wallet popup at signature 3"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "pending open expires_at recorded",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:49:14.715Z",
+    "note": "expires_at=1792973942 ttl_left=1788s"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "resumeOpen on expired unswapped open -> app refuses with recovery text",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2378,
+    "startedAt": "2026-10-26T00:19:47.701Z",
+    "error": "Error: This unswapped open expired. Cancel pending open to recover its margin."
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "raw swap_open_position_v3 on expired open (chain behaviour)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 489,
+    "startedAt": "2026-10-26T00:19:50.082Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CBCEB45BRBIEQ33WFMMYY5IW7OEGSYH3YHFSYIXDIKAFGSFF3QM3F4FN, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", swap_open_position_v3]\n   1: [Diagnostic Event] topics:[fn_call, CBCEB45BRBIEQ33WFMMYY5IW7OEGSYH3YHFSYIXDIKAFGSFF3QM3F4FN, swap_open_position_v3], data:[GAQKUALEDMPJ6YGWPPTPNVDZTSO5LB4XPTCMP7GDUMN5UBN4VRWUGGZV, 4]\n"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "cancelOpen recovers margin of expired open",
+    "status": "PASS",
+    "hashes": [
+      "471e7eeb99a0779cd99a3e932dd4e631932a89c62b6784eff0db1cbe9f81a8d6"
+    ],
+    "sims": [
+      {
+        "instructions": 13569330,
+        "readBytes": 0,
+        "writeBytes": 704,
+        "readOnlyEntries": 52,
+        "readWriteEntries": 16,
+        "ledgerEntries": 68,
+        "resourceFee": "46336"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "471e7eeb99a0779cd99a3e932dd4e631932a89c62b6784eff0db1cbe9f81a8d6",
+        "ledger": 5390082,
+        "feeCharged": "40703",
+        "resources": {
+          "instructions": 13569330,
+          "readBytes": 0,
+          "writeBytes": 704,
+          "readOnlyEntries": 52,
+          "readWriteEntries": 16,
+          "ledgerEntries": 68,
+          "resourceFee": "46336"
+        }
+      }
+    ],
+    "ms": 12958,
+    "startedAt": "2026-10-26T00:19:50.572Z"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "assert no pending open after cancel",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:20:04.233Z"
+  },
+  {
+    "flow": "E-edge/expired-pending-open",
+    "step": "withdrawMargin returns funds to supply",
+    "status": "PASS",
+    "hashes": [
+      "a077845bdf449f58aed62c9fc1ec00df180459b91268c513d1b4be0040e2f57c"
+    ],
+    "sims": [
+      {
+        "instructions": 41753804,
+        "readBytes": 0,
+        "writeBytes": 2904,
+        "readOnlyEntries": 76,
+        "readWriteEntries": 20,
+        "ledgerEntries": 96,
+        "resourceFee": "69852"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "a077845bdf449f58aed62c9fc1ec00df180459b91268c513d1b4be0040e2f57c",
+        "ledger": 5390084,
+        "feeCharged": "63306",
+        "resources": {
+          "instructions": 41753804,
+          "readBytes": 0,
+          "writeBytes": 2904,
+          "readOnlyEntries": 76,
+          "readWriteEntries": 20,
+          "ledgerEntries": 96,
+          "resourceFee": "69852"
+        }
+      }
+    ],
+    "ms": 9658,
+    "startedAt": "2026-10-26T00:20:04.235Z"
+  }
+]

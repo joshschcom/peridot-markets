@@ -1,0 +1,33 @@
+{
+  "X": {
+    "id": 2,
+    "markets": {
+      "0": "CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L",
+      "1": "CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776"
+    },
+    "name": "QaFull",
+    "distributor": "CBPRLRVZTRMK23KKXJXVS4E2ABMCXER653N2OXNWCOBENZ77PCF7BW67"
+  },
+  "Y": {
+    "id": 3,
+    "markets": {
+      "0": "CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS"
+    },
+    "name": "QaControl"
+  },
+  "W": {
+    "id": 4,
+    "markets": {
+      "0": "CBO4MWXAGRLW6QPEHZH664A3OY2TMFYKWGEPZMMOXYZNI3NJPC6K4NUN"
+    },
+    "name": "QaYield"
+  },
+  "Z": {
+    "id": 5,
+    "markets": {
+      "0": "CBCWGXU7MPCGVOVNNTI4PWTVNFNMND4SFJHCWNW6OIWYFAUWQXJS7UM3",
+      "1": "CA6E2WZ64K4PTADHE7ZDHJHZTKWRNXQFALTZDRUM4P45HP3TCK5376T7"
+    },
+    "name": "QaYieldMargin"
+  }
+}

@@ -1,0 +1,566 @@
+[
+  {
+    "flow": "C-control/X(margin)",
+    "step": "loadControl margin section",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:53:02.474Z",
+    "note": "margin enabled_markets=2 incentive_applied=true pools=1"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "update_risk USDT CF 75% -> 50% (staged)",
+    "status": "PASS",
+    "hashes": [
+      "3bf452086b5d659b8ebe18c6f3fbdbf71510fe6ce1bbfeb769e51190b872d198"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306529"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "3bf452086b5d659b8ebe18c6f3fbdbf71510fe6ce1bbfeb769e51190b872d198",
+        "ledger": 5389760,
+        "feeCharged": "263951",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306529"
+        }
+      }
+    ],
+    "ms": 4397,
+    "startedAt": "2026-10-25T23:53:02.875Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "applyPending (apply_pending then separate sync_pairs, as the UI does)",
+    "status": "PASS",
+    "hashes": [
+      "f2380463c1160bfa4b972b3b16798dbcbd72fe5290e77678d7678576f257af75",
+      "60fd3fcf30f0950c13648187016695ac696202a658c6410631e3be0a91471e79"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 46444552,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "27475"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f2380463c1160bfa4b972b3b16798dbcbd72fe5290e77678d7678576f257af75",
+        "ledger": 5389775,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "60fd3fcf30f0950c13648187016695ac696202a658c6410631e3be0a91471e79",
+        "ledger": 5389776,
+        "feeCharged": "22770",
+        "resources": {
+          "instructions": 46444552,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "27475"
+        }
+      }
+    ],
+    "ms": 10875,
+    "startedAt": "2026-10-25T23:54:17.820Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "assert pair-sync state cleared and group CF applied",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 7346,
+    "startedAt": "2026-10-25T23:54:28.697Z",
+    "note": "CF 500000; pair max_leverage before=3 after=3"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "effective_max_leverage on factory reflects new CF",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 351,
+    "startedAt": "2026-10-25T23:54:36.044Z",
+    "note": "effective(USDT market)=2"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "update_risk USDT CF 50% -> 75% (restore, staged)",
+    "status": "PASS",
+    "hashes": [
+      "a4c580efaaf1bab99b742a4cca22fba81a14a7ed3545ee1397f281fc111e51f9"
+    ],
+    "sims": [
+      {
+        "instructions": 5688319,
+        "readBytes": 0,
+        "writeBytes": 1564,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "306528"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "a4c580efaaf1bab99b742a4cca22fba81a14a7ed3545ee1397f281fc111e51f9",
+        "ledger": 5389780,
+        "feeCharged": "263949",
+        "resources": {
+          "instructions": 5688319,
+          "readBytes": 0,
+          "writeBytes": 1564,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "306528"
+        }
+      }
+    ],
+    "ms": 6730,
+    "startedAt": "2026-10-25T23:54:41.596Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "applyPending restore",
+    "status": "PASS",
+    "hashes": [
+      "ac076acdbfd3d108ef13f650c55bda3f3044e6cfdfa797d8d189e2c5a759cabe",
+      "06b2659afebd5fa4aac82bdfba001647802d3ae16017e82d10be05c9d9bb3be7"
+    ],
+    "sims": [
+      {
+        "instructions": 5668257,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18198"
+      },
+      {
+        "instructions": 48290617,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "28029"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ac076acdbfd3d108ef13f650c55bda3f3044e6cfdfa797d8d189e2c5a759cabe",
+        "ledger": 5389794,
+        "feeCharged": "13335",
+        "resources": {
+          "instructions": 5668257,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18198"
+        }
+      },
+      {
+        "hash": "06b2659afebd5fa4aac82bdfba001647802d3ae16017e82d10be05c9d9bb3be7",
+        "ledger": 5389795,
+        "feeCharged": "23324",
+        "resources": {
+          "instructions": 48290617,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "28029"
+        }
+      }
+    ],
+    "ms": 10827,
+    "startedAt": "2026-10-25T23:55:53.563Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "updateMargin: staged incentive 108% -> 105%",
+    "status": "PASS",
+    "hashes": [
+      "fe03fad04d335e278b818044380e1076c4bf246eeda04de3665c3eba6e74ecf5"
+    ],
+    "sims": [
+      {
+        "instructions": 57794914,
+        "readBytes": 0,
+        "writeBytes": 4540,
+        "readOnlyEntries": 35,
+        "readWriteEntries": 5,
+        "ledgerEntries": 40,
+        "resourceFee": "263964"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "fe03fad04d335e278b818044380e1076c4bf246eeda04de3665c3eba6e74ecf5",
+        "ledger": 5389797,
+        "feeCharged": "229873",
+        "resources": {
+          "instructions": 57794914,
+          "readBytes": 0,
+          "writeBytes": 4540,
+          "readOnlyEntries": 35,
+          "readWriteEntries": 5,
+          "ledgerEntries": 40,
+          "resourceFee": "263964"
+        }
+      }
+    ],
+    "ms": 4402,
+    "startedAt": "2026-10-25T23:56:08.366Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "pending margin incentive visible",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:56:17.001Z",
+    "note": "eta in 55s"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "apply margin incentive before delay -> refused",
+    "status": "FAIL",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1523,
+    "startedAt": "2026-10-25T23:56:17.003Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, topics:[error, Error(WasmVm, InvalidAction)], data:\"escalating error to VM trap from failed host function call: call\"\n   1: [Diagnostic Event] contract:CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, topics:[error, Error(WasmVm, InvalidAction)], data:[\"contract call failed\", update_margin_params, [CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, 2, 1050000, 0]]\n   2: [Failed Diagnostic Event (not emitted)] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[log], data:[\"VM call trapped with HostError\", update_margin_params, Error(WasmVm, InvalidAction)]\n   3: [Failed Diagnostic Event (not emitted)] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(WasmVm, InvalidAction)], data:\"escalating error to VM trap from failed host function call: call\"\n   4: [Failed Diagnostic Event (not emitted)] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(WasmVm, InvalidAction)], data:[\"contract call failed\", set_liquidation_incentive, [1050000]]\n   5: [Failed Diagnostic Event (not emitted)] contract:CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", set_liquidation_incentive]\n   6: [Failed Diagnostic Event (not emitted)] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[fn_call, CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, set_liquidation_incentive], data:1050000\n   7: [Diagnostic Event] contract:CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, update_margin_params], data:[CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, 2, 1050000, 0]\n   8: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[fn_return, get_group], data:{controller: CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, created_at: 1792970932, id: 2, keeper_mode: [None], keeper_paid_until: 0, margin_controller: CBCEB45BRBIEQ33WFMMYY5IW7OEGSYH3YHFSYIXDIKAFGSFF3QM3F4FN, markets: [CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L, CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776], name: QaFull, owner: GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, price_router: CCTQDPB4DP46F3BEEQ6CIHQ7E6PF6T5PDJ3QT7HWVO4PPZJPODHJI3XK, reward_distributor: CBPRLRVZTRMK23KKXJXVS4E2ABMCXER653N2OXNWCOBENZ77PCF7BW67}\n   9: [Diagnostic Event] contract:CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, get_group], data:2\n   10: [Diagnostic Event] topics:[fn_call, CDVJHWISUVSNSQUHUG7PBOYFX4XW3OCFBGUBG5SK54QBZHRRHJF4MKA7, apply_margin], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 2]\n"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "apply margin incentive after delay",
+    "status": "PASS",
+    "hashes": [
+      "70ecffce4ce47d183787e695382fb51eb44775d9ed84e9e5590e05854e9d5c3a"
+    ],
+    "sims": [
+      {
+        "instructions": 10249061,
+        "readBytes": 0,
+        "writeBytes": 1076,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 5,
+        "ledgerEntries": 19,
+        "resourceFee": "21910"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "70ecffce4ce47d183787e695382fb51eb44775d9ed84e9e5590e05854e9d5c3a",
+        "ledger": 5389812,
+        "feeCharged": "16828",
+        "resources": {
+          "instructions": 10249061,
+          "readBytes": 0,
+          "writeBytes": 1076,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 5,
+          "ledgerEntries": 19,
+          "resourceFee": "21910"
+        }
+      }
+    ],
+    "ms": 6217,
+    "startedAt": "2026-10-25T23:57:22.572Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "assert incentive applied = 105%",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 3851,
+    "startedAt": "2026-10-25T23:57:28.789Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "updateMargin: restore 108%",
+    "status": "PASS",
+    "hashes": [
+      "346d417a8f10db900ef91713673dc5ee8bd2b0bbb84aa422a8178df87f8cc2aa"
+    ],
+    "sims": [
+      {
+        "instructions": 57794914,
+        "readBytes": 0,
+        "writeBytes": 4540,
+        "readOnlyEntries": 35,
+        "readWriteEntries": 5,
+        "ledgerEntries": 40,
+        "resourceFee": "263964"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "346d417a8f10db900ef91713673dc5ee8bd2b0bbb84aa422a8178df87f8cc2aa",
+        "ledger": 5389814,
+        "feeCharged": "229873",
+        "resources": {
+          "instructions": 57794914,
+          "readBytes": 0,
+          "writeBytes": 4540,
+          "readOnlyEntries": 35,
+          "readWriteEntries": 5,
+          "ledgerEntries": 40,
+          "resourceFee": "263964"
+        }
+      }
+    ],
+    "ms": 4865,
+    "startedAt": "2026-10-25T23:57:32.641Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "apply restore",
+    "status": "PASS",
+    "hashes": [
+      "f93f2f3f4811b8b5c71f7eefcdd386bc40dfb7f88dce760d7a3eebc78ad935a8"
+    ],
+    "sims": [
+      {
+        "instructions": 10249061,
+        "readBytes": 0,
+        "writeBytes": 1076,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 5,
+        "ledgerEntries": 19,
+        "resourceFee": "21910"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f93f2f3f4811b8b5c71f7eefcdd386bc40dfb7f88dce760d7a3eebc78ad935a8",
+        "ledger": 5389829,
+        "feeCharged": "16828",
+        "resources": {
+          "instructions": 10249061,
+          "readBytes": 0,
+          "writeBytes": 1076,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 5,
+          "ledgerEntries": 19,
+          "resourceFee": "21910"
+        }
+      }
+    ],
+    "ms": 9095,
+    "startedAt": "2026-10-25T23:58:43.784Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "updateMargin: leverage 7x -> client guardrail",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:58:52.880Z",
+    "error": "Error: Maximum leverage must be between 1x and 5x."
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "updateMargin: incentive 120% -> client guardrail",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:58:52.881Z",
+    "error": "Error: Liquidation incentive must be between 102% and 110%."
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "set_market_margin USDT off",
+    "status": "PASS",
+    "hashes": [
+      "e6079bf1955c214c10a8d358cce96668b4c8b87d8454b53e82d33e8aeefd0864"
+    ],
+    "sims": [
+      {
+        "instructions": 42669271,
+        "readBytes": 0,
+        "writeBytes": 4188,
+        "readOnlyEntries": 22,
+        "readWriteEntries": 2,
+        "ledgerEntries": 24,
+        "resourceFee": "28235"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "e6079bf1955c214c10a8d358cce96668b4c8b87d8454b53e82d33e8aeefd0864",
+        "ledger": 5389830,
+        "feeCharged": "23449",
+        "resources": {
+          "instructions": 42669271,
+          "readBytes": 0,
+          "writeBytes": 4188,
+          "readOnlyEntries": 22,
+          "readWriteEntries": 2,
+          "ledgerEntries": 24,
+          "resourceFee": "28235"
+        }
+      }
+    ],
+    "ms": 4704,
+    "startedAt": "2026-10-25T23:58:52.882Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "set_market_margin USDT on",
+    "status": "PASS",
+    "hashes": [
+      "f227ac192056ce6bd7fa4fcb5999bbc352050167ba5720248a2415a202943341"
+    ],
+    "sims": [
+      {
+        "instructions": 51762996,
+        "readBytes": 0,
+        "writeBytes": 4188,
+        "readOnlyEntries": 32,
+        "readWriteEntries": 2,
+        "ledgerEntries": 34,
+        "resourceFee": "32437"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f227ac192056ce6bd7fa4fcb5999bbc352050167ba5720248a2415a202943341",
+        "ledger": 5389831,
+        "feeCharged": "27651",
+        "resources": {
+          "instructions": 51762996,
+          "readBytes": 0,
+          "writeBytes": 4188,
+          "readOnlyEntries": 32,
+          "readWriteEntries": 2,
+          "ledgerEntries": 34,
+          "resourceFee": "32437"
+        }
+      }
+    ],
+    "ms": 6935,
+    "startedAt": "2026-10-25T23:58:57.587Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "set_pool_allowed(false) -> app refuses (admin only)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:59:04.522Z",
+    "error": "Error: Only Peridot admin can revoke an exit pool or binding."
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "syncLeverageLimits manual",
+    "status": "PASS",
+    "hashes": [
+      "9a3f452cc65a6f9c9cf5f0afca416db3a0dbd3516f53c26f507d91f7ec44be07"
+    ],
+    "sims": [
+      {
+        "instructions": 48290617,
+        "readBytes": 0,
+        "writeBytes": 3352,
+        "readOnlyEntries": 28,
+        "readWriteEntries": 1,
+        "ledgerEntries": 29,
+        "resourceFee": "28029"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "9a3f452cc65a6f9c9cf5f0afca416db3a0dbd3516f53c26f507d91f7ec44be07",
+        "ledger": 5389833,
+        "feeCharged": "23324",
+        "resources": {
+          "instructions": 48290617,
+          "readBytes": 0,
+          "writeBytes": 3352,
+          "readOnlyEntries": 28,
+          "readWriteEntries": 1,
+          "ledgerEntries": 29,
+          "resourceFee": "28029"
+        }
+      }
+    ],
+    "ms": 8365,
+    "startedAt": "2026-10-25T23:59:04.523Z"
+  },
+  {
+    "flow": "C-control/X(margin)",
+    "step": "transfer_ownership to a valid G address -> app declines (needs 2 signatures)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:59:12.891Z",
+    "error": "Error: Ownership transfer requires both owners to authorize. This app does not yet support the second signature."
+  }
+]

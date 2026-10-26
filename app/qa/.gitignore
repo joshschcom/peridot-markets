@@ -1,0 +1,4 @@
+.secrets/
+*.secret
+out/*.log
+out/testnet-margin-prealign.json

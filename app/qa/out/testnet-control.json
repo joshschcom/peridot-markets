@@ -1,0 +1,896 @@
+[
+  {
+    "flow": "C-control/Y",
+    "step": "loadControl returns markets, no pending, history",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:48:35.337Z",
+    "note": "markets=1 pending=0 history=3 err="
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_rates (immediate)",
+    "status": "PASS",
+    "hashes": [
+      "c2b7929e5d47d60e96bfe9ba19eb7179b31e29f385bebc88aefda540b6b65cfe"
+    ],
+    "sims": [
+      {
+        "instructions": 2402207,
+        "readBytes": 0,
+        "writeBytes": 1632,
+        "readOnlyEntries": 6,
+        "readWriteEntries": 5,
+        "ledgerEntries": 11,
+        "resourceFee": "17898"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "c2b7929e5d47d60e96bfe9ba19eb7179b31e29f385bebc88aefda540b6b65cfe",
+        "ledger": 5389707,
+        "feeCharged": "13011",
+        "resources": {
+          "instructions": 2402207,
+          "readBytes": 0,
+          "writeBytes": 1632,
+          "readOnlyEntries": 6,
+          "readWriteEntries": 5,
+          "ledgerEntries": 11,
+          "resourceFee": "17898"
+        }
+      }
+    ],
+    "ms": 7673,
+    "startedAt": "2026-10-25T23:48:35.339Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "assert rates stored",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 146,
+    "startedAt": "2026-10-25T23:48:43.013Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_idle_buffer 35% (immediate)",
+    "status": "PASS",
+    "hashes": [
+      "0cc6fa4c3baeed14822c1f28e20c6fc9d099cc602559d5e726939860b90eeb90"
+    ],
+    "sims": [
+      {
+        "instructions": 5901428,
+        "readBytes": 0,
+        "writeBytes": 1288,
+        "readOnlyEntries": 35,
+        "readWriteEntries": 2,
+        "ledgerEntries": 37,
+        "resourceFee": "18770"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0cc6fa4c3baeed14822c1f28e20c6fc9d099cc602559d5e726939860b90eeb90",
+        "ledger": 5389708,
+        "feeCharged": "13901",
+        "resources": {
+          "instructions": 5901428,
+          "readBytes": 0,
+          "writeBytes": 1288,
+          "readOnlyEntries": 35,
+          "readWriteEntries": 2,
+          "ledgerEntries": 37,
+          "resourceFee": "18770"
+        }
+      }
+    ],
+    "ms": 4797,
+    "startedAt": "2026-10-25T23:48:43.160Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "assert idle buffer stored",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 127,
+    "startedAt": "2026-10-25T23:48:47.958Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_idle_buffer 5% -> guardrail (client)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:48:48.086Z",
+    "error": "Error: Kept liquid must be between 10% and 100%."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "DIAG raw update_idle_buffer 5% (chain guardrail)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 265,
+    "startedAt": "2026-10-25T23:48:48.087Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #23)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #23)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, update_idle_buffer], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, 500]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_rates 5000% -> client guardrail",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:48:48.353Z",
+    "error": "Error: Rate inputs must be 0% to 1,000%; kink must be 0% to 100%."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_risk CF 70% -> 60%, caps 400/150 (CF staged)",
+    "status": "PASS",
+    "hashes": [
+      "f71c826535269af3932d4a06d5894293c665c042bccf382b9b15cd6255ae5756"
+    ],
+    "sims": [
+      {
+        "instructions": 13702512,
+        "readBytes": 0,
+        "writeBytes": 1780,
+        "readOnlyEntries": 45,
+        "readWriteEntries": 5,
+        "ledgerEntries": 50,
+        "resourceFee": "437896"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f71c826535269af3932d4a06d5894293c665c042bccf382b9b15cd6255ae5756",
+        "ledger": 5389709,
+        "feeCharged": "379294",
+        "resources": {
+          "instructions": 13702512,
+          "readBytes": 0,
+          "writeBytes": 1780,
+          "readOnlyEntries": 45,
+          "readWriteEntries": 5,
+          "ledgerEntries": 50,
+          "resourceFee": "437896"
+        }
+      }
+    ],
+    "ms": 4478,
+    "startedAt": "2026-10-25T23:48:48.354Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "pending risk visible, caps applied immediately, CF still 70%",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:48:54.601Z",
+    "note": "executeAfter=1792972192 in 58s"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "apply_pending immediately -> must be refused (60s delay)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 423,
+    "startedAt": "2026-10-25T23:48:54.602Z",
+    "error": "Error: The 60-second delay has not elapsed for every market proposal."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "DIAG raw apply_pending before delay (chain behaviour)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 382,
+    "startedAt": "2026-10-25T23:48:55.026Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #44)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #44)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, apply_pending], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "apply_pending after delay (no margin => no sync_pairs)",
+    "status": "PASS",
+    "hashes": [
+      "519ba935afca203ac4aa01d7c36f7fd682f81eb4c83f728f33a7ddf77a40642a"
+    ],
+    "sims": [
+      {
+        "instructions": 5554971,
+        "readBytes": 0,
+        "writeBytes": 1328,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 4,
+        "ledgerEntries": 18,
+        "resourceFee": "18164"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "519ba935afca203ac4aa01d7c36f7fd682f81eb4c83f728f33a7ddf77a40642a",
+        "ledger": 5389724,
+        "feeCharged": "13301",
+        "resources": {
+          "instructions": 5554971,
+          "readBytes": 0,
+          "writeBytes": 1328,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 4,
+          "ledgerEntries": 18,
+          "resourceFee": "18164"
+        }
+      }
+    ],
+    "ms": 8272,
+    "startedAt": "2026-10-25T23:50:00.076Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "assert CF now 60% and nothing pending",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1862,
+    "startedAt": "2026-10-25T23:50:08.351Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_risk CF 90% -> client guardrail",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:50:10.385Z",
+    "error": "Error: Collateral factor must be between 1% and 75%."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "DIAG raw update_risk CF 90% (chain guardrail)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 231,
+    "startedAt": "2026-10-25T23:50:10.386Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #20)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #20)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, update_risk], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, 900000, 4000000000, 1500000000, 100000]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_risk zero supply cap -> client guardrail",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:50:10.618Z",
+    "error": "Error: Supply and borrow caps must be greater than zero."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "DIAG raw update_risk zero supply cap (chain)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 285,
+    "startedAt": "2026-10-25T23:50:10.619Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #22)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #22)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, update_risk], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, 600000, 0, 1500000000, 100000]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "DIAG raw update_risk reserve factor 60% (chain)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 237,
+    "startedAt": "2026-10-25T23:50:10.905Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #24)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #24)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, update_risk], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, 600000, 4000000000, 1500000000, 600000]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_price (staged, same approved tuple)",
+    "status": "PASS",
+    "hashes": [
+      "beed6d10feac01c072cac8136ff83edb23d411969281ab34f3f9716ccf2e0ca8"
+    ],
+    "sims": [
+      {
+        "instructions": 1580442,
+        "readBytes": 0,
+        "writeBytes": 1408,
+        "readOnlyEntries": 3,
+        "readWriteEntries": 1,
+        "ledgerEntries": 4,
+        "resourceFee": "36183"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "beed6d10feac01c072cac8136ff83edb23d411969281ab34f3f9716ccf2e0ca8",
+        "ledger": 5389726,
+        "feeCharged": "28087",
+        "resources": {
+          "instructions": 1580442,
+          "readBytes": 0,
+          "writeBytes": 1408,
+          "readOnlyEntries": 3,
+          "readWriteEntries": 1,
+          "ledgerEntries": 4,
+          "resourceFee": "36183"
+        }
+      }
+    ],
+    "ms": 4980,
+    "startedAt": "2026-10-25T23:50:12.538Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "pending price visible",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:50:19.276Z",
+    "note": "executeAfter=1792972277"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "update_price to a mapping the factory has not approved (USDT feed on XLM market)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1823,
+    "startedAt": "2026-10-25T23:50:19.276Z",
+    "error": "Error: The price feed tuple is not bound to this token or is not approved by the factory."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "apply_pending (price)",
+    "status": "PASS",
+    "hashes": [
+      "c9fc997e8edcfc8f3811929ee7e1a588daa4004c66adfe34c14a7443b2f714dc"
+    ],
+    "sims": [
+      {
+        "instructions": 3680874,
+        "readBytes": 0,
+        "writeBytes": 1764,
+        "readOnlyEntries": 6,
+        "readWriteEntries": 2,
+        "ledgerEntries": 8,
+        "resourceFee": "13760"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "c9fc997e8edcfc8f3811929ee7e1a588daa4004c66adfe34c14a7443b2f714dc",
+        "ledger": 5389740,
+        "feeCharged": "8812",
+        "resources": {
+          "instructions": 3680874,
+          "readBytes": 0,
+          "writeBytes": 1764,
+          "readOnlyEntries": 6,
+          "readWriteEntries": 2,
+          "ledgerEntries": 8,
+          "resourceFee": "13760"
+        }
+      }
+    ],
+    "ms": 2846,
+    "startedAt": "2026-10-25T23:51:24.826Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "pause_market deposits",
+    "status": "PASS",
+    "hashes": [
+      "81fc85dafb73c962f7d170702f4d1945a7c4b907039ff9386c85684853055cdd"
+    ],
+    "sims": [
+      {
+        "instructions": 7589560,
+        "readBytes": 0,
+        "writeBytes": 512,
+        "readOnlyEntries": 16,
+        "readWriteEntries": 4,
+        "ledgerEntries": 20,
+        "resourceFee": "310966"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "81fc85dafb73c962f7d170702f4d1945a7c4b907039ff9386c85684853055cdd",
+        "ledger": 5389741,
+        "feeCharged": "267964",
+        "resources": {
+          "instructions": 7589560,
+          "readBytes": 0,
+          "writeBytes": 512,
+          "readOnlyEntries": 16,
+          "readWriteEntries": 4,
+          "ledgerEntries": 20,
+          "resourceFee": "310966"
+        }
+      }
+    ],
+    "ms": 5712,
+    "startedAt": "2026-10-25T23:51:27.673Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "user supply while deposits paused -> chain rejects",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 480,
+    "startedAt": "2026-10-25T23:51:36.623Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", deposit]\n   1: [Diagnostic Event] contract:CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, topics:[fn_return, is_deposit_paused], data:true\n   2: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, is_deposit_paused], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   3: [Diagnostic Event] contract:CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, topics:[fn_return, accrue_user_market], data:Void\n   4: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, accrue_user_market], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, {total_borrowed: 0, total_ptokens: 40000000, user_borrowed: 0, user_ptokens: 40000000}]\n   5: [Contract Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[accrue_interest], data:{borrow_index: 1000000000000000000, interest_accumulated: 0, total_borrows: 0}\n   6: [Diagnostic Event] contract:CDVCVQTQKUPJRLV7QM765EKX2AOGGSH5QKTYPA6JT5DKANLWZ2BS65QS, topics:[fn_return, get_borrow_rate], data:10000\n   7: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDVCVQTQKUPJRLV7QM765EKX2AOGGSH5QKTYPA6JT5DKANLWZ2BS65QS, get_borrow_rate], data:[40000000, 0, 0]\n   8: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, balance], data:40000000\n   9: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, balance], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   10: [Diagnostic Event] topics:[fn_call, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, deposit], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, 10000000]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "unpause market",
+    "status": "PASS",
+    "hashes": [
+      "f03418062f947441b56f30a31fe33cb1f6c804c06906eee256c9fe0c0c4bd172"
+    ],
+    "sims": [
+      {
+        "instructions": 7624118,
+        "readBytes": 0,
+        "writeBytes": 412,
+        "readOnlyEntries": 16,
+        "readWriteEntries": 4,
+        "ledgerEntries": 20,
+        "resourceFee": "19635"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f03418062f947441b56f30a31fe33cb1f6c804c06906eee256c9fe0c0c4bd172",
+        "ledger": 5389743,
+        "feeCharged": "14628",
+        "resources": {
+          "instructions": 7624118,
+          "readBytes": 0,
+          "writeBytes": 412,
+          "readOnlyEntries": 16,
+          "readWriteEntries": 4,
+          "ledgerEntries": 20,
+          "resourceFee": "19635"
+        }
+      }
+    ],
+    "ms": 6244,
+    "startedAt": "2026-10-25T23:51:37.106Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "assert pause flags cleared",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2752,
+    "startedAt": "2026-10-25T23:51:43.351Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "user supplies 401 XLM into a 400 XLM supply cap -> rejected",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 636,
+    "startedAt": "2026-10-25T23:51:49.308Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", deposit]\n   1: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, balance], data:4050000000\n   2: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, balance], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   3: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, transfer], data:Void\n   4: [Contract Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[transfer, GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, \"native\"], data:4010000000\n   5: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, transfer], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, 4010000000]\n   6: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, balance], data:40000000\n   7: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, balance], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   8: [Diagnostic Event] contract:CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, topics:[fn_return, is_deposit_paused], data:false\n   9: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, is_deposit_paused], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   10: [Diagnostic Event] contract:CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, topics:[fn_return, accrue_user_market], data:Void\n   11: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CAQZQCM57IMAR56QW5HJATXW6AVNJHS3K442LPXYENTHODDDFVPS35MH, accrue_user_market], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, {total_borrowed: 0, total_ptokens: 40000000, user_borrowed: 0, user_ptokens: 40000000}]\n   12: [Contract Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[accrue_interest], data:{borrow_index: 1000000000000000000, interest_accumulated: 0, total_borrows: 0}\n   13: [Diagnostic Event] contract:CDVCVQTQKUPJRLV7QM765EKX2AOGGSH5QKTYPA6JT5DKANLWZ2BS65QS, topics:[fn_return, get_borrow_rate], data:10000\n   14: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDVCVQTQKUPJRLV7QM765EKX2AOGGSH5QKTYPA6JT5DKANLWZ2BS65QS, get_borrow_rate], data:[40000000, 0, 0]\n   15: [Diagnostic Event] contract:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, topics:[fn_return, balance], data:40000000\n   16: [Diagnostic Event] contract:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, topics:[fn_call, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, balance], data:CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS\n   17: [Diagnostic Event] topics:[fn_call, CA3Q7AN7FMS7KWASWPXOLDS5QSXTIB2VM3JXLMW2U5QYJYBKYBZ2GEVS, deposit], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, 4010000000]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "user supplies 200 XLM within cap",
+    "status": "PASS",
+    "hashes": [
+      "4b4b66965d76cf8d0b4f01424fc428a2a460dd1fc5b8e6fd6a349ce4594f5eca"
+    ],
+    "sims": [
+      {
+        "instructions": 18674847,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 44,
+        "readWriteEntries": 7,
+        "ledgerEntries": 51,
+        "resourceFee": "35025"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "4b4b66965d76cf8d0b4f01424fc428a2a460dd1fc5b8e6fd6a349ce4594f5eca",
+        "ledger": 5389745,
+        "feeCharged": "29565",
+        "resources": {
+          "instructions": 18674847,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 44,
+          "readWriteEntries": 7,
+          "ledgerEntries": 51,
+          "resourceFee": "35025"
+        }
+      }
+    ],
+    "ms": 2569,
+    "startedAt": "2026-10-25T23:51:49.945Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "add_market USDT after launch",
+    "status": "PASS",
+    "hashes": [
+      "962d83c1ef328f38b9e3a563d1a609e628f97c6e98a0739a2a315b31c9913019"
+    ],
+    "sims": [
+      {
+        "instructions": 29250027,
+        "readBytes": 0,
+        "writeBytes": 5384,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 36,
+        "ledgerEntries": 51,
+        "resourceFee": "3196256"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "962d83c1ef328f38b9e3a563d1a609e628f97c6e98a0739a2a315b31c9913019",
+        "ledger": 5389746,
+        "feeCharged": "2783851",
+        "resources": {
+          "instructions": 29250027,
+          "readBytes": 0,
+          "writeBytes": 5384,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 36,
+          "ledgerEntries": 51,
+          "resourceFee": "3196256"
+        }
+      }
+    ],
+    "ms": 3738,
+    "startedAt": "2026-10-25T23:51:54.263Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "activate_market USDT",
+    "status": "PASS",
+    "hashes": [
+      "088e139472a14446d898bf5654f58269fa1f6c8a647b610e69c02f9ea98fafeb"
+    ],
+    "sims": [
+      {
+        "instructions": 32157741,
+        "readBytes": 0,
+        "writeBytes": 3856,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 14,
+        "ledgerEntries": 65,
+        "resourceFee": "999927"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "088e139472a14446d898bf5654f58269fa1f6c8a647b610e69c02f9ea98fafeb",
+        "ledger": 5389747,
+        "feeCharged": "870431",
+        "resources": {
+          "instructions": 32157741,
+          "readBytes": 0,
+          "writeBytes": 3856,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "999927"
+        }
+      }
+    ],
+    "ms": 5472,
+    "startedAt": "2026-10-25T23:51:58.002Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "attach_yield on a market with route None -> refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 193,
+    "startedAt": "2026-10-25T23:52:03.476Z",
+    "error": "Error: This market has no yield route to attach."
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "finishMarketAddition",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 133,
+    "startedAt": "2026-10-25T23:52:03.670Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "add duplicate token (XLM again) -> should be refused",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 2619,
+    "startedAt": "2026-10-25T23:52:03.804Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #6)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #6)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, add_market], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 3, {borrow_cap: 50000000000, borrow_reward_per_sec: 0, collateral_factor: 700000, idle_buffer_bps: 2000, margin_enabled: false, price: [ReflectorOnly, {asset: [Other, XLM], oracle: CCYOZJCOPG34LLQQ7N24YXBM7LL62R7ONMZ3G6WZAAYPB5OYKOMJRN63}], rates: {base: 0, jump: 2000000, kink: 900000, multiplier: 80000}, reserve_factor: 100000, supply_cap: 100000000000, supply_reward_per_sec: 0, token: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, yield_route: [None]}]\n"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "assert group Y now has exactly 2 markets",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 166,
+    "startedAt": "2026-10-25T23:52:06.424Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "set_rewards (USDT) after markets",
+    "status": "PASS",
+    "hashes": [
+      "822f688cf88505e7b8dfbd8dd2621ffc2428ab970085ba280f7c8a7883b0ff24"
+    ],
+    "sims": [
+      {
+        "instructions": 5460673,
+        "readBytes": 0,
+        "writeBytes": 1212,
+        "readOnlyEntries": 16,
+        "readWriteEntries": 4,
+        "ledgerEntries": 20,
+        "resourceFee": "74649"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "822f688cf88505e7b8dfbd8dd2621ffc2428ab970085ba280f7c8a7883b0ff24",
+        "ledger": 5389749,
+        "feeCharged": "62366",
+        "resources": {
+          "instructions": 5460673,
+          "readBytes": 0,
+          "writeBytes": 1212,
+          "readOnlyEntries": 16,
+          "readWriteEntries": 4,
+          "ledgerEntries": 20,
+          "resourceFee": "74649"
+        }
+      }
+    ],
+    "ms": 5961,
+    "startedAt": "2026-10-25T23:52:06.591Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "fund rewards 500 USDT",
+    "status": "PASS",
+    "hashes": [
+      "3591f83d1f6bd3ca17076886f5c93059105dc760519ea0075c41c91722c4b538"
+    ],
+    "sims": [
+      {
+        "instructions": 1164335,
+        "readBytes": 0,
+        "writeBytes": 664,
+        "readOnlyEntries": 3,
+        "readWriteEntries": 3,
+        "ledgerEntries": 6,
+        "resourceFee": "36324"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "3591f83d1f6bd3ca17076886f5c93059105dc760519ea0075c41c91722c4b538",
+        "ledger": 5389750,
+        "feeCharged": "28445",
+        "resources": {
+          "instructions": 1164335,
+          "readBytes": 0,
+          "writeBytes": 664,
+          "readOnlyEntries": 3,
+          "readWriteEntries": 3,
+          "ledgerEntries": 6,
+          "resourceFee": "36324"
+        }
+      }
+    ],
+    "ms": 5836,
+    "startedAt": "2026-10-25T23:52:12.676Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "set_reward_speeds CA3Q7A",
+    "status": "PASS",
+    "hashes": [
+      "4fd5fcc6503fc0c061a5ac802e2f904df57d80ba363c2f62b01ff8822ca1ac95"
+    ],
+    "sims": [
+      {
+        "instructions": 9618554,
+        "readBytes": 0,
+        "writeBytes": 2064,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 7,
+        "ledgerEntries": 21,
+        "resourceFee": "952929"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "4fd5fcc6503fc0c061a5ac802e2f904df57d80ba363c2f62b01ff8822ca1ac95",
+        "ledger": 5389751,
+        "feeCharged": "826953",
+        "resources": {
+          "instructions": 9618554,
+          "readBytes": 0,
+          "writeBytes": 2064,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 7,
+          "ledgerEntries": 21,
+          "resourceFee": "952929"
+        }
+      }
+    ],
+    "ms": 4714,
+    "startedAt": "2026-10-25T23:52:18.514Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "set_reward_speeds CDFWJS",
+    "status": "PASS",
+    "hashes": [
+      "0b28d50c6ab1aa23b6311af9bdca01c01fc3222e31160c51b9e4d36b9b26ecf8"
+    ],
+    "sims": [
+      {
+        "instructions": 9613719,
+        "readBytes": 0,
+        "writeBytes": 2064,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 7,
+        "ledgerEntries": 21,
+        "resourceFee": "847464"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0b28d50c6ab1aa23b6311af9bdca01c01fc3222e31160c51b9e4d36b9b26ecf8",
+        "ledger": 5389752,
+        "feeCharged": "735244",
+        "resources": {
+          "instructions": 9613719,
+          "readBytes": 0,
+          "writeBytes": 2064,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 7,
+          "ledgerEntries": 21,
+          "resourceFee": "847464"
+        }
+      }
+    ],
+    "ms": 5630,
+    "startedAt": "2026-10-25T23:52:23.229Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "withdraw_unallocated rewards 10 USDT",
+    "status": "PASS",
+    "hashes": [
+      "db84da2dd602847f8e5ac797a08951eec6489f630493eaa09d6869483f4003b3"
+    ],
+    "sims": [
+      {
+        "instructions": 2494558,
+        "readBytes": 0,
+        "writeBytes": 720,
+        "readOnlyEntries": 6,
+        "readWriteEntries": 3,
+        "ledgerEntries": 9,
+        "resourceFee": "74304"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "db84da2dd602847f8e5ac797a08951eec6489f630493eaa09d6869483f4003b3",
+        "ledger": 5389753,
+        "feeCharged": "61564",
+        "resources": {
+          "instructions": 2494558,
+          "readBytes": 0,
+          "writeBytes": 720,
+          "readOnlyEntries": 6,
+          "readWriteEntries": 3,
+          "ledgerEntries": 9,
+          "resourceFee": "74304"
+        }
+      }
+    ],
+    "ms": 4070,
+    "startedAt": "2026-10-25T23:52:28.860Z"
+  },
+  {
+    "flow": "C-control/Y",
+    "step": "add market after rewards enabled -> client refuses",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 140,
+    "startedAt": "2026-10-25T23:52:34.671Z",
+    "error": "Error: Markets cannot be added after group rewards are enabled."
+  },
+  {
+    "flow": "C-control/X",
+    "step": "add market to rewards group X -> client refuses",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 230,
+    "startedAt": "2026-10-25T23:52:34.812Z",
+    "error": "Error: Markets cannot be added after group rewards are enabled."
+  },
+  {
+    "flow": "C-control/X",
+    "step": "DIAG raw add_market on rewards group X (chain enforcement)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 286,
+    "startedAt": "2026-10-25T23:52:35.042Z",
+    "error": "Error: Simulation failed: HostError: Error(Contract, #50)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, topics:[error, Error(Contract, #50)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\"\n   1: [Diagnostic Event] topics:[fn_call, CCFODI4F6QE276PXGHVYOSX52DMYYI2YDJMQZ7ZGU4YWEH5IG2Y3ZR3M, add_market], data:[GDZXZELVR5EZME2BKJCO7XL6EEGLVS72VI3JGFITMECYFA47BFBANYKZ, 2, {borrow_cap: 50000000000, borrow_reward_per_sec: 0, collateral_factor: 700000, idle_buffer_bps: 2000, margin_enabled: false, price: [ReflectorOnly, {asset: [Other, USDT], oracle: CCYOZJCOPG34LLQQ7N24YXBM7LL62R7ONMZ3G6WZAAYPB5OYKOMJRN63}], rates: {base: 0, jump: 2000000, kink: 900000, multiplier: 80000}, reserve_factor: 100000, supply_cap: 100000000000, supply_reward_per_sec: 0, token: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC, yield_route: [None]}]\n"
+  },
+  {
+    "flow": "C-control/X",
+    "step": "transfer_ownership (live) -> app declines",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:52:35.328Z",
+    "error": "Error: Unsupported address type: GDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY"
+  }
+]

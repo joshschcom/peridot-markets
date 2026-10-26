@@ -1,0 +1,182 @@
+[
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "market view shows DeFindex vault state",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:12:27.674Z",
+    "note": "route=Defindex vault={\"kind\":\"DeFindex\",\"shares\":\"0\",\"value\":\"0\"} vaultError= priceError="
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "enter_market",
+    "status": "PASS",
+    "hashes": [
+      "cf747a8ee259babfb2abfab9289dc68ef46380f14ab8d07c1bccd8e1af6d708f"
+    ],
+    "sims": [
+      {
+        "instructions": 2311743,
+        "readBytes": 0,
+        "writeBytes": 428,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "272619"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "cf747a8ee259babfb2abfab9289dc68ef46380f14ab8d07c1bccd8e1af6d708f",
+        "ledger": 5389993,
+        "feeCharged": "233908",
+        "resources": {
+          "instructions": 2311743,
+          "readBytes": 0,
+          "writeBytes": 428,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "272619"
+        }
+      }
+    ],
+    "ms": 5748,
+    "startedAt": "2026-10-26T00:12:27.677Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "supply 200 XLM (80% should route to DeFindex)",
+    "status": "PASS",
+    "hashes": [
+      "42fe0ae1a19c0522db5e6ec114216d5606c47cdcbaedd74d55908b7b6fb71191"
+    ],
+    "sims": [
+      {
+        "instructions": 25886218,
+        "readBytes": 144,
+        "writeBytes": 3616,
+        "readOnlyEntries": 46,
+        "readWriteEntries": 15,
+        "ledgerEntries": 61,
+        "resourceFee": "865624"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "42fe0ae1a19c0522db5e6ec114216d5606c47cdcbaedd74d55908b7b6fb71191",
+        "ledger": 5389995,
+        "feeCharged": "753619",
+        "resources": {
+          "instructions": 25886218,
+          "readBytes": 144,
+          "writeBytes": 3616,
+          "readOnlyEntries": 46,
+          "readWriteEntries": 15,
+          "ledgerEntries": 61,
+          "resourceFee": "865624"
+        }
+      }
+    ],
+    "ms": 7059,
+    "startedAt": "2026-10-26T00:12:36.622Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "assert market views after supply (vault holds shares, wallet decreased)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:12:48.817Z",
+    "note": "liquidity=1999998817 supplied=1999998817 vault=1599998817 err="
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "withdraw 50 XLM",
+    "status": "PASS",
+    "hashes": [
+      "57cb038f2085aacad0834e208c084171e2775fc168439f160d66cba0a67566f5"
+    ],
+    "sims": [
+      {
+        "instructions": 35235906,
+        "readBytes": 144,
+        "writeBytes": 3476,
+        "readOnlyEntries": 48,
+        "readWriteEntries": 14,
+        "ledgerEntries": 62,
+        "resourceFee": "110360"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "57cb038f2085aacad0834e208c084171e2775fc168439f160d66cba0a67566f5",
+        "ledger": 5389998,
+        "feeCharged": "97064",
+        "resources": {
+          "instructions": 35235906,
+          "readBytes": 144,
+          "writeBytes": 3476,
+          "readOnlyEntries": 48,
+          "readWriteEntries": 14,
+          "ledgerEntries": 62,
+          "resourceFee": "110360"
+        }
+      }
+    ],
+    "ms": 8908,
+    "startedAt": "2026-10-26T00:12:48.818Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "withdraw all",
+    "status": "PASS",
+    "hashes": [
+      "0b22817fc1eeee5569a0846e20385d511bc54051322e6ccda5e43646000be3fd"
+    ],
+    "sims": [
+      {
+        "instructions": 37368258,
+        "readBytes": 144,
+        "writeBytes": 3476,
+        "readOnlyEntries": 48,
+        "readWriteEntries": 14,
+        "ledgerEntries": 62,
+        "resourceFee": "53706"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0b22817fc1eeee5569a0846e20385d511bc54051322e6ccda5e43646000be3fd",
+        "ledger": 5390000,
+        "feeCharged": "49155",
+        "resources": {
+          "instructions": 37368258,
+          "readBytes": 144,
+          "writeBytes": 3476,
+          "readOnlyEntries": 48,
+          "readWriteEntries": 14,
+          "ledgerEntries": 62,
+          "resourceFee": "53706"
+        }
+      }
+    ],
+    "ms": 7116,
+    "startedAt": "2026-10-26T00:13:00.818Z"
+  },
+  {
+    "flow": "B-group/W(DeFindex)",
+    "step": "assert shares zero",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:13:13.727Z"
+  }
+]

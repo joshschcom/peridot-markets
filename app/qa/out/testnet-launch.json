@@ -1,0 +1,1131 @@
+[
+  {
+    "flow": "A-launch/W",
+    "step": "launch:create (Create isolated group)",
+    "status": "PASS",
+    "hashes": [
+      "7e51a6518c006331d10b6a38eb618c63d865909e5ab2dd48a77732467f291df6"
+    ],
+    "sims": [
+      {
+        "instructions": 11089634,
+        "readBytes": 0,
+        "writeBytes": 4036,
+        "readOnlyEntries": 5,
+        "readWriteEntries": 19,
+        "ledgerEntries": 24,
+        "resourceFee": "1003246"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "7e51a6518c006331d10b6a38eb618c63d865909e5ab2dd48a77732467f291df6",
+        "ledger": 5389489,
+        "feeCharged": "872765",
+        "resources": {
+          "instructions": 11089634,
+          "readBytes": 0,
+          "writeBytes": 4036,
+          "readOnlyEntries": 5,
+          "readWriteEntries": 19,
+          "ledgerEntries": 24,
+          "resourceFee": "1003246"
+        }
+      }
+    ],
+    "ms": 7710,
+    "startedAt": "2026-10-25T23:30:25.090Z"
+  },
+  {
+    "flow": "A-launch/W",
+    "step": "launch:market:0 (Add XLM)",
+    "status": "PASS",
+    "hashes": [
+      "6e395bde666d281c499ad38ef3e7b1110fa093b7d553bf5c8b061b4806645d40"
+    ],
+    "sims": [
+      {
+        "instructions": 28821318,
+        "readBytes": 0,
+        "writeBytes": 5456,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 36,
+        "ledgerEntries": 50,
+        "resourceFee": "3217554"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "6e395bde666d281c499ad38ef3e7b1110fa093b7d553bf5c8b061b4806645d40",
+        "ledger": 5389490,
+        "feeCharged": "2802371",
+        "resources": {
+          "instructions": 28821318,
+          "readBytes": 0,
+          "writeBytes": 5456,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 36,
+          "ledgerEntries": 50,
+          "resourceFee": "3217554"
+        }
+      }
+    ],
+    "ms": 4846,
+    "startedAt": "2026-10-25T23:30:32.802Z"
+  },
+  {
+    "flow": "A-launch/W",
+    "step": "launch:activate:0 (Activate XLM)",
+    "status": "PASS",
+    "hashes": [
+      "498b1c388f2b201b306b00d6b7edc56f5fd04a42b4129e465e3af2a7a6495b5c"
+    ],
+    "sims": [
+      {
+        "instructions": 32154092,
+        "readBytes": 0,
+        "writeBytes": 3636,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 14,
+        "ledgerEntries": 65,
+        "resourceFee": "1363670"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "498b1c388f2b201b306b00d6b7edc56f5fd04a42b4129e465e3af2a7a6495b5c",
+        "ledger": 5389491,
+        "feeCharged": "1186717",
+        "resources": {
+          "instructions": 32154092,
+          "readBytes": 0,
+          "writeBytes": 3636,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1363670"
+        }
+      }
+    ],
+    "ms": 5958,
+    "startedAt": "2026-10-25T23:30:37.649Z"
+  },
+  {
+    "flow": "A-launch/W",
+    "step": "launch:yield:0 (Attach Defindex for XLM)",
+    "status": "PASS",
+    "hashes": [
+      "8e0aa1819448cfaa8bba903065cdd0aef8ad977055a6674f32cd732be11cd6b9"
+    ],
+    "sims": [
+      {
+        "instructions": 17880593,
+        "readBytes": 0,
+        "writeBytes": 2480,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 9,
+        "ledgerEntries": 60,
+        "resourceFee": "664414"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8e0aa1819448cfaa8bba903065cdd0aef8ad977055a6674f32cd732be11cd6b9",
+        "ledger": 5389493,
+        "feeCharged": "577172",
+        "resources": {
+          "instructions": 17880593,
+          "readBytes": 0,
+          "writeBytes": 2480,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 9,
+          "ledgerEntries": 60,
+          "resourceFee": "664414"
+        }
+      }
+    ],
+    "ms": 9351,
+    "startedAt": "2026-10-25T23:30:43.608Z"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:create_group",
+    "status": "PASS",
+    "hashes": [
+      "9849ae1b5c0deade60b8ccfd43283b1d6f7dd31df818f11960f2063f41ed003b"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "9849ae1b5c0deade60b8ccfd43283b1d6f7dd31df818f11960f2063f41ed003b",
+        "ledger": 5389469,
+        "feeCharged": "888015",
+        "resources": {
+          "instructions": 11046003,
+          "readBytes": 0,
+          "writeBytes": 4020,
+          "readOnlyEntries": 5,
+          "readWriteEntries": 19,
+          "ledgerEntries": 24,
+          "resourceFee": "1020786"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:28:52Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:add_market",
+    "status": "PASS",
+    "hashes": [
+      "5c10cc6349e3db557c8e82d17345a3943f7a1c832d0e2b0747e64fc55f1546ea"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "5c10cc6349e3db557c8e82d17345a3943f7a1c832d0e2b0747e64fc55f1546ea",
+        "ledger": 5389470,
+        "feeCharged": "2795015",
+        "resources": {
+          "instructions": 28789003,
+          "readBytes": 0,
+          "writeBytes": 5384,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 36,
+          "ledgerEntries": 50,
+          "resourceFee": "3209119"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:28:57Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:activate_market",
+    "status": "PASS",
+    "hashes": [
+      "856eeacd7fb1f389e4954c62e613f059d0ca54d65fdc5c5d9c486208e5615546"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "856eeacd7fb1f389e4954c62e613f059d0ca54d65fdc5c5d9c486208e5615546",
+        "ledger": 5389471,
+        "feeCharged": "1186678",
+        "resources": {
+          "instructions": 32128864,
+          "readBytes": 0,
+          "writeBytes": 3564,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1363631"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:02Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:add_market",
+    "status": "PASS",
+    "hashes": [
+      "28dec689713fbd37f7d3033c565386ac967a1f638584c51d3f2d431009dca9d5"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "28dec689713fbd37f7d3033c565386ac967a1f638584c51d3f2d431009dca9d5",
+        "ledger": 5389472,
+        "feeCharged": "2783847",
+        "resources": {
+          "instructions": 29237773,
+          "readBytes": 0,
+          "writeBytes": 5384,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 36,
+          "ledgerEntries": 51,
+          "resourceFee": "3196252"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:07Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:activate_market",
+    "status": "PASS",
+    "hashes": [
+      "710895b462d9b16994d8c35feb16a6374ea2410bab4d5ad35467fc3ed892cad0"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "710895b462d9b16994d8c35feb16a6374ea2410bab4d5ad35467fc3ed892cad0",
+        "ledger": 5389473,
+        "feeCharged": "870495",
+        "resources": {
+          "instructions": 32181347,
+          "readBytes": 0,
+          "writeBytes": 3852,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1000000"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:12Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:enable_margin",
+    "status": "PASS",
+    "hashes": [
+      "e17b859929c37b98e84bf852ffd138fc5d9ca6a5b0991629ff76c5f41cf9743b"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "e17b859929c37b98e84bf852ffd138fc5d9ca6a5b0991629ff76c5f41cf9743b",
+        "ledger": 5389474,
+        "feeCharged": "512660527",
+        "resources": {
+          "instructions": 23064026,
+          "readBytes": 0,
+          "writeBytes": 3288,
+          "readOnlyEntries": 22,
+          "readWriteEntries": 18,
+          "ledgerEntries": 40,
+          "resourceFee": "589557788"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:17Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_pool_allowed",
+    "status": "PASS",
+    "hashes": [
+      "128a8853ff1b4668166277eb8b48eb855e48db6b01fe7bca8116a987da4262db"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "128a8853ff1b4668166277eb8b48eb855e48db6b01fe7bca8116a987da4262db",
+        "ledger": 5389475,
+        "feeCharged": "157382",
+        "resources": {
+          "instructions": 5915924,
+          "readBytes": 0,
+          "writeBytes": 464,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "184137"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:22Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_pool_binding",
+    "status": "PASS",
+    "hashes": [
+      "f69235232fcf6bfbc52d8929c30614a26f6fb50bb6efeeb30fd29911f1e0844e"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "f69235232fcf6bfbc52d8929c30614a26f6fb50bb6efeeb30fd29911f1e0844e",
+        "ledger": 5389476,
+        "feeCharged": "322429",
+        "resources": {
+          "instructions": 2807963,
+          "readBytes": 0,
+          "writeBytes": 388,
+          "readOnlyEntries": 11,
+          "readWriteEntries": 2,
+          "ledgerEntries": 13,
+          "resourceFee": "374373"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:27Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_market_margin",
+    "status": "PASS",
+    "hashes": [
+      "8b0bb377c6dc41106dd2aea0229b770393888bbff39802065552cd2178d82b1c"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "8b0bb377c6dc41106dd2aea0229b770393888bbff39802065552cd2178d82b1c",
+        "ledger": 5389477,
+        "feeCharged": "178401",
+        "resources": {
+          "instructions": 18770312,
+          "readBytes": 0,
+          "writeBytes": 1044,
+          "readOnlyEntries": 57,
+          "readWriteEntries": 3,
+          "ledgerEntries": 60,
+          "resourceFee": "207015"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:32Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_market_margin",
+    "status": "PASS",
+    "hashes": [
+      "776fa420cc735948f2b5027883e9fa5a715c0a6553aad839a6e866aeb6582f06"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "776fa420cc735948f2b5027883e9fa5a715c0a6553aad839a6e866aeb6582f06",
+        "ledger": 5389478,
+        "feeCharged": "3014777",
+        "resources": {
+          "instructions": 65760056,
+          "readBytes": 0,
+          "writeBytes": 4484,
+          "readOnlyEntries": 67,
+          "readWriteEntries": 4,
+          "ledgerEntries": 71,
+          "resourceFee": "3466181"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:37Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_rewards",
+    "status": "PASS",
+    "hashes": [
+      "93ad20a520001938004bdc491cba0677db13df41e52b3bb85fec96cefc0b93a1"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "93ad20a520001938004bdc491cba0677db13df41e52b3bb85fec96cefc0b93a1",
+        "ledger": 5389480,
+        "feeCharged": "62385",
+        "resources": {
+          "instructions": 5459019,
+          "readBytes": 0,
+          "writeBytes": 1244,
+          "readOnlyEntries": 16,
+          "readWriteEntries": 4,
+          "ledgerEntries": 20,
+          "resourceFee": "74669"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:47Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:fund",
+    "status": "PASS",
+    "hashes": [
+      "3ffa4303b0073c5a432b0866be44fc4718d9dca042866cfb184a8c181f9ebc3f"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "3ffa4303b0073c5a432b0866be44fc4718d9dca042866cfb184a8c181f9ebc3f",
+        "ledger": 5389481,
+        "feeCharged": "76998",
+        "resources": {
+          "instructions": 1165602,
+          "readBytes": 0,
+          "writeBytes": 664,
+          "readOnlyEntries": 3,
+          "readWriteEntries": 3,
+          "ledgerEntries": 6,
+          "resourceFee": "92160"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:52Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_reward_speeds",
+    "status": "PASS",
+    "hashes": [
+      "cf1b8317ccc2dd60153de0063954d55fea6db14070f49a78330af796472dfa82"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "cf1b8317ccc2dd60153de0063954d55fea6db14070f49a78330af796472dfa82",
+        "ledger": 5389482,
+        "feeCharged": "826944",
+        "resources": {
+          "instructions": 9589856,
+          "readBytes": 0,
+          "writeBytes": 2064,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 7,
+          "ledgerEntries": 21,
+          "resourceFee": "952920"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:29:57Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/X (backfilled from chain history)",
+    "step": "launch:set_reward_speeds",
+    "status": "PASS",
+    "hashes": [
+      "bb25892d5dd6cd87146872b7bfb58f6ca32a20a180356ecae90980b0263a51e0"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "bb25892d5dd6cd87146872b7bfb58f6ca32a20a180356ecae90980b0263a51e0",
+        "ledger": 5389483,
+        "feeCharged": "735235",
+        "resources": {
+          "instructions": 9585177,
+          "readBytes": 0,
+          "writeBytes": 2064,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 7,
+          "ledgerEntries": 21,
+          "resourceFee": "847455"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:30:02Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/Y (backfilled from chain history)",
+    "step": "launch:create_group",
+    "status": "PASS",
+    "hashes": [
+      "c47298dc84d5425c4a764bf853b74f2b6546e3dfd06d63d44fecf1f07f344b5d"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "c47298dc84d5425c4a764bf853b74f2b6546e3dfd06d63d44fecf1f07f344b5d",
+        "ledger": 5389485,
+        "feeCharged": "873183",
+        "resources": {
+          "instructions": 11100927,
+          "readBytes": 0,
+          "writeBytes": 4032,
+          "readOnlyEntries": 5,
+          "readWriteEntries": 19,
+          "ledgerEntries": 24,
+          "resourceFee": "1003723"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:30:12Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/Y (backfilled from chain history)",
+    "step": "launch:add_market",
+    "status": "PASS",
+    "hashes": [
+      "c3877bdd0c779b175beab3093be9b47cbf70a4585d471c65d57fc94dd9bbee1d"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "c3877bdd0c779b175beab3093be9b47cbf70a4585d471c65d57fc94dd9bbee1d",
+        "ledger": 5389486,
+        "feeCharged": "2795016",
+        "resources": {
+          "instructions": 28791161,
+          "readBytes": 0,
+          "writeBytes": 5384,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 36,
+          "ledgerEntries": 50,
+          "resourceFee": "3209120"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:30:17Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "A-launch/Y (backfilled from chain history)",
+    "step": "launch:activate_market",
+    "status": "PASS",
+    "hashes": [
+      "590eb7036f7f23764abfbd841433948893a1cb65b865124b1f1bfec83426af45"
+    ],
+    "sims": [],
+    "onchain": [
+      {
+        "hash": "590eb7036f7f23764abfbd841433948893a1cb65b865124b1f1bfec83426af45",
+        "ledger": 5389487,
+        "feeCharged": "1186677",
+        "resources": {
+          "instructions": 32116712,
+          "readBytes": 0,
+          "writeBytes": 3568,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1363630"
+        }
+      }
+    ],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:30:22Z",
+    "note": "record rebuilt from Horizon; app wizard run succeeded at the time (console log)"
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: duplicate token market rejected by wizard validation",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:42:37.821Z",
+    "note": "Each token can have only one market in a group."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: bad group name rejected",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:42:37.826Z",
+    "note": "Group name must contain 1 to 32 letters, numbers or underscores."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: CF 90% rejected by wizard validation",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:42:37.827Z",
+    "note": "Market 1: Collateral factor must be between 1% and 75%."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: zero caps rejected by wizard validation",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:42:37.828Z",
+    "note": "Market 1: Supply and borrow caps must be greater than zero."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: leverage with one market rejected",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:42:37.829Z",
+    "note": "Select at least two seven-decimal markets for leverage. | Discover a verified pool route for XLM."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: rewards token that is not a contract rejected",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-26T00:42:37.830Z",
+    "note": "Verify the reward token before launching."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: unapproved token/feed mapping rejected (testnet USDC has no Reflector mapping)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1621,
+    "startedAt": "2026-10-26T00:42:37.831Z",
+    "error": "Error: This token is not covered by the configured Reflector feeds."
+  },
+  {
+    "flow": "E-edge",
+    "step": "launch: 17 markets rejected",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-26T00:42:39.454Z",
+    "note": "ok"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:create (Create isolated group)",
+    "status": "PASS",
+    "hashes": [
+      "81b495d54e45dd3307caf19aa54b1e09375f667203e269b87e37ae60de4d6ebb"
+    ],
+    "sims": [
+      {
+        "instructions": 11057801,
+        "readBytes": 0,
+        "writeBytes": 4028,
+        "readOnlyEntries": 5,
+        "readWriteEntries": 19,
+        "ledgerEntries": 24,
+        "resourceFee": "1021745"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "81b495d54e45dd3307caf19aa54b1e09375f667203e269b87e37ae60de4d6ebb",
+        "ledger": 5390366,
+        "feeCharged": "888855",
+        "resources": {
+          "instructions": 11057801,
+          "readBytes": 0,
+          "writeBytes": 4028,
+          "readOnlyEntries": 5,
+          "readWriteEntries": 19,
+          "ledgerEntries": 24,
+          "resourceFee": "1021745"
+        }
+      }
+    ],
+    "ms": 4550,
+    "startedAt": "2026-10-26T00:43:33.480Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:market:0 (Add XLM)",
+    "status": "PASS",
+    "hashes": [
+      "316bc627be6bebeda5f8506a6fd0fbfc9fc6415b6cc37abc0671b562137165bb"
+    ],
+    "sims": [
+      {
+        "instructions": 28823060,
+        "readBytes": 0,
+        "writeBytes": 5456,
+        "readOnlyEntries": 14,
+        "readWriteEntries": 36,
+        "ledgerEntries": 50,
+        "resourceFee": "3217554"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "316bc627be6bebeda5f8506a6fd0fbfc9fc6415b6cc37abc0671b562137165bb",
+        "ledger": 5390368,
+        "feeCharged": "2802371",
+        "resources": {
+          "instructions": 28823060,
+          "readBytes": 0,
+          "writeBytes": 5456,
+          "readOnlyEntries": 14,
+          "readWriteEntries": 36,
+          "ledgerEntries": 50,
+          "resourceFee": "3217554"
+        }
+      }
+    ],
+    "ms": 9450,
+    "startedAt": "2026-10-26T00:43:38.032Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:activate:0 (Activate XLM)",
+    "status": "PASS",
+    "hashes": [
+      "228de70f7cbabd76d10ebf89d8fc670203b232f25cbe06af38e8fcde5b18bec2"
+    ],
+    "sims": [
+      {
+        "instructions": 32149267,
+        "readBytes": 0,
+        "writeBytes": 3644,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 14,
+        "ledgerEntries": 65,
+        "resourceFee": "1363672"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "228de70f7cbabd76d10ebf89d8fc670203b232f25cbe06af38e8fcde5b18bec2",
+        "ledger": 5390369,
+        "feeCharged": "1186719",
+        "resources": {
+          "instructions": 32149267,
+          "readBytes": 0,
+          "writeBytes": 3644,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1363672"
+        }
+      }
+    ],
+    "ms": 5731,
+    "startedAt": "2026-10-26T00:43:47.483Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:yield:0 (Attach Defindex for XLM)",
+    "status": "PASS",
+    "hashes": [
+      "bec9e84060438e05b149c714f7cabbfa72bc14ff6bbc2b286262cfb65600d391"
+    ],
+    "sims": [
+      {
+        "instructions": 17902074,
+        "readBytes": 0,
+        "writeBytes": 2480,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 9,
+        "ledgerEntries": 60,
+        "resourceFee": "664420"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "bec9e84060438e05b149c714f7cabbfa72bc14ff6bbc2b286262cfb65600d391",
+        "ledger": 5390370,
+        "feeCharged": "577178",
+        "resources": {
+          "instructions": 17902074,
+          "readBytes": 0,
+          "writeBytes": 2480,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 9,
+          "ledgerEntries": 60,
+          "resourceFee": "664420"
+        }
+      }
+    ],
+    "ms": 4379,
+    "startedAt": "2026-10-26T00:43:53.215Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:market:1 (Add USDT)",
+    "status": "PASS",
+    "hashes": [
+      "157138aa0dc9dbe6e0a3fd298372d20fd65d4f2d2e546d34c898d281f31cf006"
+    ],
+    "sims": [
+      {
+        "instructions": 29304704,
+        "readBytes": 0,
+        "writeBytes": 5384,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 36,
+        "ledgerEntries": 51,
+        "resourceFee": "3196272"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "157138aa0dc9dbe6e0a3fd298372d20fd65d4f2d2e546d34c898d281f31cf006",
+        "ledger": 5390371,
+        "feeCharged": "2783867",
+        "resources": {
+          "instructions": 29304704,
+          "readBytes": 0,
+          "writeBytes": 5384,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 36,
+          "ledgerEntries": 51,
+          "resourceFee": "3196272"
+        }
+      }
+    ],
+    "ms": 4784,
+    "startedAt": "2026-10-26T00:43:57.596Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:activate:1 (Activate USDT)",
+    "status": "PASS",
+    "hashes": [
+      "396a0d522984fde552b3ec19a4c9efc829d5dc99f0b5280ca7515dcec6ffc8e2"
+    ],
+    "sims": [
+      {
+        "instructions": 32179515,
+        "readBytes": 0,
+        "writeBytes": 3860,
+        "readOnlyEntries": 51,
+        "readWriteEntries": 14,
+        "ledgerEntries": 65,
+        "resourceFee": "1000003"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "396a0d522984fde552b3ec19a4c9efc829d5dc99f0b5280ca7515dcec6ffc8e2",
+        "ledger": 5390372,
+        "feeCharged": "870498",
+        "resources": {
+          "instructions": 32179515,
+          "readBytes": 0,
+          "writeBytes": 3860,
+          "readOnlyEntries": 51,
+          "readWriteEntries": 14,
+          "ledgerEntries": 65,
+          "resourceFee": "1000003"
+        }
+      }
+    ],
+    "ms": 6415,
+    "startedAt": "2026-10-26T00:44:02.381Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:margin (Create group margin controller)",
+    "status": "PASS",
+    "hashes": [
+      "1e9aeb148ebbdd56bc8c37682ce4f6254914ae440161273e0df2eb1e274e761b"
+    ],
+    "sims": [
+      {
+        "instructions": 23022030,
+        "readBytes": 0,
+        "writeBytes": 3296,
+        "readOnlyEntries": 22,
+        "readWriteEntries": 18,
+        "ledgerEntries": 40,
+        "resourceFee": "1779097"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "1e9aeb148ebbdd56bc8c37682ce4f6254914ae440161273e0df2eb1e274e761b",
+        "ledger": 5390373,
+        "feeCharged": "1548044",
+        "resources": {
+          "instructions": 23022030,
+          "readBytes": 0,
+          "writeBytes": 3296,
+          "readOnlyEntries": 22,
+          "readWriteEntries": 18,
+          "ledgerEntries": 40,
+          "resourceFee": "1779097"
+        }
+      }
+    ],
+    "ms": 5371,
+    "startedAt": "2026-10-26T00:44:08.798Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:pool:0 (Allow verified pool 1)",
+    "status": "PASS",
+    "hashes": [
+      "5fa89872a1096141775f66db149756202927fd21b065e09ee66a3ad2995ddb2b"
+    ],
+    "sims": [
+      {
+        "instructions": 5923278,
+        "readBytes": 0,
+        "writeBytes": 464,
+        "readOnlyEntries": 15,
+        "readWriteEntries": 3,
+        "ledgerEntries": 18,
+        "resourceFee": "184139"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "5fa89872a1096141775f66db149756202927fd21b065e09ee66a3ad2995ddb2b",
+        "ledger": 5390375,
+        "feeCharged": "157384",
+        "resources": {
+          "instructions": 5923278,
+          "readBytes": 0,
+          "writeBytes": 464,
+          "readOnlyEntries": 15,
+          "readWriteEntries": 3,
+          "ledgerEntries": 18,
+          "resourceFee": "184139"
+        }
+      }
+    ],
+    "ms": 8151,
+    "startedAt": "2026-10-26T00:44:14.170Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:binding:0 (Bind pool 1 to its router ID)",
+    "status": "PASS",
+    "hashes": [
+      "b652484dde4005e7a2006cbbf4b6876503b168613047dd49f9824a30a66d2d1a"
+    ],
+    "sims": [
+      {
+        "instructions": 2805636,
+        "readBytes": 0,
+        "writeBytes": 388,
+        "readOnlyEntries": 11,
+        "readWriteEntries": 2,
+        "ledgerEntries": 13,
+        "resourceFee": "374372"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "b652484dde4005e7a2006cbbf4b6876503b168613047dd49f9824a30a66d2d1a",
+        "ledger": 5390376,
+        "feeCharged": "322428",
+        "resources": {
+          "instructions": 2805636,
+          "readBytes": 0,
+          "writeBytes": 388,
+          "readOnlyEntries": 11,
+          "readWriteEntries": 2,
+          "ledgerEntries": 13,
+          "resourceFee": "374372"
+        }
+      }
+    ],
+    "ms": 6373,
+    "startedAt": "2026-10-26T00:44:22.322Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:marginmarket:0 (Enable XLM leverage)",
+    "status": "PASS",
+    "hashes": [
+      "ca884a068a22eaacd9027a6f53e2dcefaeb010825eef4492121ad6bd4a8d7607"
+    ],
+    "sims": [
+      {
+        "instructions": 19060317,
+        "readBytes": 0,
+        "writeBytes": 1044,
+        "readOnlyEntries": 57,
+        "readWriteEntries": 3,
+        "ledgerEntries": 60,
+        "resourceFee": "207102"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "ca884a068a22eaacd9027a6f53e2dcefaeb010825eef4492121ad6bd4a8d7607",
+        "ledger": 5390378,
+        "feeCharged": "178488",
+        "resources": {
+          "instructions": 19060317,
+          "readBytes": 0,
+          "writeBytes": 1044,
+          "readOnlyEntries": 57,
+          "readWriteEntries": 3,
+          "ledgerEntries": 60,
+          "resourceFee": "207102"
+        }
+      }
+    ],
+    "ms": 10207,
+    "startedAt": "2026-10-26T00:44:28.697Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:marginmarket:1 (Enable USDT leverage)",
+    "status": "PASS",
+    "hashes": [
+      "9ca2a59333de88546b12614a31224ed649c450d9d7b9982e683fa7745818d23f"
+    ],
+    "sims": [
+      {
+        "instructions": 65756699,
+        "readBytes": 0,
+        "writeBytes": 4484,
+        "readOnlyEntries": 67,
+        "readWriteEntries": 4,
+        "ledgerEntries": 71,
+        "resourceFee": "3466174"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "9ca2a59333de88546b12614a31224ed649c450d9d7b9982e683fa7745818d23f",
+        "ledger": 5390380,
+        "feeCharged": "3014770",
+        "resources": {
+          "instructions": 65756699,
+          "readBytes": 0,
+          "writeBytes": 4484,
+          "readOnlyEntries": 67,
+          "readWriteEntries": 4,
+          "ledgerEntries": 71,
+          "resourceFee": "3466174"
+        }
+      }
+    ],
+    "ms": 9329,
+    "startedAt": "2026-10-26T00:44:38.907Z"
+  },
+  {
+    "flow": "A-launch/Z",
+    "step": "launch:applymargin (Apply staged liquidation incentive)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 222,
+    "startedAt": "2026-10-26T00:44:48.236Z"
+  }
+]

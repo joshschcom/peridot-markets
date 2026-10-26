@@ -1,0 +1,876 @@
+[
+  {
+    "flow": "group1 Meridian",
+    "step": "enter_market USDC (Enable collateral)",
+    "verdict": "SIM-OK",
+    "ms": 1423,
+    "resources": {
+      "instructions": 2349867,
+      "readBytes": 0,
+      "writeBytes": 516,
+      "readOnlyEntries": 10,
+      "readWriteEntries": 2,
+      "ledgerEntries": 12,
+      "resourceFee": "180598"
+    },
+    "fee": "180698"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "supply 1 USDC",
+    "verdict": "CLIENT-GUARD",
+    "ms": 1,
+    "error": "Error: Add a USDC trustline with your wallet before receiving or using this asset, then refresh balances."
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "withdraw 0.5 USDC",
+    "verdict": "CLIENT-GUARD",
+    "ms": 0,
+    "error": "Error: Add a USDC trustline with your wallet before receiving or using this asset, then refresh balances."
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "withdraw all USDC",
+    "verdict": "CLIENT-GUARD",
+    "ms": 0,
+    "error": "Error: Add a USDC trustline with your wallet before receiving or using this asset, then refresh balances."
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "boosted health cache age of XLM market (borrow/margin fail closed when > 300 s)",
+    "verdict": "SIM-OK",
+    "ms": 184,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "refresh_boosted_underlying XLM (permissionless; the fix for stale cache)",
+    "verdict": "SIM-OK",
+    "ms": 1601,
+    "resources": {
+      "instructions": 5288731,
+      "readBytes": 0,
+      "writeBytes": 676,
+      "readOnlyEntries": 16,
+      "readWriteEntries": 4,
+      "ledgerEntries": 20,
+      "resourceFee": "42453"
+    },
+    "fee": "42553"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "enter_market XLM (Enable collateral)",
+    "verdict": "SIM-OK",
+    "ms": 1571,
+    "resources": {
+      "instructions": 2167104,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 12,
+      "readWriteEntries": 0,
+      "ledgerEntries": 12,
+      "resourceFee": "9665"
+    },
+    "fee": "9765"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "supply 1 XLM",
+    "verdict": "SIM-OK",
+    "ms": 1707,
+    "resources": {
+      "instructions": 40399054,
+      "readBytes": 144,
+      "writeBytes": 5452,
+      "readOnlyEntries": 51,
+      "readWriteEntries": 20,
+      "ledgerEntries": 71,
+      "resourceFee": "95713"
+    },
+    "fee": "95813"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "withdraw 0.5 XLM",
+    "verdict": "SIM-OK",
+    "ms": 2208,
+    "resources": {
+      "instructions": 34930741,
+      "readBytes": 144,
+      "writeBytes": 1892,
+      "readOnlyEntries": 71,
+      "readWriteEntries": 11,
+      "ledgerEntries": 82,
+      "resourceFee": "77425"
+    },
+    "fee": "77525"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "withdraw all XLM",
+    "verdict": "SIM-OK",
+    "ms": 2120,
+    "resources": {
+      "instructions": 49876381,
+      "readBytes": 144,
+      "writeBytes": 5004,
+      "readOnlyEntries": 69,
+      "readWriteEntries": 18,
+      "ledgerEntries": 87,
+      "resourceFee": "97531"
+    },
+    "fee": "97631"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "borrow 1 XLM against the deployer XLM deposit",
+    "verdict": "SIM-FAIL",
+    "ms": 669,
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction) Event log (newest first): 0: [Diagnostic Event] contract:CCK7R22G3HOZDJXU6DVDEXK4HZ6AS3DHHFCAFOMY22XQEA3DJHRRSNXI, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", borrow] 1: [Contract Event] contract:CCK7R22G3HOZDJXU6DVDEXK4HZ6AS3DHHFCAFOMY22XQEA3DJHRRSNXI, topics:[accrue_interest], dat"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "borrow 1 USDC (market has no liquidity)",
+    "verdict": "CLIENT-GUARD",
+    "ms": 0,
+    "error": "Error: Add a USDC trustline with your wallet before receiving or using this asset, then refresh balances."
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "repay 1 XLM (no debt)",
+    "verdict": "SIM-OK",
+    "ms": 1091,
+    "resources": {
+      "instructions": 16543139,
+      "readBytes": 0,
+      "writeBytes": 104,
+      "readOnlyEntries": 47,
+      "readWriteEntries": 1,
+      "ledgerEntries": 48,
+      "resourceFee": "23433"
+    },
+    "fee": "23533"
+  },
+  {
+    "flow": "group1 Meridian",
+    "step": "repay all XLM (no debt)",
+    "verdict": "SIM-OK",
+    "ms": 1087,
+    "resources": {
+      "instructions": 12503866,
+      "readBytes": 0,
+      "writeBytes": 104,
+      "readOnlyEntries": 43,
+      "readWriteEntries": 1,
+      "ledgerEntries": 44,
+      "resourceFee": "21214"
+    },
+    "fee": "21314"
+  },
+  {
+    "flow": "group2 Rewards",
+    "step": "enter_market XLM (Enable collateral)",
+    "verdict": "SIM-OK",
+    "ms": 1134,
+    "resources": {
+      "instructions": 2211167,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 12,
+      "readWriteEntries": 0,
+      "ledgerEntries": 12,
+      "resourceFee": "9678"
+    },
+    "fee": "9778"
+  },
+  {
+    "flow": "group2 Rewards",
+    "step": "supply 1 XLM",
+    "verdict": "SIM-OK",
+    "ms": 1260,
+    "resources": {
+      "instructions": 23136665,
+      "readBytes": 144,
+      "writeBytes": 1360,
+      "readOnlyEntries": 60,
+      "readWriteEntries": 8,
+      "ledgerEntries": 68,
+      "resourceFee": "42751"
+    },
+    "fee": "42851"
+  },
+  {
+    "flow": "group2 Rewards",
+    "step": "withdraw 0.5 XLM",
+    "verdict": "CLIENT-GUARD",
+    "ms": 541,
+    "error": "Error: Withdrawal exceeds your available collateral or market liquidity."
+  },
+  {
+    "flow": "group2 Rewards",
+    "step": "withdraw all XLM",
+    "verdict": "CLIENT-GUARD",
+    "ms": 552,
+    "error": "Error: Withdrawal exceeds your available collateral or market liquidity."
+  },
+  {
+    "flow": "group2 Rewards",
+    "step": "claim rewards (accrued 21000)",
+    "verdict": "SIM-OK",
+    "ms": 1505,
+    "resources": {
+      "instructions": 11543953,
+      "readBytes": 144,
+      "writeBytes": 1084,
+      "readOnlyEntries": 53,
+      "readWriteEntries": 5,
+      "ledgerEntries": 58,
+      "resourceFee": "29331"
+    },
+    "fee": "29431"
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "boosted health cache age of XLM market (borrow/margin fail closed when > 300 s)",
+    "verdict": "SIM-OK",
+    "ms": 60,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "refresh_boosted_underlying XLM (permissionless; the fix for stale cache)",
+    "verdict": "SIM-OK",
+    "ms": 1013,
+    "resources": {
+      "instructions": 1956634,
+      "readBytes": 0,
+      "writeBytes": 416,
+      "readOnlyEntries": 7,
+      "readWriteEntries": 3,
+      "ledgerEntries": 10,
+      "resourceFee": "12070"
+    },
+    "fee": "12170"
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "enter_market XLM (Enable collateral)",
+    "verdict": "SIM-OK",
+    "ms": 826,
+    "resources": {
+      "instructions": 2163958,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 12,
+      "readWriteEntries": 0,
+      "ledgerEntries": 12,
+      "resourceFee": "9664"
+    },
+    "fee": "9764"
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "supply 1 XLM",
+    "verdict": "SIM-OK",
+    "ms": 938,
+    "resources": {
+      "instructions": 28722543,
+      "readBytes": 144,
+      "writeBytes": 4112,
+      "readOnlyEntries": 52,
+      "readWriteEntries": 18,
+      "ledgerEntries": 70,
+      "resourceFee": "114383"
+    },
+    "fee": "114483"
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "withdraw 0.5 XLM",
+    "verdict": "CLIENT-GUARD",
+    "ms": 574,
+    "error": "Error: Withdrawal exceeds your available collateral or market liquidity."
+  },
+  {
+    "flow": "group3 BlendDemo",
+    "step": "withdraw all XLM",
+    "verdict": "CLIENT-GUARD",
+    "ms": 556,
+    "error": "Error: Withdrawal exceeds your available collateral or market liquidity."
+  },
+  {
+    "flow": "margin group1",
+    "step": "marginContext (get_margin_status + effective_max_leverage)",
+    "verdict": "SIM-OK",
+    "ms": 1,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "margin group1",
+    "step": "quoteOpen 0.5 XLM 2x long USDC (fees, pair config, prices, pool route, estimate_swap)",
+    "verdict": "SIM-OK",
+    "ms": 2713,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "margin group1",
+    "step": "openPosition stage 1: transfer_spot_to_margin (later stages cannot simulate without it)",
+    "verdict": "SIM-OK",
+    "ms": 3678,
+    "resources": {
+      "instructions": 34937168,
+      "readBytes": 0,
+      "writeBytes": 1088,
+      "readOnlyEntries": 68,
+      "readWriteEntries": 8,
+      "ledgerEntries": 76,
+      "resourceFee": "1785800"
+    },
+    "fee": "1785900"
+  },
+  {
+    "flow": "margin group1",
+    "step": "positions() read for deployer",
+    "verdict": "SIM-OK",
+    "ms": 107,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "margin group1",
+    "step": "withdrawMargin (no free margin) -> expected client guard",
+    "verdict": "CLIENT-GUARD",
+    "ms": 92,
+    "error": "Error: No free margin available for this asset."
+  },
+  {
+    "flow": "margin group1",
+    "step": "DIAG begin_open_position_v3 without prior transfer (expect insufficient margin balance)",
+    "verdict": "SIM-FAIL",
+    "ms": 224,
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction) Event log (newest first): 0: [Diagnostic Event] contract:CCWAUBM6C5RRPBFKJK57I56GXRCILOKRVJEOAGEI7ZHKXVSOHEL5JPEY, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", begin_open_position_v3] 1: [Diagnostic Event] contract:CCDGYBI2JL7K3B7KVPV4GWJTKUF3IE75RC3EDCQ3IGYOPQZFII6ZCNQH, topics:[fn_"
+  },
+  {
+    "flow": "control group1",
+    "step": "loadControl (markets, pending, events history, margin, rewards)",
+    "verdict": "SIM-OK",
+    "ms": 3270,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_rates USDC (unchanged curve)",
+    "verdict": "SIM-OK",
+    "ms": 748,
+    "resources": {
+      "instructions": 2410893,
+      "readBytes": 0,
+      "writeBytes": 1632,
+      "readOnlyEntries": 6,
+      "readWriteEntries": 5,
+      "ledgerEntries": 11,
+      "resourceFee": "17901"
+    },
+    "fee": "18001"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_idle_buffer USDC (unchanged)",
+    "verdict": "SIM-OK",
+    "ms": 964,
+    "resources": {
+      "instructions": 5939904,
+      "readBytes": 0,
+      "writeBytes": 1288,
+      "readOnlyEntries": 35,
+      "readWriteEntries": 2,
+      "ledgerEntries": 37,
+      "resourceFee": "18781"
+    },
+    "fee": "18881"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_risk USDC (supply cap +1)",
+    "verdict": "SIM-OK",
+    "ms": 927,
+    "resources": {
+      "instructions": 6809483,
+      "readBytes": 0,
+      "writeBytes": 1292,
+      "readOnlyEntries": 37,
+      "readWriteEntries": 2,
+      "ledgerEntries": 39,
+      "resourceFee": "19620"
+    },
+    "fee": "19720"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_risk USDC (CF -1pt -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 958,
+    "resources": {
+      "instructions": 5583983,
+      "readBytes": 0,
+      "writeBytes": 1564,
+      "readOnlyEntries": 15,
+      "readWriteEntries": 3,
+      "ledgerEntries": 18,
+      "resourceFee": "748147"
+    },
+    "fee": "748247"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_price USDC (same approved tuple -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 1395,
+    "resources": {
+      "instructions": 1594212,
+      "readBytes": 0,
+      "writeBytes": 1408,
+      "readOnlyEntries": 3,
+      "readWriteEntries": 1,
+      "ledgerEntries": 4,
+      "resourceFee": "439221"
+    },
+    "fee": "439321"
+  },
+  {
+    "flow": "control group1",
+    "step": "pause_market USDC (no-op false,false)",
+    "verdict": "SIM-OK",
+    "ms": 885,
+    "resources": {
+      "instructions": 7574097,
+      "readBytes": 0,
+      "writeBytes": 412,
+      "readOnlyEntries": 16,
+      "readWriteEntries": 4,
+      "ledgerEntries": 20,
+      "resourceFee": "428876"
+    },
+    "fee": "428976"
+  },
+  {
+    "flow": "control group1",
+    "step": "apply_pending with nothing staged",
+    "verdict": "SIM-OK",
+    "ms": 1069,
+    "resources": {
+      "instructions": 1405231,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 5,
+      "readWriteEntries": 0,
+      "ledgerEntries": 5,
+      "resourceFee": "7710"
+    },
+    "fee": "7810"
+  },
+  {
+    "flow": "control group1",
+    "step": "sync_pairs (syncLeverageLimits)",
+    "verdict": "SIM-OK",
+    "ms": 908,
+    "resources": {
+      "instructions": 44164829,
+      "readBytes": 0,
+      "writeBytes": 3352,
+      "readOnlyEntries": 26,
+      "readWriteEntries": 1,
+      "ledgerEntries": 27,
+      "resourceFee": "26267"
+    },
+    "fee": "26367"
+  },
+  {
+    "flow": "control group1",
+    "step": "update_margin (same config)",
+    "verdict": "SIM-OK",
+    "ms": 811,
+    "resources": {
+      "instructions": 3829382,
+      "readBytes": 0,
+      "writeBytes": 836,
+      "readOnlyEntries": 16,
+      "readWriteEntries": 1,
+      "ledgerEntries": 17,
+      "resourceFee": "13495"
+    },
+    "fee": "13595"
+  },
+  {
+    "flow": "control group1",
+    "step": "set_market_margin USDC true",
+    "verdict": "SIM-OK",
+    "ms": 901,
+    "resources": {
+      "instructions": 48672901,
+      "readBytes": 0,
+      "writeBytes": 4188,
+      "readOnlyEntries": 30,
+      "readWriteEntries": 2,
+      "ledgerEntries": 32,
+      "resourceFee": "31170"
+    },
+    "fee": "31270"
+  },
+  {
+    "flow": "control group1",
+    "step": "set_rewards XLM (group 1 has none; would lock the market list)",
+    "verdict": "SIM-OK",
+    "ms": 973,
+    "resources": {
+      "instructions": 5079432,
+      "readBytes": 0,
+      "writeBytes": 1244,
+      "readOnlyEntries": 15,
+      "readWriteEntries": 4,
+      "ledgerEntries": 19,
+      "resourceFee": "947820"
+    },
+    "fee": "947920"
+  },
+  {
+    "flow": "control group2",
+    "step": "loadControl (markets, pending, events history, margin, rewards)",
+    "verdict": "SIM-OK",
+    "ms": 2829,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "control group2",
+    "step": "update_rates XLM (unchanged curve)",
+    "verdict": "SIM-OK",
+    "ms": 811,
+    "resources": {
+      "instructions": 2404362,
+      "readBytes": 0,
+      "writeBytes": 1632,
+      "readOnlyEntries": 6,
+      "readWriteEntries": 5,
+      "ledgerEntries": 11,
+      "resourceFee": "17899"
+    },
+    "fee": "17999"
+  },
+  {
+    "flow": "control group2",
+    "step": "update_idle_buffer XLM (unchanged)",
+    "verdict": "SIM-OK",
+    "ms": 825,
+    "resources": {
+      "instructions": 5903582,
+      "readBytes": 0,
+      "writeBytes": 1288,
+      "readOnlyEntries": 35,
+      "readWriteEntries": 2,
+      "ledgerEntries": 37,
+      "resourceFee": "18771"
+    },
+    "fee": "18871"
+  },
+  {
+    "flow": "control group2",
+    "step": "update_risk XLM (supply cap +1)",
+    "verdict": "SIM-OK",
+    "ms": 950,
+    "resources": {
+      "instructions": 6776186,
+      "readBytes": 0,
+      "writeBytes": 1292,
+      "readOnlyEntries": 37,
+      "readWriteEntries": 2,
+      "ledgerEntries": 39,
+      "resourceFee": "19610"
+    },
+    "fee": "19710"
+  },
+  {
+    "flow": "control group2",
+    "step": "update_risk XLM (CF -1pt -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 874,
+    "resources": {
+      "instructions": 5684755,
+      "readBytes": 0,
+      "writeBytes": 1564,
+      "readOnlyEntries": 15,
+      "readWriteEntries": 3,
+      "ledgerEntries": 18,
+      "resourceFee": "748192"
+    },
+    "fee": "748292"
+  },
+  {
+    "flow": "control group2",
+    "step": "update_price XLM (same approved tuple -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 1336,
+    "resources": {
+      "instructions": 1588150,
+      "readBytes": 0,
+      "writeBytes": 1408,
+      "readOnlyEntries": 3,
+      "readWriteEntries": 1,
+      "ledgerEntries": 4,
+      "resourceFee": "439259"
+    },
+    "fee": "439359"
+  },
+  {
+    "flow": "control group2",
+    "step": "pause_market XLM (no-op false,false)",
+    "verdict": "SIM-OK",
+    "ms": 875,
+    "resources": {
+      "instructions": 7784493,
+      "readBytes": 0,
+      "writeBytes": 412,
+      "readOnlyEntries": 16,
+      "readWriteEntries": 4,
+      "ledgerEntries": 20,
+      "resourceFee": "428939"
+    },
+    "fee": "429039"
+  },
+  {
+    "flow": "control group2",
+    "step": "apply_pending with nothing staged",
+    "verdict": "SIM-OK",
+    "ms": 951,
+    "resources": {
+      "instructions": 1150136,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 4,
+      "readWriteEntries": 0,
+      "ledgerEntries": 4,
+      "resourceFee": "7372"
+    },
+    "fee": "7472"
+  },
+  {
+    "flow": "control group2",
+    "step": "fund rewards 1 unit",
+    "verdict": "SIM-OK",
+    "ms": 895,
+    "resources": {
+      "instructions": 809839,
+      "readBytes": 144,
+      "writeBytes": 792,
+      "readOnlyEntries": 2,
+      "readWriteEntries": 3,
+      "ledgerEntries": 5,
+      "resourceFee": "13509"
+    },
+    "fee": "13609"
+  },
+  {
+    "flow": "control group2",
+    "step": "set_reward_speeds (unchanged)",
+    "verdict": "SIM-OK",
+    "ms": 964,
+    "resources": {
+      "instructions": 15173193,
+      "readBytes": 0,
+      "writeBytes": 1624,
+      "readOnlyEntries": 49,
+      "readWriteEntries": 4,
+      "ledgerEntries": 53,
+      "resourceFee": "28825"
+    },
+    "fee": "28925"
+  },
+  {
+    "flow": "control group2",
+    "step": "withdraw_unallocated 0.1",
+    "verdict": "SIM-OK",
+    "ms": 860,
+    "resources": {
+      "instructions": 1726168,
+      "readBytes": 144,
+      "writeBytes": 848,
+      "readOnlyEntries": 5,
+      "readWriteEntries": 3,
+      "ledgerEntries": 8,
+      "resourceFee": "121134"
+    },
+    "fee": "121234"
+  },
+  {
+    "flow": "control group3",
+    "step": "loadControl (markets, pending, events history, margin, rewards)",
+    "verdict": "SIM-OK",
+    "ms": 2044,
+    "note": "returned without signing (read-only / no tx needed)"
+  },
+  {
+    "flow": "control group3",
+    "step": "update_rates XLM (unchanged curve)",
+    "verdict": "SIM-OK",
+    "ms": 1156,
+    "resources": {
+      "instructions": 2424978,
+      "readBytes": 0,
+      "writeBytes": 1780,
+      "readOnlyEntries": 6,
+      "readWriteEntries": 5,
+      "ledgerEntries": 11,
+      "resourceFee": "17968"
+    },
+    "fee": "18068"
+  },
+  {
+    "flow": "control group3",
+    "step": "update_idle_buffer XLM (unchanged)",
+    "verdict": "SIM-OK",
+    "ms": 1163,
+    "resources": {
+      "instructions": 6050311,
+      "readBytes": 0,
+      "writeBytes": 1436,
+      "readOnlyEntries": 35,
+      "readWriteEntries": 2,
+      "ledgerEntries": 37,
+      "resourceFee": "18878"
+    },
+    "fee": "18978"
+  },
+  {
+    "flow": "control group3",
+    "step": "update_risk XLM (supply cap +1)",
+    "verdict": "SIM-OK",
+    "ms": 963,
+    "resources": {
+      "instructions": 6923456,
+      "readBytes": 0,
+      "writeBytes": 1440,
+      "readOnlyEntries": 37,
+      "readWriteEntries": 2,
+      "ledgerEntries": 39,
+      "resourceFee": "19718"
+    },
+    "fee": "19818"
+  },
+  {
+    "flow": "control group3",
+    "step": "update_risk XLM (CF -1pt -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 943,
+    "resources": {
+      "instructions": 5611848,
+      "readBytes": 0,
+      "writeBytes": 1712,
+      "readOnlyEntries": 15,
+      "readWriteEntries": 3,
+      "ledgerEntries": 18,
+      "resourceFee": "748282"
+    },
+    "fee": "748382"
+  },
+  {
+    "flow": "control group3",
+    "step": "update_price XLM (same approved tuple -> staged)",
+    "verdict": "SIM-OK",
+    "ms": 1591,
+    "resources": {
+      "instructions": 1608766,
+      "readBytes": 0,
+      "writeBytes": 1556,
+      "readOnlyEntries": 3,
+      "readWriteEntries": 1,
+      "ledgerEntries": 4,
+      "resourceFee": "439466"
+    },
+    "fee": "439566"
+  },
+  {
+    "flow": "control group3",
+    "step": "pause_market XLM (no-op false,false)",
+    "verdict": "SIM-OK",
+    "ms": 1189,
+    "resources": {
+      "instructions": 7615078,
+      "readBytes": 0,
+      "writeBytes": 412,
+      "readOnlyEntries": 16,
+      "readWriteEntries": 4,
+      "ledgerEntries": 20,
+      "resourceFee": "428888"
+    },
+    "fee": "428988"
+  },
+  {
+    "flow": "control group3",
+    "step": "apply_pending with nothing staged",
+    "verdict": "SIM-OK",
+    "ms": 1083,
+    "resources": {
+      "instructions": 1160695,
+      "readBytes": 0,
+      "writeBytes": 0,
+      "readOnlyEntries": 4,
+      "readWriteEntries": 0,
+      "ledgerEntries": 4,
+      "resourceFee": "7375"
+    },
+    "fee": "7475"
+  },
+  {
+    "flow": "control group1",
+    "step": "add_market EURC after launch (rent of a new market)",
+    "verdict": "SIM-OK",
+    "ms": 3733,
+    "resources": {
+      "instructions": 28638004,
+      "readBytes": 0,
+      "writeBytes": 5384,
+      "readOnlyEntries": 14,
+      "readWriteEntries": 36,
+      "ledgerEntries": 50,
+      "resourceFee": "10048401"
+    },
+    "fee": "10048501"
+  },
+  {
+    "flow": "control group1",
+    "step": "add duplicate XLM market after launch",
+    "verdict": "SIM-FAIL",
+    "ms": 2646,
+    "error": "Error: Simulation failed: HostError: Error(Contract, #6) Event log (newest first): 0: [Diagnostic Event] contract:CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S, topics:[error, Error(Contract, #6)], data:\"escalating Ok(ScErrorType::Contract) frame-exit to Err\" 1: [Diagnostic Event] topics:[fn_call, CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S, add_market], data:[GC3FLITV3KLO5"
+  },
+  {
+    "flow": "control group1",
+    "step": "add market with CF 90% (client guardrail)",
+    "verdict": "CLIENT-GUARD",
+    "ms": 1906,
+    "error": "Error: Collateral factor must be between 1% and 75%."
+  },
+  {
+    "flow": "launch wizard",
+    "step": "create_group QaDryRun (first wizard tx; rent estimate)",
+    "verdict": "SIM-OK",
+    "ms": 1651,
+    "resources": {
+      "instructions": 10741895,
+      "readBytes": 0,
+      "writeBytes": 4224,
+      "readOnlyEntries": 5,
+      "readWriteEntries": 19,
+      "ledgerEntries": 24,
+      "resourceFee": "4439716"
+    },
+    "fee": "4439816"
+  },
+  {
+    "flow": "launch wizard",
+    "step": "discoverMarginPools XLM+USDC (router get_pools + registry)",
+    "verdict": "SIM-OK",
+    "ms": 3924,
+    "note": "returned without signing (read-only / no tx needed)"
+  }
+]

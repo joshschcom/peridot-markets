@@ -1,0 +1,823 @@
+[
+  {
+    "flow": "B-group/X",
+    "step": "page read: group has rewards + margin + 2 markets",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:31:52.694Z",
+    "note": "QaFull 2 markets"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "owner supply XLM before enter_market (rewards group) -> client must say enable first",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 207,
+    "startedAt": "2026-10-25T23:31:52.704Z",
+    "error": "Error: Enable this market before supplying to earn rewards."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "owner enter_market XLM",
+    "status": "PASS",
+    "hashes": [
+      "a3972b52e7aac31749f98cffc5cf8e9c2812af58feebbe49ca07bb802f40960e"
+    ],
+    "sims": [
+      {
+        "instructions": 2362098,
+        "readBytes": 0,
+        "writeBytes": 428,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "272675"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "a3972b52e7aac31749f98cffc5cf8e9c2812af58feebbe49ca07bb802f40960e",
+        "ledger": 5389506,
+        "feeCharged": "233959",
+        "resources": {
+          "instructions": 2362098,
+          "readBytes": 0,
+          "writeBytes": 428,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "272675"
+        }
+      }
+    ],
+    "ms": 4348,
+    "startedAt": "2026-10-25T23:31:52.912Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert entered XLM",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:32:03.121Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "owner supply 5000 XLM",
+    "status": "PASS",
+    "hashes": [
+      "490750b56adfc1e2018abeb85d6ae83cb1f99f830ce65cdf764342ac4f8aade1"
+    ],
+    "sims": [
+      {
+        "instructions": 24154660,
+        "readBytes": 144,
+        "writeBytes": 1840,
+        "readOnlyEntries": 57,
+        "readWriteEntries": 11,
+        "ledgerEntries": 68,
+        "resourceFee": "872693"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "490750b56adfc1e2018abeb85d6ae83cb1f99f830ce65cdf764342ac4f8aade1",
+        "ledger": 5389508,
+        "feeCharged": "759040",
+        "resources": {
+          "instructions": 24154660,
+          "readBytes": 144,
+          "writeBytes": 1840,
+          "readOnlyEntries": 57,
+          "readWriteEntries": 11,
+          "ledgerEntries": 68,
+          "resourceFee": "872693"
+        }
+      }
+    ],
+    "ms": 4743,
+    "startedAt": "2026-10-25T23:32:03.123Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "owner enter_market USDT",
+    "status": "PASS",
+    "hashes": [
+      "631afa73b925724e6b03a4658cbdcf5271b053051a49f43393493460b7e7ef45"
+    ],
+    "sims": [
+      {
+        "instructions": 2397077,
+        "readBytes": 0,
+        "writeBytes": 516,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "93795"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "631afa73b925724e6b03a4658cbdcf5271b053051a49f43393493460b7e7ef45",
+        "ledger": 5389509,
+        "feeCharged": "78417",
+        "resources": {
+          "instructions": 2397077,
+          "readBytes": 0,
+          "writeBytes": 516,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "93795"
+        }
+      }
+    ],
+    "ms": 5532,
+    "startedAt": "2026-10-25T23:32:07.867Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "owner supply 20000 USDT",
+    "status": "PASS",
+    "hashes": [
+      "607d8c044bc223e899e761944a4f8dbdd9d73e56be30c16e7d8443790a5218c4"
+    ],
+    "sims": [
+      {
+        "instructions": 25669994,
+        "readBytes": 0,
+        "writeBytes": 1764,
+        "readOnlyEntries": 58,
+        "readWriteEntries": 11,
+        "ledgerEntries": 69,
+        "resourceFee": "834189"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "607d8c044bc223e899e761944a4f8dbdd9d73e56be30c16e7d8443790a5218c4",
+        "ledger": 5389511,
+        "feeCharged": "725521",
+        "resources": {
+          "instructions": 25669994,
+          "readBytes": 0,
+          "writeBytes": 1764,
+          "readOnlyEntries": 58,
+          "readWriteEntries": 11,
+          "ledgerEntries": 69,
+          "resourceFee": "834189"
+        }
+      }
+    ],
+    "ms": 2853,
+    "startedAt": "2026-10-25T23:32:19.571Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert market liquidity after seed (XLM 5000, USDT 20000)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:32:30.014Z",
+    "note": "XLM 5000 USDT 20000 supplied 5000/20000"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user supply XLM before enter_market -> must be blocked",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 283,
+    "startedAt": "2026-10-25T23:32:38.014Z",
+    "error": "Error: Enable this market before supplying to earn rewards."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "DIAG user raw deposit() without enter_market (chain behaviour, bypasses client guard)",
+    "status": "PASS",
+    "hashes": [
+      "76dc0be75ad37ea4661234481d0c5369bc43b307895c19d458e99615b7b040e8"
+    ],
+    "sims": [
+      {
+        "instructions": 24313397,
+        "readBytes": 144,
+        "writeBytes": 1988,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "650728"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "76dc0be75ad37ea4661234481d0c5369bc43b307895c19d458e99615b7b040e8",
+        "ledger": 5389515,
+        "feeCharged": "566206",
+        "resources": {
+          "instructions": 24313397,
+          "readBytes": 144,
+          "writeBytes": 1988,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "650728"
+        }
+      }
+    ],
+    "ms": 5556,
+    "startedAt": "2026-10-25T23:32:38.299Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user enter_market XLM",
+    "status": "PASS",
+    "hashes": [
+      "d8128bb36d0e30838c73594f7abdf96da57954c9b17d14d03f01b69c859aaa27"
+    ],
+    "sims": [
+      {
+        "instructions": 2384320,
+        "readBytes": 0,
+        "writeBytes": 476,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "183971"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "d8128bb36d0e30838c73594f7abdf96da57954c9b17d14d03f01b69c859aaa27",
+        "ledger": 5389516,
+        "feeCharged": "156829",
+        "resources": {
+          "instructions": 2384320,
+          "readBytes": 0,
+          "writeBytes": 476,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "183971"
+        }
+      }
+    ],
+    "ms": 4086,
+    "startedAt": "2026-10-25T23:32:43.856Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user supply 1000 XLM",
+    "status": "PASS",
+    "hashes": [
+      "8ce84d559c05b64174eea42ac2d4ceac4185df9e362abc6ab18371d717084eff"
+    ],
+    "sims": [
+      {
+        "instructions": 24822573,
+        "readBytes": 144,
+        "writeBytes": 1996,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "241840"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8ce84d559c05b64174eea42ac2d4ceac4185df9e362abc6ab18371d717084eff",
+        "ledger": 5389518,
+        "feeCharged": "210671",
+        "resources": {
+          "instructions": 24822573,
+          "readBytes": 144,
+          "writeBytes": 1996,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "241840"
+        }
+      }
+    ],
+    "ms": 2771,
+    "startedAt": "2026-10-25T23:32:54.855Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert wallet -1000 XLM (minus fee) and shares increased",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:33:03.595Z",
+    "note": "wallet -1000.0210671 shares 10100000000 rate 1000000"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user borrow USDT before enter_market(USDT) -> client must block",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 157,
+    "startedAt": "2026-10-25T23:33:03.595Z",
+    "error": "Error: Enable this market before borrowing its asset."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "DIAG preview_borrow_max(USDT) before entering USDT",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 512,
+    "startedAt": "2026-10-25T23:33:03.752Z",
+    "note": "chain says max borrow 119.1932434 USDT (client blocks anyway)"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user enter_market USDT",
+    "status": "PASS",
+    "hashes": [
+      "9097d0cb3a717fb48ae0ac2ad14253dec73c0271e4907bd45e5d983cdf3aba1b"
+    ],
+    "sims": [
+      {
+        "instructions": 2401010,
+        "readBytes": 0,
+        "writeBytes": 516,
+        "readOnlyEntries": 10,
+        "readWriteEntries": 2,
+        "ledgerEntries": 12,
+        "resourceFee": "49430"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "9097d0cb3a717fb48ae0ac2ad14253dec73c0271e4907bd45e5d983cdf3aba1b",
+        "ledger": 5389520,
+        "feeCharged": "39839",
+        "resources": {
+          "instructions": 2401010,
+          "readBytes": 0,
+          "writeBytes": 516,
+          "readOnlyEntries": 10,
+          "readWriteEntries": 2,
+          "ledgerEntries": 12,
+          "resourceFee": "49430"
+        }
+      }
+    ],
+    "ms": 4277,
+    "startedAt": "2026-10-25T23:33:04.265Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "preview_borrow_max sane vs collateral (1000 XLM * $0.168 * 70% ~ 117 USD)",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 1,
+    "startedAt": "2026-10-25T23:33:15.626Z",
+    "note": "max borrow 119.1932434 USDT"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user borrow over max (client guard)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 442,
+    "startedAt": "2026-10-25T23:33:15.628Z",
+    "error": "Error: Borrow amount exceeds your available borrow power or liquidity."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "DIAG raw borrow over max (chain error text)",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 338,
+    "startedAt": "2026-10-25T23:33:16.071Z",
+    "error": "Error: Simulation failed: HostError: Error(WasmVm, InvalidAction)\n\nEvent log (newest first):\n   0: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[error, Error(WasmVm, InvalidAction)], data:[\"VM call trapped: UnreachableCodeReached\", borrow]\n   1: [Diagnostic Event] contract:CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, topics:[fn_return, hypothetical_liquidity_with_hint], data:[0, 4994444502]\n   2: [Diagnostic Event] contract:CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L, topics:[fn_return, get_account_snapshot], data:[10100000000, 0, 1000000, CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC]\n   3: [Diagnostic Event] contract:CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, topics:[fn_call, CBJLWWH53NOJR7S62EUPNPC5YD423TRWSJFNKTK4J64N6P3RHHE4MI3L, get_account_snapshot], data:GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44\n   4: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[fn_call, CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, hypothetical_liquidity_with_hint], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, 6191932434, CDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY, {exchange_rate: 1000000, ptoken_balance: 0, user_borrowed: 0}]\n   5: [Diagnostic Event] contract:CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, topics:[fn_return, is_borrow_paused], data:false\n   6: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[fn_call, CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, is_borrow_paused], data:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776\n   7: [Diagnostic Event] contract:CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, topics:[fn_return, accrue_user_market], data:Void\n   8: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[fn_call, CC2VPYKKKHMQXHQPLY4PQLW3T7TMKNQXLMOM3R77URGAC7GESRDGAY54, accrue_user_market], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, {total_borrowed: 0, total_ptokens: 200000000000, user_borrowed: 0, user_ptokens: 0}]\n   9: [Contract Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[accrue_interest], data:{borrow_index: 1000000000000000000, interest_accumulated: 0, total_borrows: 0}\n   10: [Diagnostic Event] contract:CC6GS2VCSFFGLQ4HENI624HW73656BFCKKZZE2BA26Q44SCN4GY2NG2X, topics:[fn_return, get_borrow_rate], data:0\n   11: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[fn_call, CC6GS2VCSFFGLQ4HENI624HW73656BFCKKZZE2BA26Q44SCN4GY2NG2X, get_borrow_rate], data:[200000000000, 0, 0]\n   12: [Diagnostic Event] contract:CDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY, topics:[fn_return, balance], data:200000000000\n   13: [Diagnostic Event] contract:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, topics:[fn_call, CDPXNHHVSLX3HFAHV7XOISM23MZH36WSXTO45RNDOBIDFZBGTSOVD4OY, balance], data:CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776\n   14: [Diagnostic Event] topics:[fn_call, CCX7TG6FAJLBU2USQSGWKOJ4OAUK3NJJLM3KJKZ3A7Z5623UZ5PID776, borrow], data:[GDCR62QPM56ND264X5F5AMMN2VWNT7ACCORPHP5J3KYMTBRRD2XMQW44, 6191932434]\n"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user borrow 60 USDT",
+    "status": "PASS",
+    "hashes": [
+      "5a1680527a3495113fc2aeda9e7efa2e8e4702017eb52b1bb12f3ded7aa79f78"
+    ],
+    "sims": [
+      {
+        "instructions": 32391803,
+        "readBytes": 0,
+        "writeBytes": 1892,
+        "readOnlyEntries": 72,
+        "readWriteEntries": 13,
+        "ledgerEntries": 85,
+        "resourceFee": "1814499"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "5a1680527a3495113fc2aeda9e7efa2e8e4702017eb52b1bb12f3ded7aa79f78",
+        "ledger": 5389523,
+        "feeCharged": "1578692",
+        "resources": {
+          "instructions": 32391803,
+          "readBytes": 0,
+          "writeBytes": 1892,
+          "readOnlyEntries": 72,
+          "readWriteEntries": 13,
+          "ledgerEntries": 85,
+          "resourceFee": "1814499"
+        }
+      }
+    ],
+    "ms": 6594,
+    "startedAt": "2026-10-25T23:33:16.409Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert debt ~60 USDT and wallet +60",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:33:29.781Z",
+    "note": "debt 60"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user withdraw 900 XLM while borrowing -> must be blocked",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 758,
+    "startedAt": "2026-10-25T23:33:29.782Z",
+    "error": "Error: Withdrawal exceeds your available collateral or market liquidity."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user repay 20 USDT",
+    "status": "PASS",
+    "hashes": [
+      "8d5dcaae5b5bf25fd1ee959a290f831d8ade328da1339160882a021769ecbf7c"
+    ],
+    "sims": [
+      {
+        "instructions": 26690982,
+        "readBytes": 0,
+        "writeBytes": 2716,
+        "readOnlyEntries": 48,
+        "readWriteEntries": 19,
+        "ledgerEntries": 67,
+        "resourceFee": "241789"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8d5dcaae5b5bf25fd1ee959a290f831d8ade328da1339160882a021769ecbf7c",
+        "ledger": 5389526,
+        "feeCharged": "211772",
+        "resources": {
+          "instructions": 26690982,
+          "readBytes": 0,
+          "writeBytes": 2716,
+          "readOnlyEntries": 48,
+          "readWriteEntries": 19,
+          "ledgerEntries": 67,
+          "resourceFee": "241789"
+        }
+      }
+    ],
+    "ms": 7970,
+    "startedAt": "2026-10-25T23:33:30.541Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert debt reduced to ~40",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:33:47.071Z",
+    "note": "40"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user repay more than wallet balance -> blocked",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:33:47.072Z",
+    "error": "Error: Repayment exceeds your wallet balance."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user supply 500 USDT (second market, reward-bearing)",
+    "status": "PASS",
+    "hashes": [
+      "8f11b266ab9784933b0a42c364c51f937b785b34b7d1a7fec7cad33bae1e07b0"
+    ],
+    "sims": [
+      {
+        "instructions": 27933839,
+        "readBytes": 0,
+        "writeBytes": 2848,
+        "readOnlyEntries": 50,
+        "readWriteEntries": 19,
+        "ledgerEntries": 69,
+        "resourceFee": "78137"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "8f11b266ab9784933b0a42c364c51f937b785b34b7d1a7fec7cad33bae1e07b0",
+        "ledger": 5389529,
+        "feeCharged": "69538",
+        "resources": {
+          "instructions": 27933839,
+          "readBytes": 0,
+          "writeBytes": 2848,
+          "readOnlyEntries": 50,
+          "readWriteEntries": 19,
+          "ledgerEntries": 69,
+          "resourceFee": "78137"
+        }
+      }
+    ],
+    "ms": 5984,
+    "startedAt": "2026-10-25T23:33:47.073Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user supply more than wallet XLM -> blocked",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 273,
+    "startedAt": "2026-10-25T23:33:53.059Z",
+    "error": "Error: Amount exceeds your wallet balance."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user repay all (repay_max)",
+    "status": "PASS",
+    "hashes": [
+      "f888d725826707127b0f3befe994b866d5bddf263fead9846171bfb90dcc94e5"
+    ],
+    "sims": [
+      {
+        "instructions": 38316141,
+        "readBytes": 0,
+        "writeBytes": 2716,
+        "readOnlyEntries": 48,
+        "readWriteEntries": 19,
+        "ledgerEntries": 67,
+        "resourceFee": "119020"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "f888d725826707127b0f3befe994b866d5bddf263fead9846171bfb90dcc94e5",
+        "ledger": 5389531,
+        "feeCharged": "105469",
+        "resources": {
+          "instructions": 38316141,
+          "readBytes": 0,
+          "writeBytes": 2716,
+          "readOnlyEntries": 48,
+          "readWriteEntries": 19,
+          "ledgerEntries": 67,
+          "resourceFee": "119020"
+        }
+      }
+    ],
+    "ms": 3617,
+    "startedAt": "2026-10-25T23:33:59.660Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert debt == 0 after repay_max",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:34:17.489Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "rewards accrued > 0 after supplying/borrowing in reward markets",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:34:38.449Z",
+    "note": "accrued 234648 USDT, distributor available 10000000000"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user claim rewards",
+    "status": "PASS",
+    "hashes": [
+      "722027b9cd00f995f4406e1a55f5e5b2b0489d7bf57cd9826241d8296ebe4357"
+    ],
+    "sims": [
+      {
+        "instructions": 34053266,
+        "readBytes": 0,
+        "writeBytes": 2128,
+        "readOnlyEntries": 90,
+        "readWriteEntries": 12,
+        "ledgerEntries": 102,
+        "resourceFee": "117311"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "722027b9cd00f995f4406e1a55f5e5b2b0489d7bf57cd9826241d8296ebe4357",
+        "ledger": 5389540,
+        "feeCharged": "102930",
+        "resources": {
+          "instructions": 34053266,
+          "readBytes": 0,
+          "writeBytes": 2128,
+          "readOnlyEntries": 90,
+          "readWriteEntries": 12,
+          "ledgerEntries": 102,
+          "resourceFee": "117311"
+        }
+      }
+    ],
+    "ms": 8839,
+    "startedAt": "2026-10-25T23:34:38.594Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert claim paid out reward token",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:34:47.767Z",
+    "note": "+461306 base units"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user withdraw 100 XLM (partial, exchange-rate conversion)",
+    "status": "FAIL",
+    "hashes": [
+      "0d90e1926e74b19e5f41c0027302592ab87b7fda9215253245dada3bcc5f8360"
+    ],
+    "sims": [
+      {
+        "instructions": 36323389,
+        "readBytes": 144,
+        "writeBytes": 1216,
+        "readOnlyEntries": 112,
+        "readWriteEntries": 7,
+        "ledgerEntries": 119,
+        "resourceFee": "55913"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0d90e1926e74b19e5f41c0027302592ab87b7fda9215253245dada3bcc5f8360",
+        "ledger": 5389542,
+        "feeCharged": "44527",
+        "resources": {
+          "instructions": 36323389,
+          "readBytes": 144,
+          "writeBytes": 1216,
+          "readOnlyEntries": 112,
+          "readWriteEntries": 7,
+          "ledgerEntries": 119,
+          "resourceFee": "55913"
+        }
+      }
+    ],
+    "ms": 10114,
+    "startedAt": "2026-10-25T23:34:47.769Z",
+    "error": "Error: The transaction failed on chain. Refresh state before trying again."
+  },
+  {
+    "flow": "B-group/X",
+    "step": "user withdraw all USDT",
+    "status": "PASS",
+    "hashes": [
+      "84bf91221221e0ea26820e0ffc69ca5654f2fd8398897758f60540496ed97cf0"
+    ],
+    "sims": [
+      {
+        "instructions": 41193247,
+        "readBytes": 0,
+        "writeBytes": 2060,
+        "readOnlyEntries": 107,
+        "readWriteEntries": 13,
+        "ledgerEntries": 120,
+        "resourceFee": "67573"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "84bf91221221e0ea26820e0ffc69ca5654f2fd8398897758f60540496ed97cf0",
+        "ledger": 5389545,
+        "feeCharged": "60234",
+        "resources": {
+          "instructions": 41193247,
+          "readBytes": 0,
+          "writeBytes": 2060,
+          "readOnlyEntries": 107,
+          "readWriteEntries": 13,
+          "ledgerEntries": 120,
+          "resourceFee": "67573"
+        }
+      }
+    ],
+    "ms": 7900,
+    "startedAt": "2026-10-25T23:35:05.686Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "assert USDT shares 0 after withdraw all",
+    "status": "PASS",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 0,
+    "startedAt": "2026-10-25T23:35:19.147Z"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "wallet REJECTS signature: app surfaces error and leaves no pending tx",
+    "status": "EXPECTED-FAIL-OK",
+    "hashes": [],
+    "sims": [],
+    "onchain": [],
+    "ms": 744,
+    "startedAt": "2026-10-25T23:35:19.149Z",
+    "error": "Error: User declined access"
+  },
+  {
+    "flow": "B-group/X",
+    "step": "after rejection a new action still works (lock released)",
+    "status": "PASS",
+    "hashes": [
+      "0d1578141eb10cc22f8e6fb50593c62bcfb1543d3cd34d9e1cd46eeaaf75c866"
+    ],
+    "sims": [
+      {
+        "instructions": 24864851,
+        "readBytes": 144,
+        "writeBytes": 1996,
+        "readOnlyEntries": 56,
+        "readWriteEntries": 12,
+        "ledgerEntries": 68,
+        "resourceFee": "47761"
+      }
+    ],
+    "onchain": [
+      {
+        "hash": "0d1578141eb10cc22f8e6fb50593c62bcfb1543d3cd34d9e1cd46eeaaf75c866",
+        "ledger": 5389547,
+        "feeCharged": "41908",
+        "resources": {
+          "instructions": 24864851,
+          "readBytes": 144,
+          "writeBytes": 1996,
+          "readOnlyEntries": 56,
+          "readWriteEntries": 12,
+          "ledgerEntries": 68,
+          "resourceFee": "47761"
+        }
+      }
+    ],
+    "ms": 2657,
+    "startedAt": "2026-10-25T23:35:19.894Z"
+  }
+]
