@@ -43,6 +43,7 @@ export function VaultOptionList({ selected, onSelect, disabled, compact, ariaLab
       }
       return <div key={option.id} className={`vault-option${live ? '' : ' locked'}`} aria-disabled={!live} data-vault={option.id}>
         {body}
+        {option.id === 'zenex' && <Link className="text-link vault-option-link" href="/vaults">Create a Zenex vault <ArrowUpRight size={13} aria-hidden /></Link>}
         {option.id === 'aquarius' && <Link className="text-link vault-option-link" href="/vaults">Try the Aquarius vault demo <ArrowUpRight size={13} aria-hidden /></Link>}
       </div>;
     })}

@@ -1005,6 +1005,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mock-zenex"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2031,6 +2038,17 @@ version = "0.1.0"
 dependencies = [
  "mock-token",
  "mock-xoxno-lending",
+ "peridot-interfaces",
+ "soroban-sdk",
+]
+
+[[package]]
+name = "zenex-vault"
+version = "0.1.0"
+dependencies = [
+ "mock-reflector",
+ "mock-token",
+ "mock-zenex",
  "peridot-interfaces",
  "soroban-sdk",
 ]

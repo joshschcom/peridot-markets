@@ -2,8 +2,9 @@
 import type { VaultKind } from './types';
 import { aquariusKind } from './aquarius';
 import { xoxnoKind } from './xoxno';
+import { zenexKind } from './zenex';
 
-export const VAULT_KINDS: readonly VaultKind[] = [aquariusKind, xoxnoKind];
+export const VAULT_KINDS: readonly VaultKind[] = [aquariusKind, zenexKind, xoxnoKind];
 
 export function getKind(id: string): VaultKind | undefined { return VAULT_KINDS.find(k => k.id === id); }
 export function liveKinds(): VaultKind[] { return VAULT_KINDS.filter(k => k.status === 'live'); }

@@ -99,6 +99,10 @@ A vault bound to a market (`bind_market(owner, market)`, set once) accepts depos
 - `app/src/lib/vaults/factory-client.ts`: `createVault`, `listMyVaults`, manifest lookups (`vault_factory`, `vault_kinds.<kind>` in the app manifests `app/src/lib/peridot/deployments/<network>.json`). Demo mode keeps vaults in localStorage.
 - `app/src/components/vaults/CreateVault.tsx`, `LadderPreview.tsx` (preview renderer per `PreviewModel.type`), `MyVaults.tsx`.
 
+## Zenex vault kind (branch `zenex-vault`)
+
+Kind `zenex` in `app/src/lib/vaults/kinds/zenex.ts` (fields, bounds that mirror the constructor, `init_args` = `(owner, market, underlying, cfg struct as a sorted ScMap)`, preview rows, summary, risks). It appears in the Create vault form and in the venue list as "Testnet, customizable". It is not a market-wizard route (`factoryRoute: null`): create the vault on `/vaults`, then the Peridot admin allow-lists it and the market uses it through the DeFindex route. Testnet runs against a MOCK Zenex; Zenex itself is mainnet only. Screenshots: `docs/ui/zenex-venues.png`, `zenex-create.png`, `zenex-created.png`. Mainnet txs: none submitted (upload would cost about 35 XLM).
+
 
 ## XOXNO vault kind (branch `xoxno-vault`)
 

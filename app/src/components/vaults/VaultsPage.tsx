@@ -30,7 +30,7 @@ export default function VaultsPage() {
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow">Vaults</p>
         <h1 className="vault-title">Where a market earns yield <Badge tone={network.name === 'mainnet' && !network.useMocks ? 'success' : 'info'}>{netLabel}</Badge></h1>
-        <p className="lead">Every yield venue Peridot knows about, and a vault factory: design your own Aquarius ladder vault (or another strategy), tune it, and deploy it from this page. Blend and DeFindex markets are live; XOXNO and Zenex are listed so you can see what is planned.</p>
+        <p className="lead">Every yield venue Peridot knows about, and a vault factory: design your own Aquarius ladder vault (or another strategy), tune it, and deploy it from this page. Blend and DeFindex markets are live. Zenex vaults are customizable here (testnet runs against a mock Zenex); XOXNO is listed so you can see what is planned.</p>
       </div>
     </div>
 

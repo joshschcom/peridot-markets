@@ -17,6 +17,8 @@ export interface VaultOption {
   /** Route written to the market config when selected in the wizard; null means it cannot be submitted. */
   factoryRoute: FactoryRoute;
   risk: 'Lowest' | 'Low' | 'Medium' | 'Higher';
+  /** Overrides the status badge text (the status still decides tone and lock state). */
+  statusText?: string;
   /** Where the user can learn more or try the venue. */
   href?: string;
   /** Extra qualifier for the status badge, for example "customizable". */
@@ -43,7 +45,7 @@ export const VAULT_OPTIONS: readonly VaultOption[] = [
   { id: 'defindex', name: 'DeFindex vault', tagline: 'Managed strategy vault', detail: 'Idle liquidity goes to an allowlisted DeFindex vault that runs Blend autocompound strategies.', status: 'live-mainnet', factoryRoute: 'Defindex', risk: 'Low', href: 'https://defindex.io' },
   { id: 'aquarius', name: 'Aquarius LP vault', tagline: 'Concentrated liquidity plus AQUA rewards', detail: 'Idle liquidity becomes a concentrated Aquarius position that earns swap fees and AQUA. Impermanent loss is possible. The factory cannot deploy this route yet: the creation flow here is a demo.', status: 'demo', factoryRoute: null, risk: 'Medium', href: '/vaults' },
   { id: 'xoxno', name: 'XOXNO Lending', tagline: 'Hub and spoke lending', detail: 'A per-owner vault that supplies one asset to XOXNO Lending (real XOXNO controller, supply only) with its own cap, minimum deposit and performance fee. Created from the Create vault form on /vaults; Peridot markets cannot route to it yet. Testnet only: nothing on mainnet.', status: 'testnet', statusNote: 'customizable', factoryRoute: null, risk: 'Medium', href: 'https://github.com/XOXNO/rs-lending-xlm' },
-  { id: 'zenex', name: 'Zenex perps vault', tagline: 'Earn perpetual futures fees', detail: 'Idle liquidity would back Zenex traders and earn their fees. Vault shares can lose value and withdrawals wait at least one hour. The adapter is not deployed yet.', status: 'coming-soon', factoryRoute: null, risk: 'Higher', href: 'https://docs.zenex.trade' },
+  { id: 'zenex', name: 'Zenex perps vault', tagline: 'Earn perpetual futures fees', detail: 'Create your own Zenex vault on the Vaults page (limits, buffer, keeper, cap). It keeps a liquid buffer and parks the rest in a Zenex strategy vault, which earns perps fees. Vault shares can lose value and Zenex exits take at least one hour. Testnet runs against a mock Zenex because Zenex has no testnet; the real protocol is mainnet only. Attach a created vault to a market through the DeFindex route (admin allow-list).', status: 'testnet', statusText: 'Testnet, customizable', factoryRoute: null, risk: 'Higher', href: '/vaults' },
 ];
 
 export function getVaultOption(id: VaultId): VaultOption {
@@ -59,11 +61,13 @@ export function isSubmittable(option: VaultOption): boolean {
 
 /** Status shown to the user on a given network. Testnet-only venues read as unavailable on mainnet and vice versa. */
 export function statusOn(option: VaultOption, net: AppNetwork): VaultStatus {
+  if (option.statusText) return option.status;
   if (option.status === 'live-mainnet' && net === 'testnet') return 'testnet';
   return option.status;
 }
 
 export function statusLabel(option: VaultOption, net: AppNetwork): string {
+  if (option.statusText) return option.statusText;
   const s = statusOn(option, net);
   const base = s === 'coming-soon' ? 'Coming soon' : STATUS_LABEL[s];
   return option.statusNote && s === option.status ? `${base}, ${option.statusNote}` : base;

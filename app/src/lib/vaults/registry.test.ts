@@ -8,14 +8,18 @@ test('registry ids are unique and cover every venue', () => {
   for (const id of ['idle', 'blend', 'defindex', 'aquarius', 'xoxno', 'zenex']) assert.ok(ids.includes(id as never), id);
 });
 
-test('Zenex is listed but never submittable', () => {
-  for (const id of ['zenex'] as const) {
-    const o = getVaultOption(id);
-    assert.equal(o.status, 'coming-soon');
-    assert.equal(o.factoryRoute, null);
-    assert.equal(isSubmittable(o), false);
-  }
+test('the coming soon copy says it is not active in this demo', () => {
   assert.match(COMING_SOON_COPY, /not active in this demo/);
+});
+
+test('Zenex is a testnet, customizable venue created on the Vaults page, not a market-wizard route', () => {
+  const o = getVaultOption('zenex');
+  assert.equal(o.status, 'testnet');
+  assert.equal(statusLabel(o, 'testnet'), 'Testnet, customizable');
+  assert.equal(statusLabel(o, 'mainnet'), 'Testnet, customizable');
+  assert.equal(o.factoryRoute, null);
+  assert.equal(isSubmittable(o), false);
+  assert.match(o.detail, /mock Zenex/);
 });
 
 test('only routes the factory accepts are submittable', () => {
@@ -31,14 +35,14 @@ test('status labels follow the network', () => {
   assert.equal(statusOn(blend, 'testnet'), 'testnet');
   assert.equal(statusLabel(blend, 'mainnet'), 'Live on mainnet');
   assert.equal(statusLabel(blend, 'testnet'), 'Testnet');
-  assert.equal(statusLabel(getVaultOption('zenex'), 'mainnet'), 'Coming soon');
+  assert.equal(statusLabel(getVaultOption('xoxno'), 'mainnet'), 'Testnet, customizable');
   assert.equal(statusLabel(getVaultOption('aquarius'), 'testnet'), 'Demo flow');
 });
 
 test('groupByStatus partitions the registry', () => {
   const g = groupByStatus();
   assert.equal(Object.values(g).flat().length, VAULT_OPTIONS.length);
-  assert.deepEqual(g['coming-soon'].map(o => o.id).sort(), ['zenex']);
+  assert.deepEqual(g['coming-soon'].map(o => o.id), []);
 });
 
 test('copy has no em dashes', () => {

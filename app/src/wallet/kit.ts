@@ -1,8 +1,11 @@
 import { Keypair, Networks, StrKey, Transaction, TransactionBuilder } from '@stellar/stellar-sdk';
 import type { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit/sdk';
-import type { Networks as KitNetworks } from '@creit.tech/stellar-wallets-kit/types';
+import type { Networks as KitNetworks, ModuleInterface } from '@creit.tech/stellar-wallets-kit/types';
 import { WalletRequest, WalletWindowError } from './request';
-export type WalletId='albedo'|'freighter';
+import { isWalletId, walletInfo, reportsNetwork, type KitWallet, type WalletId } from './catalog';
+export type { WalletId } from './catalog';
+/** WalletConnect needs a project id; without it the option is not offered at all. */
+export const walletConnectProjectId=(process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID||'').trim();
 let kit:typeof StellarWalletsKit|undefined;
 let loading:Promise<void>|undefined;
 let configuredPassphrase:string|undefined;
@@ -13,13 +16,14 @@ const request=new WalletRequest();
 /** A first-time Albedo or Freighter user may need to unlock, import or create an account. Blocked and closed windows fail fast, so this is only a last resort. */
 export const CONNECT_TIMEOUT_MS=300_000,SIGN_TIMEOUT_MS=300_000,QUICK_TIMEOUT_MS=30_000,EXPIRY_GUARD_MS=10_000;
 /** Turn wallet SDK error objects into plain, actionable messages. Never hides the wallet's own text when it is specific. */
-export function describeWalletError(error:unknown,wallet:WalletId):Error{
+export function describeWalletError(error:unknown,wallet:string):Error{
   if(error instanceof WalletWindowError)return error;
   const raw=error instanceof Error?error.message:typeof error==='string'?error:error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'?error.message:'';
   const code=error&&typeof error==='object'&&'code' in error?Number((error as {code:unknown}).code):undefined;
   if(error instanceof Error)return error;
-  if(/freighter is not connected|not installed|extension.*not/i.test(raw))return new Error('Freighter was not detected. Install and unlock the Freighter extension, allow it on this site, reload this page, or choose Albedo.');
-  if(/reject|declin|denied|cancel|closed the modal/i.test(raw)||code===-4)return new Error(`You declined the request in ${wallet==='albedo'?'Albedo':'Freighter'}. Nothing was signed. Try again when ready.`);
+  const name=walletInfo(wallet)?.name??'the wallet';
+  if(/freighter is not connected|not installed|not connected|extension.*not/i.test(raw))return new Error(wallet==='freighter'?'Freighter was not detected. Install and unlock the Freighter extension, allow it on this site, reload this page, or choose Albedo.':`${name} was not detected. Install and unlock it, allow it on this site, reload this page, or choose Albedo.`);
+  if(/reject|declin|denied|cancel|closed the modal/i.test(raw)||code===-4)return new Error(`You declined the request in ${name}. Nothing was signed. Try again when ready.`);
   return new Error(raw||'The wallet request failed. Try again.');
 }
 /** Milliseconds left before the transaction's own timebound, minus a guard so a late signature is never produced. */
@@ -33,17 +37,26 @@ export function isKitReady(passphrase:string):boolean{return !!kit&&configuredPa
 function validateNetwork(passphrase:string){
   if(passphrase!==Networks.PUBLIC&&passphrase!==Networks.TESTNET)throw new Error('This app supports Stellar mainnet and testnet only.');
 }
-/** Initialization loads only the two requested modules and never requests an account. */
+function configuredChain<T extends {PUBLIC:unknown;TESTNET:unknown}>(passphrase:string,chains:T){return (passphrase===Networks.PUBLIC?chains.PUBLIC:chains.TESTNET) as never;}
+/** Initialization loads the wallet modules that work in a plain browser (plus WalletConnect only when a project id is configured) and never requests an account. */
 export async function initializeKit(passphrase:string):Promise<void>{
   validateNetwork(passphrase);
   if(typeof window==='undefined')throw new Error('Wallet connections require a browser.');
   if(!loading)loading=(async()=>{
-    const [{StellarWalletsKit:loaded},{AlbedoModule,ALBEDO_ID},{FreighterModule}]=await Promise.all([
+    const [{StellarWalletsKit:loaded},{AlbedoModule,ALBEDO_ID},{FreighterModule},{xBullModule},{LobstrModule},{HanaModule}]=await Promise.all([
       import('@creit.tech/stellar-wallets-kit/sdk'),
       import('@creit.tech/stellar-wallets-kit/modules/albedo'),
       import('@creit.tech/stellar-wallets-kit/modules/freighter'),
+      import('@creit.tech/stellar-wallets-kit/modules/xbull'),
+      import('@creit.tech/stellar-wallets-kit/modules/lobstr'),
+      import('@creit.tech/stellar-wallets-kit/modules/hana'),
     ]);
-    loaded.init({modules:[new AlbedoModule(),new FreighterModule()],selectedWalletId:ALBEDO_ID,network:passphrase as KitNetworks});
+    const modules:ModuleInterface[]=[new AlbedoModule(),new FreighterModule(),new xBullModule(),new LobstrModule(),new HanaModule()];
+    if(walletConnectProjectId){
+      const {WalletConnectModule,WalletConnectTargetChain}=await import('@creit.tech/stellar-wallets-kit/modules/wallet-connect');
+      modules.push(new WalletConnectModule({projectId:walletConnectProjectId,metadata:{name:'Peridot Markets',description:'Peridot Markets',url:window.location.origin,icons:[`${window.location.origin}/logo-optimized.svg`]},allowedChains:[configuredChain(passphrase,WalletConnectTargetChain)]}));
+    }
+    loaded.init({modules,selectedWalletId:ALBEDO_ID,network:passphrase as KitNetworks});
     kit=loaded;configuredPassphrase=passphrase;
   })().catch(error=>{loading=undefined;throw error;});
   await loading;
@@ -53,7 +66,7 @@ export async function initializeKit(passphrase:string):Promise<void>{
   }
 }
 export async function connectKit(walletId:WalletId,passphrase:string):Promise<string>{
-  if(walletId!=='albedo'&&walletId!=='freighter')throw new Error('Unsupported wallet.');
+  if(!isWalletId(walletId))throw new Error('Unsupported wallet.');
   validateNetwork(passphrase);
   if(!isKitReady(passphrase))throw new Error('Wallet is still loading. Wait a moment, then connect again.');
   if(request.isBusy)throw new Error('Another wallet request is already open. Cancel it before trying again.');
@@ -77,8 +90,8 @@ export async function disconnectKit():Promise<void>{
 export async function getKitNetwork():Promise<{network:string;networkPassphrase:string}>{
   if(!kit||!configuredPassphrase)throw new Error('Connect your wallet first.');
   // Albedo has no network getter. Each request specifies its network and the returned signature is verified against it.
-  if(selected==='albedo')return {network:configuredPassphrase===Networks.PUBLIC?'PUBLIC':'TESTNET',networkPassphrase:configuredPassphrase};
-  return request.run(()=>kit!.getNetwork(),QUICK_TIMEOUT_MS).catch(error=>{throw describeWalletError(error,'freighter');});
+  if(!reportsNetwork(selected))return {network:configuredPassphrase===Networks.PUBLIC?'PUBLIC':'TESTNET',networkPassphrase:configuredPassphrase};
+  return request.run(()=>kit!.getNetwork(),QUICK_TIMEOUT_MS).catch(error=>{throw describeWalletError(error,selected);});
 }
 export function validateWalletSignature(unsignedXdr:string,signedXdr:string,address:string,passphrase:string,signerAddress?:string):string{
   validateNetwork(passphrase);
@@ -102,11 +115,11 @@ export async function signKitTransaction(xdr:string,address:string,passphrase:st
   const remaining=()=>{const left=deadline-Date.now();if(left<=0)throw new Error('Transaction expired. Review the action again.');return left;};
   let result:Awaited<ReturnType<typeof StellarWalletsKit.signTransaction>>;
   try{
-    if(wallet==='freighter'){
+    if(walletInfo(wallet)?.kind==='extension'){
       const current=await request.run(()=>kit!.fetchAddress(),Math.min(QUICK_TIMEOUT_MS*2,remaining()));
       if(attempt!==generation)throw new Error('Wallet selection changed. Reconnect before signing.');
       if(current.address!==address)throw new Error('The selected wallet account changed. Reconnect before signing.');
-      if((await request.run(()=>kit!.getNetwork(),Math.min(QUICK_TIMEOUT_MS,remaining()))).networkPassphrase!==passphrase)throw new Error('Switch your wallet to the selected app network before signing.');
+      if(reportsNetwork(wallet)&&(await request.run(()=>kit!.getNetwork(),Math.min(QUICK_TIMEOUT_MS,remaining()))).networkPassphrase!==passphrase)throw new Error('Switch your wallet to the selected app network before signing.');
     }
     if(attempt!==generation)throw new Error('Wallet selection changed. Reconnect before signing.');
     // Sign only: never request implicit permissions or call signAndSubmitTransaction.
@@ -115,4 +128,10 @@ export async function signKitTransaction(xdr:string,address:string,passphrase:st
   if(attempt!==generation||connectedAddress!==address)throw new Error('Wallet selection changed while signing. Reconnect and review again.');
   if(!result.signedTxXdr)throw new Error('Wallet did not return a signed transaction.');
   return validateWalletSignature(xdr,result.signedTxXdr,address,passphrase,result.signerAddress);
+}
+
+/** Ask every module whether its wallet is installed. Never throws: an unanswered check just means no detection hint. */
+export async function detectWallets():Promise<KitWallet[]|null>{
+  if(!kit)return null;
+  try{return (await kit.refreshSupportedWallets()).map(w=>({id:w.id,isAvailable:w.isAvailable,icon:w.icon,url:w.url}));}catch{return [];}
 }

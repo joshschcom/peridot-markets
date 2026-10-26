@@ -3,6 +3,7 @@
   "status": "Awaiting Lead A deployment manifest",
   "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE",
   "vault_kinds": {
+    "zenex": "df801d08c54b423b29c524e317719a16c7c8285f07e14ef49624e538396295fb",
     "xoxno": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342"
   }
 }

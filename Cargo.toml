@@ -24,6 +24,8 @@ members = [
   "contracts/blend-vault-adapter",
   "contracts/xoxno-vault",
   "contracts/mocks/mock-xoxno-lending",
+  "contracts/zenex-vault",
+  "contracts/mocks/mock-zenex",
   "contracts/margin-factory",
   "contracts/launchpad-token",
   "contracts/launchpad-curve",
