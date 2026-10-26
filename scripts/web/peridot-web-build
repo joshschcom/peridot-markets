@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Installed at /usr/local/bin/peridot-web-build. Run as root. Builds /opt/peridot-web/app into a fresh
+# release dist dir per target, points the env file at it, restarts the unit, removes the old dist dir.
+#   peridot-web-build [mainnet] [testnet]     (default: both)
+set -euo pipefail
+APP=/opt/peridot-web/app
+. /etc/peridot-web/hosts.env
+if [ -n "${TESTNET_HOST:-}" ]; then TESTNET_URL="https://$TESTNET_HOST"; else TESTNET_URL="http://testnet.${IP}.sslip.io"; fi
+TARGETS=("$@"); [ ${#TARGETS[@]} -gt 0 ] || TARGETS=(mainnet testnet)
+cd "$APP"
+if [ ! -d node_modules ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
+  runuser -u web -- npm ci --no-audit --no-fund
+fi
+for t in "${TARGETS[@]}"; do
+  REL="$(date +%s)"; DIST=".next-$t-$REL"
+  echo "== building $t into $DIST"
+  runuser -u web -- env NODE_OPTIONS=--max-old-space-size=1536 NEXT_TELEMETRY_DISABLED=1 NEXT_DIST_DIR="$DIST" \
+    NEXT_PUBLIC_NETWORK="$t" NEXT_PUBLIC_USE_MOCKS=false NEXT_PUBLIC_READ_ONLY=false \
+    NEXT_PUBLIC_MAINNET_RPC_URL=https://soroban-rpc.mainnet.stellar.gateway.fm \
+    NEXT_PUBLIC_TESTNET_RPC_URL=https://soroban-testnet.stellar.org \
+    NEXT_PUBLIC_TESTNET_APP_URL="$TESTNET_URL" npm run build
+  OLD="$(grep -s '^NEXT_DIST_DIR=' /etc/peridot-web/$t.env | cut -d= -f2 || true)"
+  printf 'NEXT_DIST_DIR=%s\nNEXT_TELEMETRY_DISABLED=1\nNODE_ENV=production\n' "$DIST" > /etc/peridot-web/$t.env
+  if [ "$t" = mainnet ]; then UNIT=peridot-web; else UNIT=peridot-web-testnet; fi
+  systemctl restart "$UNIT"
+  if [ -n "$OLD" ] && [ "$OLD" != "$DIST" ]; then rm -rf "${APP:?}/$OLD"; fi
+done
+echo "done"
