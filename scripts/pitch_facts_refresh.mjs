@@ -65,8 +65,8 @@ async function withRpc(fn) {
 // ---------- helpers ----------
 export const fmtLisbon = (iso) => {
   const d = new Date(iso);
-  const f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-  return f.format(d).replace(',', '');
+  const f = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  return f.format(d);
 };
 const stroops = (v, dec = 7) => {
   const neg = v < 0n; let a = neg ? -v : v;

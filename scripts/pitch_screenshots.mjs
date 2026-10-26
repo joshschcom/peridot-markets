@@ -64,7 +64,7 @@ async function startServer(name) {
 process.on('exit', () => children.forEach((c) => { try { c.kill('SIGTERM'); } catch {} }));
 
 const settle = async (page, ms = 3500) => { await page.waitForLoadState('networkidle').catch(() => {}); await sleep(ms); };
-const scrollTo = async (page, heading) => { const h = page.getByRole('heading', { name: heading }).first(); await h.scrollIntoViewIfNeeded().catch(() => {}); await page.evaluate(() => window.scrollBy(0, -140)); await sleep(800); };
+const scrollTo = async (page, heading, offset = 140) => { await page.evaluate(({ heading, offset }) => { const el = [...document.querySelectorAll('h1,h2,h3')].find((e) => e.textContent.trim().startsWith(heading)); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - offset); }, { heading, offset }); await sleep(900); };
 const click = async (page, name, opts = {}) => page.getByRole('button', { name, exact: true, ...opts }).first().click();
 
 // Testnet token pages (deployments/testnet.json): PDEMO still trading, PGRAD graduated 25 Oct (docs/DEMO-TESTNET.md).
@@ -83,12 +83,26 @@ const SHOTS = [
       await p.getByRole('button', { name: 'Discover and verify pool routes' }).click(); await sleep(1500);
       await click(p, 'Continue'); await click(p, 'Continue'); await settle(p, 1500);
       await p.getByRole('button', { name: 'Create demo group' }).waitFor({ timeout: 8000 }).catch(() => {});
+      await scrollTo(p, 'Transactions');
     } },
   { id: 'group', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Group 1 Meridian page: markets, yield routes, caps', run: async (p, b) => { await p.goto(b + '/groups/1'); await settle(p, 7000); } },
   { id: 'vaults', server: 'mainnet', kind: 'real mainnet registry data (read-only)', desc: 'Vault options panel (/vaults)', run: async (p, b) => { await p.goto(b + '/vaults'); await settle(p, 5000); } },
   { id: 'leverage', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Group 1 Leverage tab', run: async (p, b) => { await p.goto(b + '/groups/1'); await settle(p, 6000); await click(p, 'Leverage'); await settle(p, 2500); } },
-  { id: 'control', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Control Panel for group 1 with staged-change and history sections', run: async (p, b) => { await p.goto(b + '/groups/1/control'); await settle(p, 9000); await scrollTo(p, 'Change history'); } },
-  { id: 'control-mock', server: 'mock', kind: 'MOCK mode (demo banner, no chain)', desc: 'Control Panel in demo mode as group owner', run: async (p, b) => { await p.goto(b + '/groups/1/control'); await settle(p, 3500); await scrollTo(p, 'Change history'); } },
+  { id: 'control', server: 'mainnet', kind: 'real mainnet data (read-only, no wallet)', desc: 'Real Control Panel for group 1 (read-only without the owner wallet): staged changes, leverage sync, market list', run: async (p, b) => { await p.goto(b + '/groups/1/control'); await settle(p, 9000); } },
+  { id: 'control-guardrail', server: 'mock', kind: 'MOCK mode (demo banner, no chain); same guardrail as the on-chain CollateralFactorTooHigh error', desc: 'Control Panel rejecting a 90% collateral factor', run: async (p, b) => {
+      await p.goto(b + '/groups/1/control'); await settle(p, 3000);
+      await p.getByLabel(/Collateral factor \(%\)/).first().fill('90');
+      await p.getByRole('button', { name: 'Save risk settings' }).first().click();
+      const msg = p.getByText(/Collateral factor must be between 1% and 75%/).first(); await msg.waitFor({ timeout: 8000 });
+      await msg.evaluate((el) => el.scrollIntoView({ block: 'center' })); await sleep(800);
+    } },
+  { id: 'control-mock', server: 'mock', kind: 'MOCK mode (demo banner, no chain)', desc: 'Control Panel in demo mode: a staged collateral-factor change and the change history', run: async (p, b) => {
+      await p.goto(b + '/groups/1/control'); await settle(p, 3000);
+      await p.getByLabel(/Collateral factor \(%\)/).first().fill('60');
+      await p.getByRole('button', { name: 'Save risk settings' }).first().click();
+      await p.getByText(/Applies in \d+s/).first().waitFor({ timeout: 8000 }).catch(() => {});
+      await sleep(800); await scrollTo(p, 'Change history', 330);
+    } },
   { id: 'token-before', server: 'testnet', kind: 'real TESTNET data (read-only)', desc: 'Launched token still on its bonding curve (PDEMO), before graduation', run: async (p, b) => { await p.goto(b + '/token/' + TRADING_TOKEN); await settle(p, 7000); } },
   { id: 'token-after', server: 'testnet', kind: 'real TESTNET data (read-only)', desc: 'Graduated token (PGRAD): Aquarius pool, locked LP, own market group', run: async (p, b) => { await p.goto(b + '/token/' + GRADUATED_TOKEN); await settle(p, 7000); } },
 ];
