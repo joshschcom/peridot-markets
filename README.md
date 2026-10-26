@@ -85,7 +85,7 @@ keeper/           Group-aware keeper: interest accrual, boosted-vault refresh, m
 scripts/          Build and deploy scripts (stellar-cli), mainnet runbooks, droplet hosting, pitch tooling
 deployments/      Generated manifests with every contract ID and Wasm hash per network (source of truth)
 build/            Optimized Wasm used by deployments and by integration tests (build/test)
-docs/             Specs, architecture, mainnet and testnet evidence, handoff specs, QA results (docs/README.md)
+docs/             Specs, architecture, mainnet and testnet evidence, QA results (docs/README.md)
 openzeppelin-stellar-contracts/  Vendored OpenZeppelin Stellar contracts v0.7.1, unmodified (MIT)
 ```
 

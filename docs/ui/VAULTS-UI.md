@@ -27,7 +27,7 @@ Single source: `app/src/lib/vaults/registry.ts` (`VAULT_OPTIONS`, `isSubmittable
 
 ## Aquarius registry
 
-Order: router `get_pools([USDC, counterparty])` on chain, merged with the AMM API (CORS open), merged with the verified list from `docs/handoff/11-ADDRESSES.md`; demo data when `NEXT_PUBLIC_USE_MOCKS=true`. The page never shows an empty list: a failed or slow (15 s) source gives a warning and the verified list. TVL is about twice the USDC reserve (labelled approximate). APR is not shown (the v2 API has no APR field and computing it needs a price feed). Mainnet works without a wallet; without `NEXT_PUBLIC_MAINNET_RPC_URL` the chain source is skipped and the API plus the verified list are used.
+Order: router `get_pools([USDC, counterparty])` on chain, merged with the AMM API (CORS open), merged with the verified static list in `app/src/lib/vaults/aquarius-pools.ts`; demo data when `NEXT_PUBLIC_USE_MOCKS=true`. The page never shows an empty list: a failed or slow (15 s) source gives a warning and the verified list. TVL is about twice the USDC reserve (labelled approximate). APR is not shown (the v2 API has no APR field and computing it needs a price feed). Mainnet works without a wallet; without `NEXT_PUBLIC_MAINNET_RPC_URL` the chain source is skipped and the API plus the verified list are used.
 
 ## "Create a vault for me": which case applies
 

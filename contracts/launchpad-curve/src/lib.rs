@@ -1,4 +1,4 @@
-//! Launchpad bonding curve (docs/handoff/12-LAUNCHPAD.md), one contract per launch.
+//! Launchpad bonding curve (docs/SPECS.md, launchpad sections), one contract per launch.
 //!
 //! Constant product on virtual reserves quoted in a quote token (XLM SAC by default, any SEP-41 works):
 //! `(virtual_quote + real_quote) * (virtual_token - sold) >= k`, `k = virtual_quote * virtual_token`.

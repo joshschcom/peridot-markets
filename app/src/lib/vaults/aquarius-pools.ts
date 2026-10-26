@@ -3,7 +3,7 @@
  * Source order (see memory note "Aquarius /pools/ API is incomplete"):
  *   1. the router's on-chain `get_pools(tokens)` for USDC against a list of counterparties (authoritative),
  *   2. the Aquarius AMM HTTP API (broad, but it hides some live pools),
- *   3. a static list of pools verified in docs/handoff/11-ADDRESSES.md (so the page is never blank),
+ *   3. a static list of pools verified on chain by the Peridot team (so the page is never blank),
  *   4. demo data when the app runs with NEXT_PUBLIC_USE_MOCKS=true.
  * Everything here is pure or takes an injected reader so it is unit-testable in node. */
 
@@ -233,7 +233,7 @@ function p(net: Net, address: string, a: string, b: string, type: PoolType, feeB
   const tok = (s: string): PoolToken => ({ symbol: s, address: addressOf(net, s) || s });
   return { address, tokens: [tok(a), tok(b)], type, feeBps, tvlUsd, volumeUsd: null, source };
 }
-/** Verified on chain by the Peridot team (docs/handoff/11-ADDRESSES.md, checked 18 Sep 2026). TVL is unknown on purpose. */
+/** Verified on chain by the Peridot team (checked 18 Sep 2026). TVL is unknown on purpose. */
 export function registryPools(net: Net): AquariusPool[] {
   if (net === 'testnet') return [
     { address: 'CA6DAGOMK5D7GKBNWVCIEAYSTPJXLQUFWFKSZOMNEM6BVOTUBDCTIT5I', tokens: [{ symbol: 'USDT', address: addressOf('testnet', 'USDT') }, { symbol: 'XLM', address: addressOf('testnet', 'XLM') }], type: 'concentrated', feeBps: 30, tvlUsd: null, volumeUsd: null, source: 'registry' },

@@ -52,7 +52,7 @@ Object.defineProperty(g, 'navigator', { value: { locks, userAgent: 'peridot-qa-h
 
 export const deployFile = (n: string) => JSON.parse(readFileSync(resolve(REPO, `deployments/${n}.json`), 'utf8'));
 
-/** External testnet ids from docs/handoff/11-ADDRESSES.md + scripts/demo_testnet.sh (verified on chain by the harness). */
+/** External testnet ids from deployments/testnet.json + scripts/demo_testnet.sh (verified on chain by the harness). */
 export const TESTNET_EXTERNAL = {
   reflector_stellar: 'CAVLP5DH2GJPZMVO7IJY4CVOD5MWEFTJFVPD2YY2FQXOQHRGHK4D6HLP',
   reflector_external: 'CCYOZJCOPG34LLQQ7N24YXBM7LL62R7ONMZ3G6WZAAYPB5OYKOMJRN63',

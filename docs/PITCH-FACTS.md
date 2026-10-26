@@ -52,7 +52,7 @@ Peridot Markets is a factory that gives any Stellar token its own isolated money
 
 ## 1. Phases
 
-Only one git tag exists: `phase-1` (annotated tag object `590a2f0779c86904e98b70959b655f7c7d4076bf`, points at commit `3bf79b5ae7fe3ff8a9923214d776d955837e7ee1`, tagger time 2026-10-25 16:02:30 UTC = 16:02:30 Lisbon; pushed to origin, verified with `git ls-remote --tags origin`). Phase definitions: `docs/handoff/00-DROPOFF.md` section 1.
+Only one git tag exists: `phase-1` (annotated tag object `590a2f0779c86904e98b70959b655f7c7d4076bf`, points at commit `3bf79b5ae7fe3ff8a9923214d776d955837e7ee1`, tagger time 2026-10-25 16:02:30 UTC = 16:02:30 Lisbon; pushed to origin, verified with `git ls-remote --tags origin`). Phase definitions: the original design notes (not published) section 1.
 
 | Phase | Planned scope (00-DROPOFF.md) | Shipped to mainnet | Not shipped | Tag / commit | Mainnet deploy time (Lisbon) |
 |---|---|---|---|---|---|
@@ -222,7 +222,7 @@ Read from chain where marked "chain"; otherwise from the repo file named.
 | Blend fee-vault take rate | 10% (`FeeModeKey.value` 1000000 on 1e7 scale, `is_apr_capped: false`); fee vault admin is the deployer | chain: instance storage of `CCHILGAY...` read via RPC. Fees accrued so far: 0 |
 | DeFindex Peridot XLM vault fees | `get_fees` = [100, 5000]: 1% vault fee (100 bps), DeFindex takes 50% of that fee. Fee receiver is Peridot's prior-work key per `docs/SPECS.md` | chain: `get_fees` simulation; roles from SPECS (UNVERIFIED on chain) |
 | LP vault performance fee | NOT BUILT (no Aquarius LP vault deployed) | n/a |
-| Loss reserve cut and cap | NOT BUILT. Design only: reserve cut default 30% (`reserve_cut_bps` 3000) of harvested yield, cap 10% of principal (`reserve_cap_bps` 1000) | `docs/handoff/01-VAULT-AQUARIUS.md` line 29, design, not deployed |
+| Loss reserve cut and cap | NOT BUILT. Design only: reserve cut default 30% (`reserve_cut_bps` 3000) of harvested yield, cap 10% of principal (`reserve_cap_bps` 1000) | the original vault design notes (not published) line 29, design, not deployed |
 | Margin fees (group 1) | Open fee 0 and close fee 0 (preview at 2x returns `close_fee_bps` 0 and `open_fee_ptokens` 0); liquidation fee 0; liquidation incentive 1.08 (pair incentive 8%); max leverage 3x group maximum; max slippage 5% (50000 on 1e6); maintenance margin 5% | chain: `margin_controller.preview_open_fees_v3`, `margin_factory.get_margin` and `get_margin_status`. Core cap on open or close fee is 5% (`core/margin-controller/src/constants.rs` `MAX_BASIS_FEE_BPS` 500). Custom per-asset margin fees: not built |
 | Close factor | 50% | chain: `get_close_factor_scaled` 500000 on each group controller |
 | Collateral factors | USDC 75%, XLM 70% (groups 1 to 3) | chain, market records |

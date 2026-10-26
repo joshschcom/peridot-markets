@@ -3,7 +3,7 @@
 End-to-end logic tests of the app's own client code (`app/src/lib/peridot/*`) without a browser wallet. The harness lives in `app/qa/` and never edits app source.
 
 ## How it works
-- `app/qa/lib/bootstrap.ts` (first import of every script) selects the network through the app's env vars, polyfills `window.localStorage` and `navigator.locks`, and for testnet overlays the app's placeholder `deployments/testnet.json` with `deployments/testnet.json` plus the external ids from `docs/handoff/11-ADDRESSES.md` (in memory only). For mainnet it patches `rpc.Server.sendTransaction` to throw, so nothing can be submitted.
+- `app/qa/lib/bootstrap.ts` (first import of every script) selects the network through the app's env vars, polyfills `window.localStorage` and `navigator.locks`, and for testnet overlays the app's placeholder `deployments/testnet.json` with `deployments/testnet.json` plus the external ids from `deployments/testnet.json` (in memory only). For mainnet it patches `rpc.Server.sendTransaction` to throw, so nothing can be submitted.
 - `app/qa/lib/signer.ts`: a `Signer` that signs the prepared envelope with a Stellar SDK keypair exactly like a wallet (`signTransaction(xdr)`), records the simulated resources, and flags address-credential auth entries (the wallets sign the envelope only). `dryRunSigner` records the prepared tx then throws `dry run`.
 - `app/qa/lib/report.ts`: `step()`/`check()`/`dryStep()` record each step with tx hash, simulated and on-chain resources, fee and exact error into `app/qa/out/*.json`; `app/qa/make-report.ts` renders `docs/qa/RESULTS-*.md`.
 - Secrets: testnet keys live only in `app/qa/.secrets/` (git-ignored, mode 600). Friendbot budget is capped at 5 accounts (used: owner, user, trader2).

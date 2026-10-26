@@ -7,3 +7,6 @@ node_modules/
 .stellar/
 .soroban/
 build/*/raw/
+
+# Internal design notes kept locally, not published
+docs/handoff/

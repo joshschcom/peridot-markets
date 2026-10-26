@@ -1,4 +1,4 @@
-//! Launchpad token template (docs/handoff/12-LAUNCHPAD.md).
+//! Launchpad token template (docs/SPECS.md, launchpad sections).
 //!
 //! A fixed-supply SEP-41 token built on the OpenZeppelin fungible `Base`.
 //!

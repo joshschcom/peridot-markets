@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className={`network-banner${network.useMocks ? ' demo' : ''}`} role="note"><BannerIcon size={14} aria-hidden />{bannerText}</div>
     <header className="site-header">
       <div className="site-header-inner">
-        <Link href="/" className="wordmark" aria-label="Peridot Markets home"><img src="/logo-optimized.svg" alt="" width="26" height="30" />peridot<span>markets</span></Link>
+        <Link href="/" className="wordmark" aria-label="SuperMarkets home"><img src="/logo-optimized.svg" alt="" width="26" height="30" />Super<span>Markets</span></Link>
         <nav className="site-nav" aria-label="Main navigation">{nav}</nav>
         <div className="header-actions">
           <NetworkSwitch />

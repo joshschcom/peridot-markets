@@ -1,4 +1,4 @@
-//! Launchpad factory (docs/handoff/12-LAUNCHPAD.md): deploys one fixed-supply token and one bonding curve per
+//! Launchpad factory (docs/SPECS.md, launchpad sections): deploys one fixed-supply token and one bonding curve per
 //! launch, applies guardrails, indexes launches.
 //!
 //! Chicken and egg (the token must mint to the curve, the curve must know the token): both addresses are
