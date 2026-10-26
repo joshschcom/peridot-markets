@@ -1,6 +1,7 @@
 import { Account, Address, BASE_FEE, Contract, rpc, scValToNative, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { network } from './network';
 import { ReadScheduler, isRateLimited } from './read-scheduler';
+import { emitTx, nextTxId } from '../ui-events';
 
 export interface TxProgress {
   status: 'simulating' | 'signing' | 'submitting' | 'confirming' | 'success' | 'unknown' | 'error';
@@ -115,7 +116,9 @@ interface ContractInput {
 }
 export async function submitContract<T>(input: ContractInput): Promise<TxResult<T>> {
   if (network.readOnly) throw new Error('This preview is read-only. Transactions are not enabled.');
-  try { return await withWalletLock(input.signer.address, () => submitContractLocked<T>(input)); }
+  // UI toasts (lib/ui-events.ts): mirror every progress report to the event bus. The caller's callback and the transaction path are unchanged.
+  const txId = nextTxId(), onProgress = (progress: TxProgress) => { emitTx({ id: txId, method: input.method, contractId: input.contractId, ...progress }); input.onProgress?.(progress); };
+  try { return await withWalletLock(input.signer.address, () => submitContractLocked<T>({ ...input, onProgress })); }
   finally { invalidateContractReads(); }
 }
 async function submitContractLocked<T>(input: ContractInput): Promise<TxResult<T>> {
