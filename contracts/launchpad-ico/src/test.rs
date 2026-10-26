@@ -112,3 +112,44 @@ fn unfunded_constructor_rejected() {
     let x = Ctx::new(10_0000000, SCALE, 0);
     x.e.register(Ico, (x.token.clone(), x.creator.clone(), x.c().get_config().params));
 }
+
+#[test]
+fn failed_transfer_rolls_back_purchase_and_auth_is_required() {
+    let x = Ctx::new(10_0000000, SCALE, 0); x.time(100);
+    let empty = Address::generate(&x.e);
+    assert!(x.c().try_buy(&empty, &10_0000000).is_err());
+    assert_eq!(x.c().get_state().raised, 0);
+    assert_eq!(x.c().get_position(&empty), Position::default());
+    x.e.mock_auths(&[]);
+    assert!(x.c().try_buy(&x.a, &10_0000000).is_err());
+    assert!(x.c().try_set_paused(&admin_address(&x.e), &true).is_err());
+    assert_eq!(x.c().get_state().raised, 0);
+}
+
+#[test]
+fn pause_can_resume_and_failed_sale_upgrade_stays_locked_after_refunds() {
+    let x = Ctx::new(80_0000000, SCALE, 0); x.time(100);
+    let admin = admin_address(&x.e);
+    x.c().set_paused(&admin, &true);
+    assert_eq!(x.c().try_buy(&x.a, &10_0000000), Err(Ok(IcoError::Paused)));
+    x.c().set_paused(&admin, &false); x.c().buy(&x.a, &10_0000000);
+    x.time(700);
+    assert_eq!(x.c().try_refund(&x.b), Err(Ok(IcoError::NothingToClaim)));
+    x.e.mock_auths(&[]); assert!(x.c().try_refund(&x.a).is_err());
+    x.e.mock_all_auths(); x.c().refund(&x.a);
+    assert_eq!(x.c().try_upgrade(&admin, &BytesN::from_array(&x.e, &[0;32])), Err(Ok(IcoError::UpgradeLocked)));
+}
+
+#[test]
+fn many_rounded_purchases_conserve_tokens_and_quote() {
+    let x = Ctx::new(1, 3 * SCALE, 0); x.time(100);
+    x.e.cost_estimate().budget().reset_unlimited();
+    for _ in 0..40 { x.c().buy(&x.a, &1_0000000); x.c().buy(&x.b, &1_0000000); }
+    let s = x.c().get_state();
+    assert_eq!(s.allocated, 80 * 3_333_333);
+    assert!(s.allocated <= s.raised * SCALE / (3 * SCALE));
+    x.time(700); x.c().claim(&x.a); x.c().claim(&x.b); x.c().withdraw(&x.creator);
+    assert_eq!(x.balance(&x.token, &x.id), 0);
+    assert_eq!(x.balance(&x.token, &x.a) + x.balance(&x.token, &x.b) + x.balance(&x.token, &x.creator), 1000_0000000);
+    assert_eq!(x.balance(&x.quote, &x.a) + x.balance(&x.quote, &x.b) + x.balance(&x.quote, &x.creator), 2000_0000000);
+}

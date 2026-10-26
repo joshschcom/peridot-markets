@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real ICO smoke test, hardwired to Stellar TESTNET. No secret keys are read.
 Run `python3 scripts/demo_ico_testnet.py launch`, then `... settle` after both deadlines.
+After any submission timeout, inspect its transaction hash and registry before resuming.
 Public results and tx hashes are saved via dep.py to deployments/testnet.json.
 """
 import json
@@ -65,18 +66,23 @@ def main():
         for label in ['success', 'refund']:
             sale = dep['demo']['launchpad']['ico'][label]
             if time.time() < sale['params']['end'] + 5:
-                raise RuntimeError('Sale deadline has not passed yet')
-            phase, tx = invoke(ADMIN, sale['ico'], 'finalize')
-            assert phase == (1 if label == 'success' else 2), phase
-            record(f'demo.launchpad.ico.{label}.txs.finalize', tx)
+                print(label, 'deadline has not passed yet; run settle again after', sale['params']['end'], flush=True)
+                continue
+            if not sale['txs'].get('finalize'):
+                phase, tx = invoke(ADMIN, sale['ico'], 'finalize')
+                assert phase == (1 if label == 'success' else 2), phase
+                record(f'demo.launchpad.ico.{label}.txs.finalize', tx)
             for n, identity in enumerate(BUYERS):
                 action = 'claim' if label == 'success' else 'refund'
+                if sale['txs'].get(f'{action}_{n+1}'):
+                    continue
                 amount, tx = invoke(identity, sale['ico'], action, user=buyers[n])
                 assert int(amount) == 100000000
                 record(f'demo.launchpad.ico.{label}.txs.{action}_{n+1}', tx)
-            payout, tx = invoke(ADMIN, sale['ico'], 'withdraw', creator=creator)
-            assert list(map(int, payout)) == ([200000000, 9800000000] if label == 'success' else [0, 10000000000])
-            record(f'demo.launchpad.ico.{label}.txs.withdraw', tx)
+            if not sale['txs'].get('withdraw'):
+                payout, tx = invoke(ADMIN, sale['ico'], 'withdraw', creator=creator)
+                assert list(map(int, payout)) == ([200000000, 9800000000] if label == 'success' else [0, 10000000000])
+                record(f'demo.launchpad.ico.{label}.txs.withdraw', tx)
             balance, _ = invoke(ADMIN, dep['external']['xlm'], 'balance', id=sale['ico'])
             assert int(balance) == 0
             record(f'demo.launchpad.ico.{label}.verified_empty_quote_escrow', True)

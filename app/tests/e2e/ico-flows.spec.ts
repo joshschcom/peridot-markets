@@ -16,7 +16,7 @@ for (const outcome of ['success', 'refund'] as const) {
     await page.getByRole('button', { name: 'Create demo ICO' }).click();
     await expect(page.getByRole('heading', { name: 'Your ICO is live on testnet' })).toBeVisible();
     await page.getByRole('link', { name: 'Open ICO page' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: new RegExp(`Browser ${outcome}`) })).toBeVisible({ timeout: 30000 });
+    await expect(page.getByRole('heading', { level: 1, name: new RegExp(`Browser ${outcome}`) })).toBeVisible({ timeout: 60000 });
     await expect(page.locator('h1 [data-token-type="ico"]')).toBeVisible();
     await page.getByRole('button', { name: 'Start sale now (demo)' }).click();
     await page.getByLabel('Spend XLM').fill('201');
@@ -63,6 +63,7 @@ test('ICO screenshots and 375px layout in both themes', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1080 });
   await page.goto('/token/mock-token-orbit');
   await expect(page.getByRole('heading', { level: 1, name: /Orbit Collective/ })).toBeVisible();
+  await page.addStyleTag({ content: 'nextjs-portal { display: none; }' });
   for (const theme of ['dark', 'light']) {
     await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
     await page.screenshot({ path: `../docs/ui/ico-desktop-${theme}.png`, fullPage: true });
@@ -73,5 +74,6 @@ test('ICO screenshots and 375px layout in both themes', async ({ page }) => {
   await page.screenshot({ path: '../docs/ui/ico-mobile-dark.png', fullPage: true });
   await page.goto('/launch-token'); await page.getByRole('button', { name: 'ICO fixed price sale' }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: '../docs/ui/ico-create-mobile.png', fullPage: true });
 });

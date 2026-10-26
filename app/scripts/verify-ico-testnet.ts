@@ -2,11 +2,12 @@
  * Run: NEXT_PUBLIC_NETWORK=testnet NEXT_PUBLIC_USE_MOCKS=false npx tsx scripts/verify-ico-testnet.ts
  */
 import assert from 'node:assert/strict';
-import { launchpadMode } from '../src/lib/launchpad/config';
+import { LAUNCHPAD_TESTNET, launchpadMode } from '../src/lib/launchpad/config';
 import { getIco, getIcoDetails, listIcos } from '../src/lib/launchpad/ico-client';
 
 async function main() {
   assert.equal(launchpadMode(), 'live', 'Use testnet with mocks disabled');
+  assert.equal(await getIco(LAUNCHPAD_TESTNET.demo.first.token), null, 'Curve tokens must keep their existing page');
   const list = await listIcos();
   assert.ok(list.length >= 2);
   for (const info of list) {
