@@ -12,7 +12,7 @@ import { GradStep, PRESETS, Phase, type CurveActivity, type CurveConfig, type Cu
 import { CurveChart } from './CurveChart';
 import { GraduationPanel } from './GraduationPanel';
 import { LpAddress, LpTxLink } from './LpAddress';
-import { LaunchpadBadges, MainnetNotice, PhaseBadge, RiskNotice, TokenIcon, TxStatus, fmtIso } from './LaunchpadFrame';
+import { LaunchpadBadges, MainnetNotice, PhaseBadge, RiskNotice, TokenIcon, TxStatus, TypeBadge, fmtIso } from './LaunchpadFrame';
 import { TradePanel } from './TradePanel';
 
 const readable = (e: unknown) => e instanceof Error ? e.message : String(e);
@@ -105,7 +105,7 @@ export default function TokenPage({ address }: { address: string }) {
     <header className="page-heading">
       <div style={{ minWidth: 0 }}>
         <p className="eyebrow"><Link href="/tokens" className="row" style={{ gap: 6 }}><ArrowLeft size={12} aria-hidden />Launchpad token #{launch.id}</Link></p>
-        <h1 className="lp-title"><TokenIcon symbol={launch.symbol} uri={meta?.metadataUri} large />{launch.name} <Badge>{launch.symbol}</Badge> <PhaseBadge phase={state.phase} /> <LaunchpadBadges /></h1>
+        <h1 className="lp-title"><TokenIcon symbol={launch.symbol} uri={meta?.metadataUri} large />{launch.name} <Badge>{launch.symbol}</Badge> <TypeBadge type="curve" /> <PhaseBadge phase={state.phase} /> <LaunchpadBadges /></h1>
         <div className="lp-meta">
           <span>Token <LpAddress value={launch.token} label="token address" /></span>
           <span>Curve <LpAddress value={launch.curve} label="curve address" /></span>

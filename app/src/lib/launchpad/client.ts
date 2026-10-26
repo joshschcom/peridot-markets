@@ -12,9 +12,9 @@ import { readWalletTokenBalance } from '@/lib/peridot/group-client';
 import { LAUNCHPAD_TESTNET, TESTNET_XLM, launchpadMode } from './config';
 import { describeLaunchpadError, type ContractRole } from './errors';
 import { fetchCurveActivity, readTestnet, testnetRpc } from './testnet-rpc';
-import { MOCK_AQUA, MOCK_AQUA_ISSUER, MOCK_GRADUATION_FEE, MOCK_XLM_TOKEN, findMockLaunch, mockActivity, mockBuy, mockClaimGroup, mockCurveInfo, mockFactoryConfig, mockGraduate, mockLaunchCurve, mockPreset, mockQuoteBuy, mockQuoteSell, mockSell, mutateLaunchpadMock, readLaunchpadMock } from './mock';
-import { creatorCap } from './math';
-import type { BuyQuote, CurveActivity, CurveConfig, CurveInfo, CurveParams, FactoryConfig, GradStep, Graduation, LaunchInfo, Preset, SellQuote } from './types';
+import { findMockPlain, mockCreatePlainToken, MOCK_AQUA, MOCK_AQUA_ISSUER, MOCK_GRADUATION_FEE, MOCK_XLM_TOKEN, findMockLaunch, mockActivity, mockBuy, mockClaimGroup, mockCurveInfo, mockFactoryConfig, mockGraduate, mockLaunchCurve, mockPreset, mockQuoteBuy, mockQuoteSell, mockSell, mutateLaunchpadMock, readLaunchpadMock } from './mock';
+import { creatorCap, parsePlainSupply } from './math';
+import type { BuyQuote, CurveActivity, CurveConfig, CurveInfo, CurveParams, FactoryConfig, GradStep, Graduation, LaunchInfo, PlainTokenInfo, Preset, SellQuote } from './types';
 
 export type { Signer, TxProgress };
 export const FACTORY = LAUNCHPAD_TESTNET.launchpad_factory;
@@ -42,6 +42,22 @@ export async function listLaunches(): Promise<LaunchInfo[]> {
   const pages: Promise<LaunchInfo[]>[] = [];
   for (let start = 0; start < count; start += 50) pages.push(read<LaunchInfo[]>(FACTORY, 'list_launches', [scU32(start), scU32(50)]));
   return (await Promise.all(pages)).flat();
+}
+/** Simple (no curve) tokens, newest last. Factories upgraded before the simple-token path return an empty list. */
+export async function listPlainTokens(): Promise<PlainTokenInfo[]> {
+  if (launchpadMode() === 'mock') return [...(readLaunchpadMock().plainTokens ?? [])];
+  try {
+    const count = await read<number>(FACTORY, 'plain_token_count');
+    const pages: Promise<PlainTokenInfo[]>[] = [];
+    for (let start = 0; start < count; start += 50) pages.push(read<PlainTokenInfo[]>(FACTORY, 'list_plain_tokens', [scU32(start), scU32(50)]));
+    return (await Promise.all(pages)).flat();
+  } catch { return []; }
+}
+/** The simple-token record for a token address, or null when the address is not a simple token. */
+export async function getPlainToken(address: string): Promise<PlainTokenInfo | null> {
+  if (launchpadMode() === 'mock') return findMockPlain(readLaunchpadMock(), address);
+  if (!StrKey.isValidContract(address)) return null;
+  try { return await read<PlainTokenInfo>(FACTORY, 'get_plain_token', [scAddress(address)]); } catch { return null; }
 }
 /** Looks a launch up by its token address, or by its curve address through the curve's own config. */
 export async function resolveLaunch(address: string): Promise<LaunchInfo> {
@@ -104,6 +120,8 @@ export async function getTokenBalance(token: string, owner: string): Promise<Tok
     const state = readLaunchpadMock();
     if (token === MOCK_XLM_TOKEN) return { balance: state.xlm[owner] ?? 0n, needsTrustline: false };
     if (token === MOCK_AQUA) return { balance: state.aqua[owner] ?? 0n, needsTrustline: false };
+    const plain = state.plainHoldings?.[token];
+    if (plain) return { balance: plain[owner] ?? 0n, needsTrustline: false };
     return { balance: findMockLaunch(state, token).holdings[owner] ?? 0n, needsTrustline: false };
   }
   return readWalletTokenBalance(token, owner, (contract, method, args) => read(contract, method, args));
@@ -153,6 +171,22 @@ export async function launchCurve(signer: Signer, input: LaunchInput, onProgress
     // The curve of a new launch has no address before the call: an unknown innermost frame is that curve (creator buy).
     rethrow(error, {}, 'factory', 'curve');
   }
+}
+export interface PlainTokenInput { name: string; symbol: string; /** Whole tokens; 7 decimals are fixed by the token template. */ supply: string; metadataUri: string }
+/** Simple token: one transaction, the whole fixed supply is minted to the signer. No curve, no fee beyond network fees. */
+export async function createPlainToken(signer: Signer, input: PlainTokenInput, onProgress?: (p: TxProgress) => void): Promise<{ token: string; hash: string }> {
+  assertSigning();
+  const supply = parsePlainSupply(input.supply);
+  if (supply === null) throw new Error('Supply must be a whole number between 1 and 1,000,000,000,000.');
+  if (launchpadMode() === 'mock') {
+    const result = mutateLaunchpadMock(state => mockCreatePlainToken(state, signer.address, input.name, input.symbol, supply));
+    demoDone(onProgress, result.hash);
+    return result;
+  }
+  try {
+    const result = await submitContract<string>({ contractId: FACTORY, method: 'create_plain_token', args: [scAddress(signer.address), scString(input.name), scString(input.symbol), scI128(supply), scString(input.metadataUri)], signer, onProgress });
+    return { token: result.value, hash: result.hash };
+  } catch (error) { rethrow(error, {}, 'factory', 'token'); }
 }
 export async function buyTokens(signer: Signer, launch: Pick<LaunchInfo, 'curve' | 'token'>, quoteIn: bigint, minTokensOut: bigint, onProgress?: (p: TxProgress) => void): Promise<{ tokensOut: bigint; hash: string }> {
   assertSigning();
