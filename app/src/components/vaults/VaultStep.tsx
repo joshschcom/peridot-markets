@@ -71,8 +71,9 @@ export default function VaultStep({ id, value, onChange, disabled }: VaultStepPr
     const address = o.id === 'defindex' ? defindex?.vault ?? '' : o.id === 'blend' ? blendVault : '';
     onChange({ ...value, route: o.factoryRoute ?? 'None', routeAddress: address });
   };
-  // The DeFindex default follows the verified token; the draft is updated only when it differs.
-  useEffect(() => { if (venue === 'defindex') { const want = defindex?.vault ?? ''; if (value.routeAddress !== want) onChange({ ...value, routeAddress: want }); } }, [venue, defindex?.vault]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The DeFindex default follows the verified token; the draft is updated only when it differs. A token without a
+  // default vault falls back to Keep in Peridot so the step never shows a locked card as selected.
+  useEffect(() => { if (venue === 'defindex') { if (!defindex && value.token) { setVenue('idle'); onChange({ ...value, route: 'None', routeAddress: '' }); return; } const want = defindex?.vault ?? ''; if (value.routeAddress !== want) onChange({ ...value, routeAddress: want }); } }, [venue, defindex?.vault, value.token]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (venue === 'blend' && blendVault && value.routeAddress !== blendVault) onChange({ ...value, routeAddress: blendVault }); }, [venue, blendVault]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Factory allow-list for the chosen vault.
