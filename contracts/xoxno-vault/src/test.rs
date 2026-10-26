@@ -249,3 +249,34 @@ fn slippage_and_overdraw_rejected() {
     let r = c.vault.try_withdraw(&(5 * E7), &vec![&c.env, 6 * E7], &c.market);
     assert_eq!(r.err().unwrap().unwrap(), Error::SlippageExceeded);
 }
+
+#[test]
+fn get_assets_matches_check_defindex_shape() {
+    let c = setup();
+    let a = c.vault.get_assets();
+    assert_eq!(a.len(), 1);
+    let set = a.get(0).unwrap();
+    assert_eq!(set.address, c.token.address);
+    assert_eq!(set.strategies.len(), 1);
+    assert!(!set.strategies.get(0).unwrap().paused);
+    c.vault.pause(&c.owner, &true);
+    assert!(c.vault.get_assets().get(0).unwrap().strategies.get(0).unwrap().paused);
+    assert_eq!(c.vault.get_asset_amounts_per_shares(&0).len(), 1);
+}
+
+#[test]
+fn bind_market_is_one_time_owner_only_and_needs_an_empty_vault() {
+    let c = setup();
+    let m2 = Address::generate(&c.env);
+    let stranger = Address::generate(&c.env);
+    assert_eq!(c.vault.try_bind_market(&stranger, &m2).err().unwrap().unwrap(), Error::NotOwner);
+    dep(&c, 5 * E7);
+    assert_eq!(c.vault.try_bind_market(&c.owner, &m2).err().unwrap().unwrap(), Error::HasShares);
+    c.vault.withdraw(&(5 * E7), &vec![&c.env, 0], &c.market);
+    c.vault.bind_market(&c.owner, &m2);
+    assert_eq!(c.vault.market(), m2);
+    assert_eq!(c.vault.try_bind_market(&c.owner, &c.market).err().unwrap().unwrap(), Error::AlreadyBound);
+    // the old depositor is locked out
+    let r = c.vault.try_deposit(&vec![&c.env, E7], &vec![&c.env, 0], &c.market, &true);
+    assert_eq!(r.err().unwrap().unwrap(), Error::NotDepositor);
+}

@@ -24,7 +24,7 @@ use peridot_interfaces::VaultState;
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
     contract, contractclient, contracterror, contractevent, contractimpl, contracttype, symbol_short,
-    vec, Address, BytesN, Env, IntoVal, Symbol, Vec, U256,
+    vec, Address, BytesN, Env, IntoVal, String, Symbol, Vec, U256,
 };
 
 #[cfg(test)]
@@ -89,6 +89,9 @@ pub enum Error {
     CapExceeded = 18,
     BelowMinDeposit = 19,
     NotOwner = 20,
+    /// `bind_market` is one-time and only while the vault holds no shares.
+    AlreadyBound = 21,
+    HasShares = 22,
 }
 
 /// XOXNO market key (mirrors the controller spec).
@@ -139,6 +142,21 @@ pub trait XoxnoApi {
     fn get_spoke_asset(env: Env, spoke_id: u32, hub_asset: HubAssetKey) -> SpokeAssetConfig;
 }
 
+/// DeFindex-shaped views read by `market-factory.check_defindex` (field names and order must match).
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Strategy {
+    pub address: Address,
+    pub name: String,
+    pub paused: bool,
+}
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AssetStrategySet {
+    pub address: Address,
+    pub strategies: Vec<Strategy>,
+}
+
 /// Read-only view of the customizable parameters.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -172,6 +190,7 @@ enum DataKey {
     MinDeposit,
     FeeBps,
     Paused,
+    Bound,
     TotalShares,
     Principal,
     /// XOXNO account id; absent until the first deposit and after the account closes.
@@ -215,6 +234,10 @@ pub struct FeeEvent {
 pub struct HarvestEvent {
     pub fee_value: i128,
     pub fee_shares: i128,
+}
+#[contractevent(topics = ["bound"])]
+pub struct BoundEvent {
+    pub market: Address,
 }
 #[contractevent(topics = ["upgraded"])]
 pub struct UpgradedEvent {
@@ -702,6 +725,42 @@ impl XoxnoVault {
         env.storage().instance().set(&DataKey::FeeBps, &fee_bps);
         FeeEvent { fee_bps }.publish(&env);
         Ok(())
+    }
+
+    /// One-time, owner only, only while the vault holds no shares: makes `market` (a Peridot receipt-vault)
+    /// the only depositor, so the vault can serve as that market's yield route. Peridot's market factory
+    /// additionally requires the admin to allowlist this vault (`set_yield_vault_allowed`).
+    pub fn bind_market(env: Env, owner: Address, market: Address) -> Result<(), Error> {
+        require_owner(&env, &owner)?;
+        if env.storage().instance().get(&DataKey::Bound).unwrap_or(false) {
+            return Err(Error::AlreadyBound);
+        }
+        if total_shares(&env) != 0 {
+            return Err(Error::HasShares);
+        }
+        bump_instance(&env);
+        env.storage().instance().set(&DataKey::Depositor, &market);
+        env.storage().instance().set(&DataKey::Bound, &true);
+        BoundEvent { market }.publish(&env);
+        Ok(())
+    }
+
+    /// What `market-factory.check_defindex` reads: one asset (the underlying) with one strategy (this vault).
+    pub fn get_assets(env: Env) -> Vec<AssetStrategySet> {
+        vec![
+            &env,
+            AssetStrategySet {
+                address: addr(&env, DataKey::Underlying),
+                strategies: vec![
+                    &env,
+                    Strategy {
+                        address: env.current_contract_address(),
+                        name: String::from_str(&env, "xoxno-lending"),
+                        paused: is_paused(&env),
+                    },
+                ],
+            },
+        ]
     }
 
     /// Baked protocol admin only. Immediate, no timelock.
