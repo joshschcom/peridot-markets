@@ -24,6 +24,7 @@ enum K {
     Spacing,
     Pos(Address, i32, i32),
     Killed,
+    Impact,
 }
 
 fn sp(tick: i32) -> f64 {
@@ -62,6 +63,10 @@ impl MockClPool {
     }
     pub fn set_tick(env: Env, tick: i32) {
         env.storage().instance().set(&K::Tick, &tick);
+    }
+    /// Price impact: every swap moves the tick by this many ticks per 1e9 raw units sold (upwards when token1 is sold).
+    pub fn set_impact(env: Env, ticks_per_1e9: i32) {
+        env.storage().instance().set(&K::Impact, &ticks_per_1e9);
     }
     pub fn set_killed(env: Env, k: bool) {
         env.storage().instance().set(&K::Killed, &k);
@@ -142,6 +147,12 @@ impl MockClPool {
         let me = env.current_contract_address();
         TokenClient::new(&env, &toks.get(in_idx).unwrap()).transfer(&user, &me, &(amount as i128));
         TokenClient::new(&env, &toks.get(out_idx).unwrap()).transfer(&me, &user, &(out as i128));
+        let impact: i32 = env.storage().instance().get(&K::Impact).unwrap_or(0);
+        if impact != 0 {
+            let tick: i32 = env.storage().instance().get(&K::Tick).unwrap();
+            let d = (amount as f64 / 1e9 * impact as f64) as i32;
+            env.storage().instance().set(&K::Tick, &(if in_idx == 1 { tick + d } else { tick - d }));
+        }
         out
     }
     pub fn get_all_position_fees(env: Env, _owner: Address) -> Vec<u128> {
@@ -211,6 +222,16 @@ fn setup<'a>(underlying_is_t0: bool, rungs: u32) -> Ctx<'a> {
     Ctx { env, vault, pool, t0, t1, owner, keeper, alice }
 }
 
+/// Runs rebalance steps until nothing is left to do (the on-chain keeper does the same), returning the number of transactions.
+fn settle(c: &Ctx, who: &Address) -> u32 {
+    let mut n = 0;
+    while c.vault.needs_rebalance() && n < 20 {
+        assert!(c.vault.rebalance(who));
+        n += 1;
+    }
+    n
+}
+
 fn u_tok(c: &Ctx) -> Address {
     c.vault.underlying()
 }
@@ -243,7 +264,7 @@ fn deposit_rebalance_withdraw_round_trip_both_sides() {
         assert_eq!(shares, 1000 * E7 - crate::DEAD_SHARES);
         assert_eq!(c.vault.total_supply(), 1000 * E7);
         assert!(c.vault.needs_rebalance());
-        assert!(c.vault.rebalance(&c.keeper));
+        assert!(settle(&c, &c.keeper) >= 1);
         let rungs = c.vault.get_rungs();
         assert!(rungs.len() >= 4, "ladder built: {}", rungs.len());
         // value is conserved within the 1% slippage guard
@@ -251,11 +272,22 @@ fn deposit_rebalance_withdraw_round_trip_both_sides() {
         assert!(nav * 10_000 >= 1000 * E7 * 9_900, "nav {nav}");
         // rebalance again right away is not due
         assert_eq!(c.vault.try_rebalance(&c.keeper).unwrap_err().unwrap(), Error::NotDue);
-        // exit with everything
-        let out = c.vault.withdraw(&shares, &vec![&c.env, 0i128], &c.alice);
-        let got = out.get(0).unwrap();
-        assert!(got * 10_000 >= 1000 * E7 * 9_800, "got {got}");
-        assert_eq!(ut.balance(&c.alice), start - 1000 * E7 + got);
+        // a quarter can leave at once (idle funds plus at most two rungs)
+        let out = c.vault.withdraw(&(shares / 4), &vec![&c.env, 0i128], &c.alice);
+        assert!(out.get(0).unwrap() * 10_000 >= 250 * E7 * 9_800, "quarter {:?}", out);
+        // the whole position cannot leave through two rungs...
+        let rest = c.vault.balance(&c.alice);
+        assert_eq!(c.vault.try_withdraw(&rest, &vec![&c.env, 0i128], &c.alice).unwrap_err().unwrap(), Error::LiquidityBusy);
+        // ...so the owner winds the vault down and everything leaves atomically
+        c.vault.set_wind_down(&c.owner, &true);
+        assert_eq!(c.vault.try_deposit_underlying(&c.alice, &(1 * E7), &0).unwrap_err().unwrap(), Error::Paused);
+        assert!(settle(&c, &c.keeper) >= 1);
+        assert!(c.vault.get_rungs().is_empty());
+        assert!(!c.vault.needs_rebalance());
+        let out2 = c.vault.withdraw(&rest, &vec![&c.env, 0i128], &c.alice).get(0).unwrap();
+        let total = out.get(0).unwrap() + out2;
+        assert!(total * 10_000 >= 1000 * E7 * 9_800, "total {total}");
+        assert_eq!(ut.balance(&c.alice), start - 1000 * E7 + total);
         assert_eq!(c.vault.balance(&c.alice), 0);
     }
 }
@@ -266,14 +298,15 @@ fn second_depositor_pays_fair_price_and_partial_withdraw_is_pro_rata() {
     let bob = Address::generate(&c.env);
     StellarAssetClient::new(&c.env, &u_tok(&c)).mint(&bob, &(5_000 * E7));
     let s1 = c.vault.deposit_underlying(&c.alice, &(1000 * E7), &0);
-    c.vault.rebalance(&c.owner);
+    settle(&c, &c.owner);
     let s2 = c.vault.deposit_underlying(&bob, &(500 * E7), &0);
     // bob deposited half of alice's amount into a vault worth ~the same: shares within 2% of half
     let expected = s1 / 2;
     assert!((s2 - expected).abs() * 100 < expected * 2, "s1 {s1} s2 {s2}");
     let before = c.vault.get_asset_amounts_per_shares(&s1).get(0).unwrap();
-    let out = c.vault.withdraw(&(s1 / 2), &vec![&c.env, 0i128], &c.alice).get(0).unwrap();
-    assert!(out * 100 > before * 48 && out * 100 < before * 52, "out {out} before {before}");
+    let out = c.vault.withdraw(&(s1 / 4), &vec![&c.env, 0i128], &c.alice).get(0).unwrap();
+    let before = before / 4;
+    assert!(out * 100 > before * 96 && out * 100 < before * 104, "out {out} before {before}");
     // the remaining ladder keeps its other half
     let rungs = c.vault.get_rungs();
     assert!(rungs.iter().all(|r| r.liquidity > 0));
@@ -283,14 +316,17 @@ fn second_depositor_pays_fair_price_and_partial_withdraw_is_pro_rata() {
 fn drift_and_cooldown_gate_rebalances() {
     let c = setup(true, 5);
     c.vault.deposit_underlying(&c.alice, &(1000 * E7), &0);
-    c.vault.rebalance(&c.keeper);
+    settle(&c, &c.keeper);
     let pool = MockClPoolClient::new(&c.env, &c.pool);
     // price moves 4 spacings: past the 3-spacing trigger, but the cooldown has not elapsed
     pool.set_tick(&(17_487 + 4 * 60));
     assert_eq!(c.vault.try_rebalance(&c.keeper).unwrap_err().unwrap(), Error::NotDue);
     c.env.ledger().set_timestamp(1_000_000 + 3_601);
     assert!(c.vault.needs_rebalance());
-    assert!(c.vault.rebalance(&c.keeper));
+    // five rungs: 2 unwind transactions (3 + 2 withdrawals), then 3 funding transactions (2 + 2 + 1 deposits)
+    let steps = settle(&c, &c.keeper);
+    assert!(steps >= 4, "staged over several transactions: {steps}");
+    assert_eq!(c.vault.get_rungs().len(), 5);
     // moved: nothing to do until the next drift
     c.env.ledger().set_timestamp(1_000_000 + 8_000);
     assert!(!c.vault.needs_rebalance());
@@ -303,15 +339,15 @@ fn drift_and_cooldown_gate_rebalances() {
 fn pause_blocks_deposit_and_rebalance_but_never_exit() {
     let c = setup(false, 3);
     let shares = c.vault.deposit_underlying(&c.alice, &(1000 * E7), &0);
-    c.vault.rebalance(&c.keeper);
+    settle(&c, &c.keeper);
     c.vault.set_paused(&c.owner, &true);
     assert_eq!(c.vault.try_deposit_underlying(&c.alice, &(10 * E7), &0).unwrap_err().unwrap(), Error::Paused);
     assert_eq!(c.vault.try_rebalance(&c.keeper).unwrap_err().unwrap(), Error::Paused);
     assert!(c.vault.get_assets().get(0).unwrap().strategies.get(0).unwrap().paused);
     // in-kind exit pays both tokens without a swap
-    let (u_out, o_out) = c.vault.redeem_in_kind(&c.alice, &(shares / 2));
+    let (u_out, o_out) = c.vault.redeem_in_kind(&c.alice, &(shares / 4));
     assert!(u_out + o_out > 0);
-    let out = c.vault.withdraw(&c.vault.balance(&c.alice), &vec![&c.env, 0i128], &c.alice);
+    let out = c.vault.withdraw(&(c.vault.balance(&c.alice) / 4), &vec![&c.env, 0i128], &c.alice);
     assert!(out.get(0).unwrap() > 0);
 }
 
@@ -378,4 +414,29 @@ fn killed_deposits_leave_funds_idle_and_withdraw_still_works() {
     assert_eq!(c.vault.try_rebalance(&c.keeper).unwrap_err().unwrap(), Error::PoolUnavailable);
     let out = c.vault.withdraw(&shares, &vec![&c.env, 0i128], &c.alice);
     assert!(out.get(0).unwrap() > 99 * E7);
+}
+
+#[test]
+fn price_impact_of_the_rebalance_swap_does_not_strand_the_straddling_rung() {
+    for (u_is_t0, impact) in [(true, 2), (false, 2), (false, 6), (true, 25)] {
+        let c = setup(u_is_t0, 5);
+        MockClPoolClient::new(&c.env, &c.pool).set_impact(&impact);
+        c.vault.deposit_underlying(&c.alice, &(1000 * E7), &0);
+        settle(&c, &c.keeper);
+        assert!(c.vault.get_rungs().len() >= if impact <= 6 { 5 } else { 3 }, "rungs funded (impact {impact}): {}", c.vault.get_rungs().len());
+        let (iu, io) = c.vault.get_idle();
+        let nav = c.vault.total_value();
+        assert!(nav > 0 && (iu + io / 6) * 100 < nav * 30, "idle {iu} {io} nav {nav}");
+    }
+}
+
+#[test]
+fn sqrt_at_tick_matches_float_maths() {
+    let env = Env::default();
+    for t in [-130_000i32, -120_000, -17_000, -60, -1, 0, 1, 60, 17_487, 100_000, 130_000] {
+        let got = crate::sqrt_at_tick(&env, t).unwrap().to_u128().unwrap() as f64;
+        let want = sp(t) * 2f64.powi(96);
+        assert!(((got - want) / want).abs() < 1e-9, "tick {t}: {got} vs {want}");
+    }
+    assert!(crate::sqrt_at_tick(&env, 131_001).is_err());
 }
