@@ -63,14 +63,16 @@
   },
   "vault_factory": "CAORI4VMNA655LG3JD4B253YW74VIJ6L4ZXCSFL6R54S75GR746X2JUE",
   "vault_kinds": {
-    "xoxno": "7d3b215ba88ea097774f3dbfa541ea1ba90200a92f68bc7846947960d212115c"
+    "xoxno": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342"
   },
   "xoxno_vault": {
-    "wasm_hash": "7d3b215ba88ea097774f3dbfa541ea1ba90200a92f68bc7846947960d212115c",
+    "wasm_hash": "b00478fe9d698cb901ae3fccd6ed8fe336beb59e46f984875bbcb4a0bac84342",
     "txs": {
       "upgrade_to_final_wasm_note": "demo vault upgraded in place to the final wasm via admin upgrade(); kind re-registered",
       "final_wasm_withdraw_50pct": "4c87ca863b5d8b8a3c0db3f8b1c66469b74382b1fc3a0b7054d4a8eb44220327",
-      "final_wasm_deposit_5xlm": "675e56ed723231460ec73a7bc50172adc63755cb4429c2de2b4e697a5dc7c0f9"
+      "final_wasm_deposit_5xlm": "675e56ed723231460ec73a7bc50172adc63755cb4429c2de2b4e697a5dc7c0f9",
+      "final2_withdraw_30pct": "09fd1432cb33e6dca1efa3546f5ac8a308b102466d4a04b0f367162f04d89ecd",
+      "final2_deposit_3xlm": "86e051f33e425c92289a4c55fd8436cf65fa1c29595665a8df187c227c96fcab"
     }
   }
 }
