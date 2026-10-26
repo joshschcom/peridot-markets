@@ -35,12 +35,14 @@
     ".next-mainnet-1793012533/types/**/*.ts",
     ".next-mainnet-1793014457/types/**/*.ts",
     ".next-mainnet-1793015255/types/**/*.ts",
+    ".next-mainnet-1793015962/types/**/*.ts",
     ".next-shots/types/**/*.ts",
     ".next-testnet-1793012533/types/**/*.ts",
     ".next-testnet-1793014457/types/**/*.ts",
+    ".next-testnet-1793015255/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-testnet-1793015255/types/**/*.ts"
+    ".next-testnet-1793015962/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
