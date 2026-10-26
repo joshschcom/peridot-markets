@@ -46,12 +46,15 @@
   },
   "margin_factory": "CCTFHRHDJM4BH6O2R325L6JXYWVCUDCM2IBO3BLRCE53KDM5JR5YZ6YH",
   "xoxno_vault_prepared": {
-    "status": "prepared, not deployed",
+    "status": "wasm uploaded, vault not yet created",
     "wasm_sha256": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23",
     "wasm_bytes": 22775,
     "controller": "CAUCMIN5KSXEVZ7NMXR3LZATGD5EFIEUI5XWTFLYRO2R5OTXI22WE5JX",
     "baked_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
-    "sim_upload_xlm": 30.95,
-    "codex_review": "GO x2"
+    "codex_review": "GO x2",
+    "upload_tx": "1f902ad6f654cb5677d91b7128264b21179ca87e525cdd80d0804e2506f14423"
+  },
+  "vault_kinds": {
+    "xoxno_wasm_uploaded": "61d1443a708a10691ad6cf955584cf43cb4fd9465e4c40e927ad1673bb63bc23"
   }
 }
