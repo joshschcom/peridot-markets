@@ -7,11 +7,18 @@
     "receipt_vault": "8cc9f7231179bb60585c555b9a207fd397d7622615b87cb3289e1a10b0137de9",
     "controller": "dabe8d1cd44d9bf893b5acd799f9269ea5829761522aa31bafe08dbd4106eac5",
     "jump_rate": "4052162e583af42f61cd0e25a606180a2036ff158b505355219152ec09a1121a",
-    "price_router": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876",
+    "price_router": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5",
     "reward_distributor": "2e5790ce46581ad46de216e36ad543b8190ba12cc24b1e3fc3b3f1c10ceb4b71",
     "swap_adapter": "2640f364c3bb4ddf7b29c58a757a7c675f5f53cbb2ea35e14eb445939edb7f4f",
     "margin": "f11f34e7bfe46dae2139acfa7623a511cc9e15e725a0d923224a0b6848ad6e51",
-    "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739"
+    "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739",
+    "zenex_vault": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399",
+    "launchpad_token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
+    "launchpad_curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
+    "launchpad_factory": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+    "market_factory_v2": "baec971cc451c9bf2e810c8abfef14589ee6b9b10fcb1245aed3fedeae47dda7",
+    "price_router_ext": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5",
+    "price_router_legacy": "e04a63e0cd653c0672fbef06324dec1179b4145ccd0d4a3469d1bf94428e1876"
   },
   "demo": {
     "group_id": 1,
@@ -53,5 +60,194 @@
     "baked_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
     "sim_upload_xlm": 30.95,
     "codex_review": "GO x2"
+  },
+  "zenex": {
+    "note": "Zenex wasm uploaded; baked admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH; zenex_market CAOZCITWHWAXH5FRU4EULQ5EN2HMTCHICRNC4R5ZAOVD7XHCCQSJ42IB, zenex_vault CB2MX4WXJHOHCTDTN5DCFC7G3TLFLOYLCRCINPK7G2A3EUVW2AYVA56N",
+    "upload_tx": "259c941990dcec9a9ff9353de3bcedaa4e011b4b70e048fc71837c272adcc64d",
+    "uploader": "GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP",
+    "upload_fee_xlm": 32.39,
+    "constructor_simulation": "succeeded against real Zenex CAOZCITW.../CB2MX4WX... on 2026-10-26 (create_contract simulate, fee 0.19 XLM, nothing sent)"
+  },
+  "launchpad_log": {
+    "note": "All sent by peridot-mainnet-admin. Times are UTC; Lisbon is WET (UTC+0) on this date, so identical. fee_xlm includes Soroban rent. Plus 5 XLM creator buy paid into the curve.",
+    "txs": [
+      {
+        "step": "upload_launchpad_token",
+        "tx": "4afb03933df16a24baa258045c376f976664ace368f592748caa323f106d3f8c",
+        "at_utc": "2026-10-26T09:15:48Z",
+        "at_lisbon": "2026-10-26T09:15:48+00:00",
+        "ledger": 65144073,
+        "fee_xlm": 11.8334523
+      },
+      {
+        "step": "upload_launchpad_curve",
+        "tx": "69bf21f0e2cfe7cdba8460a7f38aa5b66ef90e9988078e8f38c3466c36d7a81a",
+        "at_utc": "2026-10-26T09:16:08Z",
+        "at_lisbon": "2026-10-26T09:16:08+00:00",
+        "ledger": 65144077,
+        "fee_xlm": 43.4719822
+      },
+      {
+        "step": "upload_launchpad_factory",
+        "tx": "3b5bb0e00b4dff298e217e45409dad1082e82eeb642a79a627f387d898d33790",
+        "at_utc": "2026-10-26T09:16:18Z",
+        "at_lisbon": "2026-10-26T09:16:18+00:00",
+        "ledger": 65144079,
+        "fee_xlm": 37.3875343
+      },
+      {
+        "step": "upload_market_factory_v2",
+        "tx": "103ebbac38906ccc595f1fd6a99d78c00a89ac3c0324011e110a7cf9de6af9fb",
+        "at_utc": "2026-10-26T09:16:28Z",
+        "at_lisbon": "2026-10-26T09:16:28+00:00",
+        "ledger": 65144081,
+        "fee_xlm": 58.6335367
+      },
+      {
+        "step": "upload_price_router_ext",
+        "tx": "90ff31061d5b4d977ac9eec3edad73fd89370319af14a625b60a76d5e92df764",
+        "at_utc": "2026-10-26T09:16:38Z",
+        "at_lisbon": "2026-10-26T09:16:38+00:00",
+        "ledger": 65144083,
+        "fee_xlm": 28.5724282
+      },
+      {
+        "step": "market_factory_upgrade",
+        "tx": "be954d8101b54e2936b1082be89752d8be8ce1b55db86ceecafd83848f9dec16",
+        "at_utc": "2026-10-26T09:17:08Z",
+        "at_lisbon": "2026-10-26T09:17:08+00:00",
+        "ledger": 65144089,
+        "fee_xlm": 0.0005354
+      },
+      {
+        "step": "launchpad_factory_deploy",
+        "tx": "ef3dfcc92c3e1618b83464cb5efa2ac021322614c11201ffb46d7818e7c7d699",
+        "at_utc": "2026-10-26T09:17:53Z",
+        "at_lisbon": "2026-10-26T09:17:53+00:00",
+        "ledger": 65144098,
+        "fee_xlm": 0.0545346
+      },
+      {
+        "step": "lp_set_wasm",
+        "tx": "86ed4ae8d685c0c74ac87e7d773271c0551b19fa67a90b96484501e9d20d6731",
+        "at_utc": "2026-10-26T09:18:23Z",
+        "at_lisbon": "2026-10-26T09:18:23+00:00",
+        "ledger": 65144104,
+        "fee_xlm": 0.0244274
+      },
+      {
+        "step": "lp_set_default_presets",
+        "tx": "6ea456f137690195d84c4ba27272f8cc6bd19556320d928c9690d41d6f8504ae",
+        "at_utc": "2026-10-26T09:18:28Z",
+        "at_lisbon": "2026-10-26T09:18:28+00:00",
+        "ledger": 65144105,
+        "fee_xlm": 0.233254
+      },
+      {
+        "step": "lp_set_preset_fast_500xlm",
+        "tx": "45fca49c16c52cc691ea50233098f480149e59e87ba6529ba22599afb7c39aa9",
+        "at_utc": "2026-10-26T09:18:38Z",
+        "at_lisbon": "2026-10-26T09:18:38+00:00",
+        "ledger": 65144107,
+        "fee_xlm": 0.0005838
+      },
+      {
+        "step": "lp_set_graduation",
+        "tx": "49510585b39e6a090d3614f3ccc91508fcc944265b8ff8a7fdb19f40accf9d43",
+        "at_utc": "2026-10-26T09:18:48Z",
+        "at_lisbon": "2026-10-26T09:18:48+00:00",
+        "ledger": 65144109,
+        "fee_xlm": 0.0277733
+      },
+      {
+        "step": "lp_set_quote_price",
+        "tx": "560343b7f5de791a2db8957ae0c4d7c6f65f5cfd9f86d7c8c82c6f364519858b",
+        "at_utc": "2026-10-26T09:18:58Z",
+        "at_lisbon": "2026-10-26T09:18:58+00:00",
+        "ledger": 65144111,
+        "fee_xlm": 0.0486566
+      },
+      {
+        "step": "mf_set_launchpad",
+        "tx": "c0019b9d1262b8c13fdc7aa5e039761617dc06546d48fe818c28766c3adff5d3",
+        "at_utc": "2026-10-26T09:19:18Z",
+        "at_lisbon": "2026-10-26T09:19:18+00:00",
+        "ledger": 65144115,
+        "fee_xlm": 0.0123587
+      },
+      {
+        "step": "mf_set_wasm_price_router_ext",
+        "tx": "bb6ed2a361d55f8c608998b72cb17172926a8556ba574f7ffd098d4403c19e79",
+        "at_utc": "2026-10-26T09:19:28Z",
+        "at_lisbon": "2026-10-26T09:19:28+00:00",
+        "ledger": 65144117,
+        "fee_xlm": 0.0006326
+      },
+      {
+        "step": "demo_launch_curve_and_creator_buy",
+        "tx": "fce3e87f87ade9af25b5eb7785f80ea2b19b28901773a0f19d61b2ef4acf4030",
+        "at_utc": "2026-10-26T09:21:03Z",
+        "at_lisbon": "2026-10-26T09:21:03+00:00",
+        "ledger": 65144136,
+        "fee_xlm": 0.5345496
+      }
+    ],
+    "market_factory_upgrade": {
+      "old_hash": "a5442caecfd0d66637b6f8bf903807f674a3fd7b148b1c06518e7de5052f4769",
+      "new_hash": "baec971cc451c9bf2e810c8abfef14589ee6b9b10fcb1245aed3fedeae47dda7",
+      "rollback": "upgrade(admin, old_hash) restores the code only"
+    },
+    "total_fees_and_rent_xlm": 180.8362397,
+    "creator_buy_xlm": 5,
+    "total_spent_xlm": 185.8362397,
+    "admin_balance_before_xlm": 247.1465637,
+    "admin_balance_after_xlm": 61.310324
+  },
+  "launchpad_factory": "CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J",
+  "launchpad_demo": {
+    "symbol": "PDEMO",
+    "name": "Peridot Demo",
+    "token": "CDKHQPYSBULW3T2FNLPKKKXVKREDYZTI37KRURBNVNEUIZ5YDT4O4DYT",
+    "curve": "CDWJL4YJ4H546FFXNXSNREW27PFQFNMBQPXDIUHTN765Z52MRDUJH43A",
+    "launch_id": 0,
+    "preset": "Fast",
+    "quote_token": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+    "graduation_target_xlm": 500,
+    "creator": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+    "creator_buy_xlm": 5,
+    "creator_tokens": "292764457038619",
+    "launch_tx": "fce3e87f87ade9af25b5eb7785f80ea2b19b28901773a0f19d61b2ef4acf4030",
+    "ledger": 65144136,
+    "at_utc": "2026-10-26T09:21:03Z",
+    "at_lisbon": "2026-10-26T09:21:03+00:00"
+  },
+  "launchpad": {
+    "factory": "CAN6YNLFZHMLHPZAMSLR2BTIM7VOS6YZEXJSZAXQEHKPO7BN4RP5NA7J",
+    "admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+    "treasury": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
+    "market_factory": "CBGW6LMUXRZ7OB6SUOZELAFJOQV74E4ME4S4ZPGD5IFY32LSMQFMCQ7S",
+    "aquarius_router": "CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK",
+    "graduation_cost_aqua": "300000 (read live with curve.graduation_cost())",
+    "wasm": {
+      "token": "aab4c9e060086d8928459dd4efe16c1ecc381b3eb9abdf55d363b9914965a550",
+      "curve": "bdde6afcccaafe445652294c3b03d382cfdc905a4fc7a25534a6daf6bb16420c",
+      "factory": "e7c070cecffa912ba791a63bc377299965635be62dd3f5e3b6dd72b62b71304d",
+      "market_factory": "baec971cc451c9bf2e810c8abfef14589ee6b9b10fcb1245aed3fedeae47dda7",
+      "price_router_ext": "14c83a903c0b5ffba61e1080aa866e580db4bf60c0150d422d9f25ee674275f5"
+    },
+    "presets_xlm": {
+      "Fast": {
+        "graduation_target_xlm": 500,
+        "note": "demo preset"
+      },
+      "Standard": {
+        "graduation_target_xlm": 85000
+      },
+      "Slow": {
+        "graduation_target_xlm": 250000
+      }
+    },
+    "paused": false,
+    "enabled_for_public": true
   }
 }
