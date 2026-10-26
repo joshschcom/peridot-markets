@@ -35,7 +35,7 @@ export function VaultOptionList({ selected, onSelect, disabled, compact, ariaLab
         <span className="vault-option-tag">{option.tagline}</span>
         {!compact && <span className="vault-option-detail">{option.detail}</span>}
         {option.status === 'coming-soon' && <span className="vault-option-note">{COMING_SOON_COPY}</span>}
-        {option.id === 'xoxno' && <span className="vault-option-note">Create one in the XOXNO form below. Testnet only, not yet selectable as a market route.</span>}
+        {option.id === 'xoxno' && <span className="vault-option-note">Pick XOXNO in Create a vault below. Testnet only, not yet selectable as a market route.</span>}
         {option.status === 'demo' && <span className="vault-option-note">Demo flow only. Nothing is deployed on chain from this app yet.</span>}
       </>;
       if (live && onSelect) {

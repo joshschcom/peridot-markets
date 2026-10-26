@@ -28,18 +28,26 @@ test('vault options and the Aquarius registry list USDC pools and create a label
   await expect(page.getByTestId('pool-row')).toHaveCount(1);
   await page.getByLabel('Search pools').fill('');
 
-  // Create a demo vault on USDC/EURC.
+  // Pick a pool, configure the ladder, create a demo vault (mock mode keeps it in the browser).
   await page.getByRole('button', { name: 'Create a vault for USDC/EURC' }).click();
-  await expect(page.getByRole('heading', { name: 'Create a vault for USDC/EURC' })).toBeVisible();
-  await expect(page.getByText('Demo flow: nothing is deployed')).toBeVisible();
-  await expect(page.getByText('Contract missing')).toHaveCount(3);
-  await page.getByLabel('Kept liquid (%)').fill('10');
-  await expect(page.getByText(/Keep at least 30% liquid/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Create a vault', exact: true })).toBeVisible();
+  await expect(page.locator('#vf-pool')).toHaveValue(/^C/);
+  await expect(page.getByTestId('ladder-preview')).toBeVisible();
+  await expect(page.getByText('Demo mode')).toBeVisible();
+
+  // Live validation: out-of-range values block submission and say why.
+  await page.locator('#vf-rungs').fill('9');
   await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
-  await page.getByLabel('Kept liquid (%)').fill('30');
+  await expect(page.getByText(/Rungs must be at most 7/).first()).toBeVisible();
+  await page.locator('#vf-rungs').fill('3');
+  await expect(page.getByRole('listitem').filter({ hasText: /^Rung 3/ })).toHaveCount(1);
+  await page.locator('#vf-shape').selectOption('2');
+  await page.locator('#vf-fee').fill('25');
+  await expect(page.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
+  await page.locator('#vf-fee').fill('10');
   await page.getByRole('button', { name: 'Create demo vault' }).click();
-  await expect(page.getByText('Demo vault saved')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId('demo-vault')).toHaveCount(1);
+  await expect(page.getByText('Demo vault saved').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('my-vault')).toHaveCount(1);
   await expect(page.getByText('Demo, not deployed')).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -106,31 +114,33 @@ test('add market: paste a custom token, see its facts and pricing, and get block
   expect(errors).toEqual([]);
 });
 
-test('create a customizable XOXNO vault: validation bounds, preview, and a labelled demo result', async ({ page }) => {
+test('create a customizable XOXNO vault: validation bounds, summary, and a labelled demo result', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto('/vaults');
-  const form = page.locator('#create-xoxno');
-  await expect(form.getByRole('heading', { name: /Create a XOXNO Lending vault/ })).toBeVisible();
-  await expect(form.getByText('Testnet, customizable')).toBeVisible();
+  const form = page.locator('#create-vault');
+  await form.locator('[data-kind="xoxno"]').click();
+  await expect(form.locator('[data-kind="xoxno"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(form.getByText('Testnet today')).toBeVisible();
 
-  // The fee is bounded at 2000 bps and the cap must cover the minimum deposit.
-  await form.getByLabel('Performance fee (bps)').fill('2500');
-  await expect(form.getByText('A whole number from 0 to 2000.')).toBeVisible();
-  await expect(form.getByRole('button', { name: 'Create demo XOXNO vault' })).toBeDisabled();
-  await form.getByLabel('Performance fee (bps)').fill('500');
+  await form.getByLabel('Asset (token contract)').fill('CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC');
+  // The fee is bounded at 20% and the cap must cover the minimum deposit.
+  await form.getByLabel('Performance fee').fill('25');
+  await expect(form.getByText(/Performance fee must be at most 20/).first()).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Create demo vault' })).toBeDisabled();
+  await form.getByLabel('Performance fee').fill('5');
   await form.getByLabel('Minimum deposit').fill('5000');
-  await expect(form.getByText('Cannot exceed the deposit cap.')).toBeVisible();
+  await expect(form.getByText('The minimum deposit cannot exceed the deposit cap.').first()).toBeVisible();
   await form.getByLabel('Minimum deposit').fill('2');
   await form.getByLabel('Deposit cap').fill('250');
-  await expect(form.getByLabel('Vault preview')).toContainText('5.00% of yield');
-  await expect(form.getByLabel('Vault preview')).toContainText('250 tokens');
-  await expect(form.getByLabel('Vault preview')).toContainText('upgrade');
-
+  await expect(form.getByText(/Deposits stop at 250 tokens/)).toBeVisible();
+  await expect(form.getByText(/You \(the owner\) take 5% of the yield/)).toBeVisible();
+  await expect(form.getByText(/Peridot admin can pause new deposits and upgrade the code/)).toBeVisible();
   await form.screenshot({ path: '../docs/ui/xoxno-create-vault.png' });
   await page.getByRole('group', { name: 'Yield venues' }).screenshot({ path: '../docs/ui/xoxno-venue-list.png' });
-  await form.getByRole('button', { name: 'Create demo XOXNO vault' }).click();
-  await expect(form.getByText('Demo vault recorded')).toBeVisible({ timeout: 30_000 });
+
+  await form.getByRole('button', { name: 'Create demo vault' }).click();
+  await expect(page.getByText('Demo vault saved').first()).toBeVisible({ timeout: 30_000 });
   await form.screenshot({ path: '../docs/ui/xoxno-create-vault-result.png' });
   expect(errors).toEqual([]);
 });

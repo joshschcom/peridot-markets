@@ -76,3 +76,25 @@ Demo mode (`NEXT_PUBLIC_USE_MOCKS=true`) adds two mock tokens: `PDEMO` (`CADQOBY
 ## Screenshots
 
 `vaults-desktop.png`, `vaults-desktop-light.png`, `vaults-mobile.png`, `vaults-add-market-custom-token.png` (demo mode; the sticky header repeats mid-page because the shots are full page).
+
+
+## Vault factory and the Aquarius ladder vault (branch `vault-factory`)
+
+### How a created vault plugs into a Peridot market: NO market-factory change needed
+
+`contracts/market-factory` already attaches any allowlisted vault that looks like a DeFindex vault (`YieldRoute::Defindex { vault }` in `add_market`, then `attach_yield`, which calls `check_defindex`). The ladder vault is built to satisfy exactly that surface:
+
+1. `get_assets() -> Vec<{ address: underlying, strategies: [{ address: vault, name, paused: false }] }>` (one asset, one unpaused strategy; `paused` is true while the vault is paused or killed).
+2. `get_asset_amounts_per_shares(shares) -> Vec<i128>` with one entry, and `get_asset_amounts_per_shares(0)` returns `[0]` (the receipt-vault probes the shape with 0).
+3. The receipt-vault surface the market calls: `balance(id)`, `total_supply()`, `deposit(amounts_desired, amounts_min, from, invest) -> Vec<i128>` (pulls exactly `token.transfer(from, vault, amount)`), `withdraw(shares, min_amounts_out, from) -> Vec<i128>`.
+4. Peridot admin must call `market-factory.set_yield_vault_allowed(admin, vault, true)` for the created vault (the factory refuses unreviewed vaults, by design). On mainnet that is `peridot-mainnet-admin`: it goes on the lead's list, one call per demo vault. The vault itself accepts deposits from any wallet, so it is also usable stand-alone without a market.
+
+A vault bound to a market (`bind_market(owner, market)`, set once) accepts deposits only from that market, which is how a market keeps strangers out of its vault. Unbound vaults are open to wallets (`deposit_underlying`).
+
+### Files (vault-factory work)
+
+- `contracts/vault-factory`: generic factory (`set_wasm(kind)`, `create_vault(owner, kind, salt, init_args)`, `list_vaults`, `vaults_of`, `get_vault`, `transfer_admin`, `upgrade`). `init_args[0]` must be the owner (enforced). The factory is not an admin of the vaults it deploys.
+- `contracts/aquarius-vault`: the ladder vault. `contracts/mocks/mock-kind-vault`: test fixture.
+- `app/src/lib/vaults/kinds/`: `types.ts` (VaultKind, FieldSpec), `schema.ts` (validation, encoding), `aquarius.ts` (the Aquarius kind), `index.ts` (`VAULT_KINDS`). **Sibling agents add a kind by creating `kinds/<id>.ts` and adding it to `VAULT_KINDS`.** The Create page, live validation, summary, preview and My vaults are driven by the schema.
+- `app/src/lib/vaults/factory-client.ts`: `createVault`, `listMyVaults`, manifest lookups (`vault_factory`, `vault_kinds.<kind>` in the app manifests `app/src/lib/peridot/deployments/<network>.json`). Demo mode keeps vaults in localStorage.
+- `app/src/components/vaults/CreateVault.tsx`, `LadderPreview.tsx` (preview renderer per `PreviewModel.type`), `MyVaults.tsx`.
