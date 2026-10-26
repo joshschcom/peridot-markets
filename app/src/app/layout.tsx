@@ -11,16 +11,16 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://markets.peridot.finance';
-const TITLE = 'Peridot Markets | Any Stellar token gets its own money market';
-const DESCRIPTION = 'Any Stellar token gets its own money market in a few transactions: lending, borrowing, leverage and rewards, with idle liquidity routed into the best yield on Stellar.';
+const TITLE = 'SuperMarkets | Everything your Stellar token needs, under one roof';
+const DESCRIPTION = 'Launch a token on Stellar, lend and borrow it, earn yield on it and trade it with leverage, from one app on an audited core. Every token gets its own isolated market.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
-  applicationName: 'Peridot Markets',
+  applicationName: 'SuperMarkets',
   icons: { icon: '/peridot.ico' },
-  openGraph: { type: 'website', siteName: 'Peridot Markets', title: TITLE, description: DESCRIPTION, url: '/' },
+  openGraph: { type: 'website', siteName: 'SuperMarkets', title: TITLE, description: DESCRIPTION, url: '/' },
   twitter: { card: 'summary', title: TITLE, description: DESCRIPTION },
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: [{ media: '(prefers-color-scheme: dark)', color: '#0b100d' }, { media: '(prefers-color-scheme: light)', color: '#f4f7f4' }] };

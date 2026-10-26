@@ -11,14 +11,14 @@ export function Hero() {
     <div className="home-wrap">
       <div className="home-hero-grid">
         <div>
-          <p className="eyebrow"><span className="live-dot" aria-hidden /> Lending and leverage on Stellar Soroban</p>
-          <h1 id="home-title">Every Stellar project gets its own <em>isolated money market</em>.</h1>
-          <p className="home-lead">Peridot Markets gives any project, even a token launched today, a lending group it owns: a guarded price feed, lending and borrowing, optional yield vaults and up to 5x leverage. If one market fails, only that group feels it.</p>
+          <p className="eyebrow"><span className="live-dot" aria-hidden /> Launch, lend, earn and leverage on Stellar</p>
+          <h1 id="home-title">Everything your Stellar token needs, <em>under one roof</em>.</h1>
+          <p className="home-lead">SuperMarkets lets any Stellar project launch a token, lend and borrow it, earn yield on it and trade it with leverage, from one app.</p>
           <div className="home-cta">
             <Link className="button large" href="/groups">Explore markets <ArrowRight size={17} aria-hidden /></Link>
             <Link className="button large ghost" href="/launch-token">Launch a token <Rocket size={16} aria-hidden /></Link>
           </div>
-          <p className="home-hero-note">Already have a token? <Link href="/launch">Launch its market</Link> in a few transactions. Mainnet beta, capped markets.</p>
+          <p className="home-hero-note">Already have a token? <Link href="/launch">Launch its market</Link> in a few transactions. Markets are isolated: if one fails, only that one feels it. Mainnet beta, capped markets.</p>
           <div className="home-facts">
             <span><ShieldCheck size={15} aria-hidden /> Audited Peridot core</span>
             <span><Coins size={15} aria-hidden /> Reflector or Aquarius pricing with guards</span>

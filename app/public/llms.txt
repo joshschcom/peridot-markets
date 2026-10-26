@@ -1,6 +1,6 @@
 # Peridot Markets
 
-> Peridot Markets is a lending, leverage and token-launch platform on Stellar (Soroban). Any project gets its own isolated lending market group with a safe price oracle, optional yield vaults and optional leverage. Tokens launched on the Aquarius-only launchpad can graduate into a real lending market. Built for HackMeridian 2026 on top of the audited Peridot lending core (timelocks set to 60 seconds for the event). Beta: the new contracts are unaudited.
+> SuperMarkets (formerly Peridot Markets) gives any Stellar token everything it needs under one roof: launch it, lend and borrow it, earn yield on it and trade it with leverage, from one app on Stellar (Soroban). Every token gets its own isolated lending market with a safe price oracle, so one market's failure never reaches another. Tokens launched on the Aquarius-only launchpad can graduate into a real lending market. Built for HackMeridian 2026 on top of the audited Peridot lending core (timelocks set to 60 seconds for the event). Beta: the new contracts are unaudited.
 
 ## Live app
 - [Mainnet app](https://markets.peridot.finance/): markets, groups, vaults, launchpad (connected to Stellar mainnet, beta).

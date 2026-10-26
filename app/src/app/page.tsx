@@ -3,8 +3,8 @@ import { Audiences, Closing, Hero, HowItWorks, Problem, Solution } from '@/compo
 import { LiveProof } from '@/components/home/LiveProof';
 
 export const metadata: Metadata = {
-  title: 'Peridot Markets | Isolated lending markets for any Stellar token',
-  description: 'Lending and leverage on Stellar Soroban. Any project gets its own isolated market group with a guarded price feed, optional yield vaults and up to 5x leverage. Launchpad tokens graduate straight into a market.',
+  title: 'SuperMarkets | Everything your Stellar token needs, under one roof',
+  description: 'Launch a token, lend and borrow it, earn yield on it and trade it with leverage on Stellar Soroban, from one app. Every token gets its own isolated market with a guarded price feed, and launchpad tokens graduate straight into one.',
 };
 
 export default function HomePage() {
