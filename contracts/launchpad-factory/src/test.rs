@@ -533,3 +533,128 @@ fn launching_needs_graduation_wiring_and_a_quote_price() {
     assert_eq!(f.get_quote_price(&quote_id), Some(xlm_price(&env, &oracle)));
     assert!(launch().is_ok());
 }
+
+// ---------------- simple (plain) tokens ----------------
+
+fn plain(c: &Ctx, creator: &Address, name: &str, symbol: &str, supply: i128) -> Address {
+    c.f.create_plain_token(
+        creator,
+        &String::from_str(&c.env, name),
+        &String::from_str(&c.env, symbol),
+        &supply,
+        &String::from_str(&c.env, ""),
+    )
+}
+
+fn plain_err(c: &Ctx, creator: &Address, name: &str, symbol: &str, supply: i128) -> FactoryError {
+    c.f.try_create_plain_token(
+        creator,
+        &String::from_str(&c.env, name),
+        &String::from_str(&c.env, symbol),
+        &supply,
+        &String::from_str(&c.env, ""),
+    )
+    .unwrap_err()
+    .unwrap()
+}
+
+#[test]
+fn plain_token_mints_whole_supply_to_creator_and_is_indexed() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    let tok = plain(&c, &creator, "Plain Coin", "PLN", 1_000_000);
+    let t = token::Client::new(&c.env, &tok);
+    assert_eq!(t.balance(&creator), 1_000_000 * X7);
+    assert_eq!(t.decimals(), 7);
+    assert_eq!(t.symbol(), String::from_str(&c.env, "PLN"));
+
+    assert_eq!(c.f.plain_token_count(), 1);
+    let info = c.f.get_plain_token(&tok);
+    assert_eq!(info.creator, creator);
+    assert_eq!(info.supply, 1_000_000 * X7);
+    assert_eq!(c.f.list_plain_tokens(&0, &10).len(), 1);
+    assert_eq!(c.f.plain_tokens_of(&creator).get(0).unwrap().token, tok);
+    // the curve registry is untouched
+    assert_eq!(c.f.launch_count(), 0);
+    assert_eq!(c.f.list_launches(&0, &10).len(), 0);
+    assert_eq!(c.f.try_get_launch(&tok).unwrap_err().unwrap(), FactoryError::LaunchNotFound);
+}
+
+#[test]
+fn plain_tokens_are_distinct_and_do_not_collide_with_curve_launches() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    let (curve_token, curve) = c.launch(&creator, "Curve Coin", "CRV", Preset::Fast);
+    let a = plain(&c, &creator, "Plain A", "PLA", 10);
+    let b = plain(&c, &creator, "Plain B", "PLB", 20);
+    let (curve_token2, _) = c.launch(&creator, "Curve Two", "CR2", Preset::Fast);
+    for (x, y) in [(&a, &b), (&a, &curve_token), (&b, &curve_token), (&a, &curve), (&curve_token2, &b)] {
+        assert_ne!(x, y);
+    }
+    assert_eq!(c.f.plain_token_count(), 2);
+    assert_eq!(c.f.launch_count(), 2);
+    let page = c.f.list_plain_tokens(&1, &10);
+    assert_eq!(page.len(), 1);
+    assert_eq!(page.get(0).unwrap().token, b);
+}
+
+#[test]
+fn plain_token_validates_inputs() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    assert_eq!(plain_err(&c, &creator, "", "PLN", 1), FactoryError::InvalidName);
+    assert_eq!(plain_err(&c, &creator, "Ok", "P", 1), FactoryError::InvalidSymbol);
+    assert_eq!(plain_err(&c, &creator, "Ok", "P-N", 1), FactoryError::InvalidSymbol);
+    assert_eq!(plain_err(&c, &creator, "Ok", "PLN", 0), FactoryError::InvalidSupply);
+    assert_eq!(plain_err(&c, &creator, "Ok", "PLN", -5), FactoryError::InvalidSupply);
+    assert_eq!(plain_err(&c, &creator, "Ok", "PLN", crate::MAX_PLAIN_SUPPLY + 1), FactoryError::InvalidSupply);
+    // the maximum is accepted
+    let tok = plain(&c, &creator, "Max", "MAX", crate::MAX_PLAIN_SUPPLY);
+    assert_eq!(token::Client::new(&c.env, &tok).balance(&creator), crate::MAX_PLAIN_SUPPLY * X7);
+    let long_uri = String::from_str(&c.env, &"x".repeat(257));
+    assert_eq!(
+        c.f.try_create_plain_token(&creator, &String::from_str(&c.env, "Ok"), &String::from_str(&c.env, "PLN"), &1, &long_uri)
+            .unwrap_err()
+            .unwrap(),
+        FactoryError::InvalidMetadataUri
+    );
+}
+
+#[test]
+fn plain_token_respects_pause_and_wasm_and_creator_cap() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    c.f.set_paused(&c.admin, &true);
+    assert_eq!(plain_err(&c, &creator, "Ok", "PLN", 1), FactoryError::Paused);
+    c.f.set_paused(&c.admin, &false);
+    for _ in 0..crate::MAX_LAUNCHES_PER_CREATOR {
+        plain(&c, &creator, "Ok", "PLN", 1);
+    }
+    assert_eq!(plain_err(&c, &creator, "Ok", "PLN", 1), FactoryError::TooManyLaunches);
+    // a factory without token wasm cannot create plain tokens
+    let env = Env::default();
+    env.mock_all_auths();
+    let f_addr = env.register(LaunchFactory, (&Address::generate(&env), &Address::generate(&env)));
+    let f = LaunchFactoryClient::new(&env, &f_addr);
+    assert_eq!(
+        f.try_create_plain_token(
+            &Address::generate(&env),
+            &String::from_str(&env, "Ok"),
+            &String::from_str(&env, "PLN"),
+            &1,
+            &String::from_str(&env, "")
+        )
+        .unwrap_err()
+        .unwrap(),
+        FactoryError::WasmNotSet
+    );
+}
+
+#[test]
+fn plain_token_requires_the_creator_auth() {
+    let c = setup();
+    let creator = Address::generate(&c.env);
+    plain(&c, &creator, "Plain Coin", "PLN", 5);
+    let auths = c.env.auths();
+    assert!(auths.iter().any(|(addr, _)| *addr == creator));
+}

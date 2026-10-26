@@ -4,7 +4,7 @@
 import { network } from '@/lib/peridot/network';
 import { MOCK_OWNER } from '@/lib/peridot/mock';
 import { creatorCap, feeOf, quoteBuy, quoteSell, reserves, soldAtTarget } from './math';
-import { GradStep, Phase, Preset, type CurveActivity, type CurveInfo, type CurveParams, type FactoryConfig, type Graduation, type HistoryEvent, type LaunchInfo, type Trade } from './types';
+import { GradStep, Phase, Preset, type PlainTokenInfo, type CurveActivity, type CurveInfo, type CurveParams, type FactoryConfig, type Graduation, type HistoryEvent, type LaunchInfo, type Trade } from './types';
 
 export const MOCK_XLM_TOKEN = 'mock-xlm';
 export const MOCK_AQUA = 'mock-aqua';
@@ -32,6 +32,9 @@ export interface MockLaunch {
 export interface MockLaunchpadState {
   version: 1;
   launches: MockLaunch[];
+  /** Simple tokens (absent in states saved before the simple-token path existed). */
+  plainTokens?: PlainTokenInfo[];
+  plainHoldings?: Record<string, Record<string, bigint>>;
   xlm: Record<string, bigint>;
   aqua: Record<string, bigint>;
   groupOwners: Record<string, string>;
@@ -218,4 +221,19 @@ export function mockLaunchCurve(state: MockLaunchpadState, creator: string, name
   launch.history.unshift({ name: 'launched', hash: h, ledger: ++state.ledger, at: now(), data: { id, creator } });
   if (creatorBuy > 0n) mockBuy(state, creator, launch, creatorBuy, minTokensOut);
   return { token: launch.info.token, curve: launch.info.curve, hash: h };
+}
+
+export function mockCreatePlainToken(state: MockLaunchpadState, creator: string, name: string, symbol: string, supplyWhole: bigint): { token: string; hash: string } {
+  const plain = (state.plainTokens ??= []);
+  if (state.launches.some(l => l.info.symbol.toLowerCase() === symbol.toLowerCase()) || plain.some(t => t.symbol.toLowerCase() === symbol.toLowerCase())) throw new Error('A demo token with this symbol already exists. Choose another symbol.');
+  if (supplyWhole < 1n || supplyWhole > 1_000_000_000_000n) throw new Error('Supply must be a whole number between 1 and 1,000,000,000,000 tokens.');
+  if (plain.filter(t => t.creator === creator).length >= 100) throw new Error('This creator has reached the limit of 100 launches.');
+  const token = `mock-plain-${symbol.toLowerCase()}`;
+  const supply = supplyWhole * X7;
+  plain.push({ id: plain.length, token, creator, name, symbol, supply, created_at: BigInt(Math.floor(Date.now() / 1000)) });
+  (state.plainHoldings ??= {})[token] = { [creator]: supply };
+  return { token, hash: hash() };
+}
+export function findMockPlain(state: MockLaunchpadState, address: string): PlainTokenInfo | null {
+  return (state.plainTokens ?? []).find(t => t.token === address) ?? null;
 }

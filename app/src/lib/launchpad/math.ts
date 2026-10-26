@@ -178,3 +178,17 @@ export const GRAD_STEPS: ReadonlyArray<{ step: GradStep; short: string; title: s
 export function stepLabel(step: GradStep | number): string {
   return GRAD_STEPS.find(s => s.step === step)?.title ?? (step === 0 ? 'Not started' : 'Unknown');
 }
+
+/** Largest simple-token supply in whole tokens (the contract's `MAX_PLAIN_SUPPLY`). */
+export const MAX_PLAIN_SUPPLY = 1_000_000_000_000n;
+/** Parses a whole-token supply typed by the user ("1,000,000" and "1_000" are accepted). Returns null when invalid. */
+export function parsePlainSupply(value: string): bigint | null {
+  const cleaned = value.trim().replace(/[,_\s]/g, '');
+  if (!/^\d+$/.test(cleaned)) return null;
+  const n = BigInt(cleaned);
+  return n >= 1n && n <= MAX_PLAIN_SUPPLY ? n : null;
+}
+export function validatePlainSupply(value: string): string | null {
+  if (!value.trim()) return 'Enter a supply.';
+  return parsePlainSupply(value) === null ? 'Supply must be a whole number between 1 and 1,000,000,000,000.' : null;
+}
