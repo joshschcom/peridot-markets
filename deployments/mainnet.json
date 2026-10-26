@@ -11,7 +11,8 @@
     "reward_distributor": "2e5790ce46581ad46de216e36ad543b8190ba12cc24b1e3fc3b3f1c10ceb4b71",
     "swap_adapter": "2640f364c3bb4ddf7b29c58a757a7c675f5f53cbb2ea35e14eb445939edb7f4f",
     "margin": "f11f34e7bfe46dae2139acfa7623a511cc9e15e725a0d923224a0b6848ad6e51",
-    "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739"
+    "blend_adapter": "4a5b6d2c5996e2a30b33456c013a91e3a64ca93784044915a989ecf3d3971739",
+    "zenex_vault": "99a3fc7e0275a209f44a50256d822ccfcad4da0d2824979ec7f08dc32abff399"
   },
   "demo": {
     "group_id": 1,
@@ -53,5 +54,12 @@
     "baked_admin": "GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH",
     "sim_upload_xlm": 30.95,
     "codex_review": "GO x2"
+  },
+  "zenex": {
+    "note": "Zenex wasm uploaded; baked admin GC3FLITV3KLO5RUJLJWXM5O5MMWVDIF5RX64Y46YZFHP3WVYQBF37CXH; zenex_market CAOZCITWHWAXH5FRU4EULQ5EN2HMTCHICRNC4R5ZAOVD7XHCCQSJ42IB, zenex_vault CB2MX4WXJHOHCTDTN5DCFC7G3TLFLOYLCRCINPK7G2A3EUVW2AYVA56N",
+    "upload_tx": "259c941990dcec9a9ff9353de3bcedaa4e011b4b70e048fc71837c272adcc64d",
+    "uploader": "GDLVO6BC6NPS2UZBN2DVP2E4G57KAEGTMV2DAMOENHVVQNQNT5YI7GWP",
+    "upload_fee_xlm": 32.39,
+    "constructor_simulation": "succeeded against real Zenex CAOZCITW.../CB2MX4WX... on 2026-10-26 (create_contract simulate, fee 0.19 XLM, nothing sent)"
   }
 }

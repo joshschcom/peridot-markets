@@ -361,6 +361,57 @@ fn bind_market_once() {
     assert_eq!(c.try_bind_market(&t.owner, &t.owner), Err(Ok(Error::AlreadyBound)));
 }
 
+// review fix: an unbound vault takes no deposits (closes the owner pre-bind donation/rounding trick)
+#[test]
+fn unbound_vault_refuses_deposits() {
+    let t = setup();
+    let v2 = t.env.register(
+        ZenexVault,
+        (t.owner.clone(), t.owner.clone(), t.token.clone(), cfg_for(&t.env, &t.zmarket, &t.zvault, &t.keeper)),
+    );
+    let c = ZenexVaultClient::new(&t.env, &v2);
+    t.tok().mint(&t.owner, &(100 * E7));
+    assert_eq!(
+        c.try_deposit(&vec![&t.env, 100 * E7], &vec![&t.env, 0i128], &t.owner, &true),
+        Err(Ok(Error::NotBound))
+    );
+}
+
+// review fix: an oversized withdrawal can be served by unwinding from Zenex on request
+#[test]
+fn unwind_serves_an_oversized_withdrawal_after_the_lock() {
+    let t = setup();
+    t.deposit(1_000 * E7);
+    t.v().sync(&t.keeper);
+    t.warp(10);
+    t.zm().mock_fill(&t.vault, &1, &false);
+    let shares = t.v().balance(&t.market);
+    assert_eq!(t.v().try_withdraw(&shares, &vec![&t.env, 0i128], &t.market), Err(Ok(Error::LiquidityShortfall)));
+    t.warp(400);
+    // buffer 300 -> want 900 (the floor is 10% so a plain sync would not act)
+    let id = t.v().unwind(&t.keeper, &(900 * E7));
+    assert_eq!(t.zm().get_vault_order(&t.vault, &id).kind, 1);
+    t.warp(3_700);
+    t.zm().mock_fill(&t.vault, &id, &false);
+    assert!(t.tok().balance(&t.vault) >= 890 * E7);
+    t.yv().withdraw(&(800 * E7), &vec![&t.env, 0i128], &t.market);
+    assert_eq!(t.v().try_unwind(&t.market, &(1 * E7)), Err(Ok(Error::NotKeeper)));
+}
+
+// review fix: a Zenex payout parked as a credit is counted and can be claimed into the buffer
+#[test]
+fn parked_zenex_credit_is_valued_and_claimable() {
+    let t = setup();
+    t.deposit(1_000 * E7);
+    let before = t.v().get_state().total_value;
+    t.tok().mint(&t.zmarket, &(50 * E7));
+    t.zm().park_credit(&t.vault, &(50 * E7));
+    assert_eq!(t.v().get_state().total_value, before + 50 * E7);
+    assert_eq!(t.v().claim_zenex_credit(&t.keeper), 50 * E7);
+    assert_eq!(t.tok().balance(&t.vault), 1_050 * E7);
+    assert_eq!(t.v().get_state().total_value, before + 50 * E7);
+}
+
 #[test]
 fn defindex_shaped_reads_never_panic() {
     let t = setup();
