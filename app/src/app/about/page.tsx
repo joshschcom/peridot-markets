@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Coins, Gift, Sprout } from 'lucide-react';
+
+export const metadata: Metadata = { title: 'How it works | Peridot Markets', description: 'How an isolated Peridot market group composes yield, prices and rewards, and which parts are audited prior work versus new hackathon contracts.' };
 
 export default function AboutPage() {
   return <div className="page">

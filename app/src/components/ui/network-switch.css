@@ -16,7 +16,7 @@
 /* Desktop shows the header pill; phones show the pill in the mobile nav row so the header never overflows at 375px. */
 @media (max-width: 760px) {
   .header-actions > .network-switch { display: none; }
-  .mobile-nav > .network-switch { display: block; margin-left: auto; position: sticky; right: 0; padding-left: 8px; background: var(--bg); }
+  .mobile-nav > .network-switch { display: block; flex: 0 0 auto; }
   .network-pill { padding: 4px 9px; }
   .network-menu { position: fixed; left: var(--gutter); right: var(--gutter); top: var(--nm-top, 100px); width: auto; max-width: none; }
 }
