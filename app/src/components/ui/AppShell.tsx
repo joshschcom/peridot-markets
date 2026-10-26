@@ -1,15 +1,23 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowUpRight, ChevronDown, Eye, FlaskConical, ShieldAlert, Wallet } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { network } from '@/lib/peridot/network';
+import { ArrowUpRight, BookOpen, ChevronDown, Eye, FileCode2, FlaskConical, GitBranch, Search, ShieldAlert, Wallet } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { buildDefaultNetwork, getDeployments, network } from '@/lib/peridot/network';
+import type { NetworkName } from '@/lib/peridot/network-select';
 import { useWallet } from '@/lib/peridot/wallet';
 import { shortAddress, walletInfo } from '@/wallet/catalog';
 import { reconcilePendingTransaction } from '@/lib/peridot/rpc';
 import { ThemeToggle } from './ThemeToggle';
 import { RecentTransactions } from './RecentTransactions';
 import { NetworkSwitch } from './NetworkSwitch';
+
+export const GITHUB_URL = 'https://github.com/joshschcom/peridot-markets';
+/** Factory contract explorer link for the active network; demo mode has no manifest and shows nothing. */
+function factoryExplorerUrl(): string | null {
+  if (network.useMocks) return null;
+  try { return `${network.explorerUrl}/contract/${getDeployments().factory}`; } catch { return null; }
+}
 
 /* Presentation-only shell. Wallet, network and recovery behaviour are the same calls as
  * components/peridot/AppShell.tsx; only the markup, badges and theme toggle differ. */
@@ -25,6 +33,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const wallet = useWallet();
   const path = usePathname();
   const [recovery, setRecovery] = useState('');
+  // The runtime network (header switch, ?network=) is only known in the browser; the first render must match the server.
+  const [netName, setNetName] = useState<NetworkName>(buildDefaultNetwork);
+  const [factoryUrl, setFactoryUrl] = useState<string | null>(null);
+  useEffect(() => { setNetName(network.name); setFactoryUrl(factoryExplorerUrl()); }, []);
   const bannerText = network.useMocks ? 'Demo data. No funds move and no wallet signatures are requested.' : network.readOnly ? 'Read-only preview. Transactions are not enabled.' : 'Beta. New contracts are unaudited. Caps apply.';
   const BannerIcon = network.useMocks ? FlaskConical : network.readOnly ? Eye : ShieldAlert;
   const nav = links.map(l => <Link key={l.href} className={l.match(path) ? 'active' : ''} href={l.href} aria-current={l.match(path) ? 'page' : undefined}>{l.label}</Link>);
@@ -47,18 +59,39 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
     </header>
-    <nav className="mobile-nav" aria-label="Main navigation (mobile)">{nav}<NetworkSwitch where="mobile-nav" /></nav>
+    <nav className="mobile-nav" aria-label="Main navigation (mobile)"><div className="mobile-nav-links">{nav}</div><NetworkSwitch where="mobile-nav" /></nav>
     {(wallet.error || wallet.networkMismatch) && <div className="wallet-alert" role="alert">{wallet.error || `Switch your wallet to ${network.name} before signing, then return to this page. If this message stays, disconnect and connect again.`}</div>}
-    <main className="site-main">{children}</main>
+    <main className="site-main" id="main-content" tabIndex={-1}>{children}</main>
     <footer className="site-footer">
       <div className="site-footer-inner">
-        <span>Built on Stellar. Composed with Reflector, DeFindex, Blend and Aquarius.</span>
-        <div>
-          <Link href="/about">Prior work and architecture <ArrowUpRight size={13} aria-hidden /></Link>
-          {wallet.address && !network.useMocks && <button onClick={() => void reconcilePendingTransaction(wallet.address!).then(s => setRecovery(`Previous transaction: ${s}. Refresh the current page before continuing.`)).catch(e => setRecovery(e.message))}>Check pending transaction</button>}
+        <div className="site-footer-cols">
+          <div className="site-footer-col">
+            <strong>SuperMarkets</strong>
+            <span>Isolated money markets by Peridot. Built on Stellar, composed with Reflector, DeFindex, Blend and Aquarius.</span>
+            <span className="site-footer-net"><span className={`live-dot${netName === 'testnet' ? ' testnet' : ''}`} aria-hidden />{network.useMocks ? 'Demo data' : netName === 'mainnet' ? 'Stellar mainnet, beta' : 'Stellar testnet'}</span>
+          </div>
+          <nav className="site-footer-col" aria-label="Product">
+            <strong>Product</strong>
+            <Link href="/groups">Explore groups</Link>
+            <Link href="/launch">Launch a market</Link>
+            <Link href="/tokens">Launchpad</Link>
+            <Link href="/vaults">Vaults</Link>
+          </nav>
+          <nav className="site-footer-col" aria-label="Documentation">
+            <strong>Learn</strong>
+            <Link href="/about"><BookOpen size={13} aria-hidden /> How it works</Link>
+            <a href={`${GITHUB_URL}/blob/main/docs/ARCHITECTURE.md`} target="_blank" rel="noreferrer"><FileCode2 size={13} aria-hidden /> Architecture <ArrowUpRight size={12} aria-hidden /></a>
+            <a href={`${GITHUB_URL}/blob/main/docs/SPECS.md`} target="_blank" rel="noreferrer"><FileCode2 size={13} aria-hidden /> Contract specs <ArrowUpRight size={12} aria-hidden /></a>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer"><GitBranch size={13} aria-hidden /> GitHub <ArrowUpRight size={12} aria-hidden /></a>
+          </nav>
+          <div className="site-footer-col">
+            <strong>On chain</strong>
+            {network.useMocks ? <span>Demo build. No contracts are called.</span> : factoryUrl ? <a href={factoryUrl} target="_blank" rel="noreferrer"><Search size={13} aria-hidden /> Factory on stellar.expert <ArrowUpRight size={12} aria-hidden /></a> : <span>Factory contract: see the group pages.</span>}
+            {wallet.address && !network.useMocks && <button onClick={() => void reconcilePendingTransaction(wallet.address!).then(s => setRecovery(`Previous transaction: ${s}. Refresh the current page before continuing.`)).catch(e => setRecovery(e.message))}>Check pending transaction</button>}
+            {recovery && <p role="status">{recovery}</p>}
+          </div>
         </div>
-        {recovery && <p role="status">{recovery}</p>}
-        <p>Beta. New contracts are unaudited. Caps apply. Core lending contracts are Peridot&apos;s audited contracts with 60 second timelocks.</p>
+        <p>Beta. New contracts are unaudited. Caps apply. Core lending contracts are Peridot&apos;s audited contracts with 60 second timelocks. Blend, DeFindex, Aquarius and Reflector are venues Peridot routes into, not products of Peridot.</p>
       </div>
     </footer>
   </div>;
