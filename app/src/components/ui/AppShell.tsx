@@ -61,8 +61,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="site-footer-inner">
         <div className="site-footer-cols">
           <div className="site-footer-col">
-            <strong>Peridot Markets</strong>
-            <span>Built on Stellar. Composed with Reflector, DeFindex, Blend and Aquarius.</span>
+            <strong>SuperMarkets</strong>
+            <span>Isolated money markets by Peridot. Built on Stellar, composed with Reflector, DeFindex, Blend and Aquarius.</span>
             <span className="site-footer-net"><span className={`live-dot${network.name === 'testnet' ? ' testnet' : ''}`} aria-hidden />{network.useMocks ? 'Demo data' : network.name === 'mainnet' ? 'Stellar mainnet, beta' : 'Stellar testnet'}</span>
           </div>
           <nav className="site-footer-col" aria-label="Product">

@@ -1,7 +1,9 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, Gift, RefreshCw, Scale, Settings2, Sprout, Wallet, X } from 'lucide-react';
+import { ArrowRight, Check, Compass, Gift, RefreshCw, Scale, Settings2, Sprout, Wallet, X } from 'lucide-react';
+import { CopyLink } from '@/components/ui/CopyLink';
+import { firstSteps, showFirstSteps } from '@/lib/ui/first-steps';
 import { getGroup, getMarketConfig } from '@/lib/peridot/factory';
 import { useWallet } from '@/lib/peridot/wallet';
 import { network } from '@/lib/peridot/network';
@@ -102,7 +104,7 @@ export default function GroupDashboard({id}:{id:string}) {
           <span className="subtle" style={{fontSize:12,display:'inline-flex',alignItems:'center',gap:6}}>Owner <Address value={group.owner} label="owner address"/></span>
         </div>
       </div>
-      <div className="page-actions"><button className="button secondary" onClick={()=>void refresh()} disabled={busy||refreshing}><RefreshCw size={14} aria-hidden/>Refresh</button>{wallet.address===group.owner&&<Link className="button secondary" href={`/groups/${group.id}/control`}><Settings2 size={14} aria-hidden/>Control Panel</Link>}</div>
+      <div className="page-actions"><CopyLink/><button className="button secondary" onClick={()=>void refresh()} disabled={busy||refreshing}><RefreshCw size={14} aria-hidden/>Refresh</button>{wallet.address===group.owner&&<Link className="button secondary" href={`/groups/${group.id}/control`}><Settings2 size={14} aria-hidden/>Control Panel</Link>}</div>
     </header>
     {network.useMocks&&<Notice tone="info" role="note">Demo mode. Balances and actions are simulated. Each market action advances one second of demo rewards.</Notice>}
     {(refreshing||loadedAddress!==wallet.address)&&<Notice tone="info" role="status">Updating balances for this wallet. Actions will unlock when current balances are ready.</Notice>}
@@ -111,6 +113,10 @@ export default function GroupDashboard({id}:{id:string}) {
     {!wallet.address&&<section className="card" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}><div className="row"><Wallet size={18} aria-hidden style={{color:'var(--accent-text)'}}/><p style={{margin:0}}>Connect your wallet to see your balances and use these markets.</p></div><button className="button" onClick={()=>void wallet.connect()} disabled={wallet.isConnecting}>Connect wallet</button></section>}
     {markets.filter(m=>m.needsTrustline).map(m=><Notice key={m.address} tone="warn" role="status">Add a {m.token.symbol} trustline with your wallet before receiving or using this asset, then refresh balances. Other markets and market entry remain available.</Notice>)}
     <Tabs ariaLabel="Group sections" value={tab} onChange={setTab} items={[{value:'markets',label:'Markets and rewards'},{value:'leverage',label:'Leverage'}]}/>
+    {tab==='markets'&&showFirstSteps({held:held.length>0})&&<section className="card first-steps" aria-labelledby="first-steps-title">
+      <div className="card-header"><div><h2 id="first-steps-title"><Compass size={16} aria-hidden/>New here? Start with these steps</h2><p>Each step is one small wallet signature. Nothing moves until you confirm it.</p></div></div>
+      <ol className="step-list first-steps-list">{firstSteps({connected:!!wallet.address,anyEntered:markets.some(m=>m.entered),held:held.length>0,hasLeverage:!!group.margin_controller,readOnly:network.readOnly}).map((s,i)=><li key={s.key} className={s.done?'done':s.current?'current':''}><span className="step-dot" aria-hidden>{s.done?<Check size={12}/>:i+1}</span><div><strong>{s.title}{s.done&&<span className="sr-only"> (done)</span>}</strong><span>{s.detail}</span>{s.current&&s.key==='connect'&&!network.readOnly&&<button className="button sm mt-2" onClick={()=>void wallet.connect()} disabled={wallet.isConnecting}>Connect wallet</button>}{s.current&&s.key!=='connect'&&markets[0]&&!active&&<button className="button secondary sm mt-2" onClick={()=>{setActive(markets[0].address);setAmount('');setUseAll(false);setAction('Supply');}}>Open {markets[0].token.symbol} market</button>}</div></li>)}</ol>
+    </section>}
     {tab==='markets'?<>
       {wallet.address&&<section className="card">
         <div className="card-header"><div><h2>Your position</h2><p>Balances in this group for the connected wallet.</p></div>{positionList.length>0&&<Badge tone="info" icon={Scale}>{positionList.length} leveraged {positionList.length===1?'position':'positions'}</Badge>}</div>
@@ -131,6 +137,14 @@ export default function GroupDashboard({id}:{id:string}) {
             <td className="actions"><button className="button secondary sm" onClick={()=>{setActive(m.address);setAmount('');setUseAll(false);}}>Manage {m.token.symbol}</button></td>
           </tr>)}</tbody></table></div>
           {rewards&&<p className="subtle mt-4" style={{fontSize:12}}>Reward APR unavailable without a reward price.</p>}
+          <details className="glossary mt-4"><summary>What these numbers mean</summary><dl>
+            <div><dt>Supply and borrow APR</dt><dd>Indicative yearly rates from this market&apos;s interest curve. They move with utilization and are not guaranteed.</dd></div>
+            <div><dt>Utilization</dt><dd>The share of supplied assets that is currently borrowed. Higher utilization raises both rates.</dd></div>
+            <div><dt>Supply and borrow caps</dt><dd>Hard limits set by the group owner. Once a cap is full, new supply or borrowing waits until room frees up.</dd></div>
+            <div><dt>Collateral factor</dt><dd>The share of your enabled supply&apos;s value you can borrow against. 70% means 100 USDC of collateral supports up to 70 USDC of debt before liquidation.</dd></div>
+            <div><dt>Liquid buffer and yield route</dt><dd>The share of deposits kept in the market for withdrawals. The rest can be routed into the owner&apos;s chosen vault and is pulled back when needed.</dd></div>
+            <div><dt>Price status</dt><dd>Whether the guarded price feed for this asset is fresh. Stale or deviating prices block risky actions until they recover.</dd></div>
+          </dl></details>
         </section>
         {selected&&<aside className="card manage-panel" aria-label={`${selected.token.symbol} market actions`}>
           <div className="card-header"><div><h2>{selected.token.symbol}</h2><p className="row" style={{gap:6}}>Market <Address value={selected.address} label="market address"/></p></div><button className="button quiet sm" onClick={()=>setActive(null)} aria-label={`Close ${selected.token.symbol} panel`}><X size={14} aria-hidden/>Close</button></div>
@@ -158,6 +172,7 @@ export default function GroupDashboard({id}:{id:string}) {
       </div>
       <section className="card">
         <div className="card-header"><div><h2>Rewards</h2><p>{rewards?`Group rewards are paid in ${rewards.token.symbol} from a funded distributor.`:'This group has no reward token configured.'}</p></div>{rewards&&<Badge tone="warn" icon={Gift}>{rewards.token.symbol}</Badge>}</div>
+        {!rewards&&!group.reward_distributor&&<p className="muted" style={{fontSize:13,margin:0}}>{wallet.address===group.owner?<>You can fund rewards in any token from the <Link className="text-link" href={`/groups/${group.id}/control`}>Control Panel</Link>. Enabling rewards locks the market list, so add every market first.</>:'The group owner can add a reward token later. Supply and borrow rates still apply without rewards.'}</p>}
         {rewards&&<div className="grid-2">
           <div className="stack">
             <div className="stat-grid"><Stat label="Accrued rewards" value={fmtAmount(rewards.accrued,rewards.token.decimals,4)} unit={rewards.token.symbol}/><Stat label="Distributor funding" value={fmtAmount(rewards.available,rewards.token.decimals,4)} unit={rewards.token.symbol}/></div>

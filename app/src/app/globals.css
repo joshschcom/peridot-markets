@@ -618,6 +618,25 @@ tr:last-child > td { border-bottom: 0; }
 .review-card { border-color: var(--accent); }
 .history code { font-size: 12px; }
 
+/* First-time checklist and glossary (group page, launch) */
+.first-steps { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 60%, var(--surface)), var(--surface) 60%); }
+.first-steps .card-header h2 { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; }
+.first-steps .card-header h2 svg { color: var(--accent-text); }
+.first-steps-list { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
+.first-steps-list li.done strong { color: var(--text-2); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+.glossary { font-size: 13px; }
+.glossary summary { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-weight: 500; padding: 4px 0; }
+.glossary summary::before { content: "+"; font-weight: 600; color: var(--accent-text); width: 14px; }
+.glossary[open] summary::before { content: "\2013"; }
+.glossary summary:hover { color: var(--text); }
+.glossary dl { margin: 10px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 24px; }
+.glossary dl > div { display: grid; gap: 2px; }
+.glossary dt { font-weight: 600; color: var(--text); }
+.glossary dd { margin: 0; color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
+.launch-checklist { padding: 14px 16px; display: grid; gap: 10px; }
+.launch-checklist h3 { margin: 0; font-size: 14px; }
+.launch-checklist .step-dot { color: var(--accent-text); border-color: var(--accent); }
+
 /* Market config editor */
 .editor { display: grid; gap: 4px; }
 .editor-step { display: grid; gap: 14px; padding: 18px 0; border-top: 1px solid var(--border); }
