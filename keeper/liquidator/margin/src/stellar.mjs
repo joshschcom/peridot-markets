@@ -158,7 +158,17 @@ export class StellarClient {
         requireSafe(typeof this.config.validateLendingCall === 'function', 'lending profitability guard is required');
         await this.config.validateLendingCall(args);
       }
-      const account = await this.horizon.loadAccount(this.config.publicKey);
+      // Horizon ingests a few seconds behind RPC. Right after our own confirmed
+      // transaction it can still report the previous sequence, so wait for it
+      // to catch up before treating a mismatch as a real change. Nothing is
+      // journaled or signed yet, so retrying here is safe.
+      let account;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        account = await this.horizon.loadAccount(this.config.publicKey);
+        if (BigInt(account.sequence) + 1n === BigInt(prepared.sequence)) break;
+        if (BigInt(account.sequence) + 1n > BigInt(prepared.sequence)) break;
+        await sleep(2_000);
+      }
       const ledger = (await this.horizon.ledgers().order("desc").limit(1).call()).records[0];
       requireSafe(BigInt(account.sequence) + 1n === BigInt(prepared.sequence), "source sequence changed");
       assertFeeBalance(this.config, account, ledger, fee);
