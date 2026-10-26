@@ -24,7 +24,7 @@ use peridot_interfaces::VaultState;
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
     contract, contractclient, contracterror, contractevent, contractimpl, contracttype, symbol_short,
-    vec, Address, BytesN, Env, IntoVal, String as SString, Symbol, Vec, U256,
+    vec, Address, BytesN, Env, IntoVal, Symbol, Vec, U256,
 };
 
 #[cfg(test)]
@@ -705,10 +705,5 @@ impl XoxnoVault {
         .publish(&env);
         env.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())
-    }
-
-    /// Human readable label used by explorers and the app.
-    pub fn name(env: Env) -> SString {
-        SString::from_str(&env, "Peridot XOXNO Vault")
     }
 }

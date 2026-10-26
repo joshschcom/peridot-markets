@@ -42,7 +42,7 @@ fn setup_with(fee: u32) -> Ctx {
     let keeper = Address::generate(&env);
     let token_id = env.register(MockToken, ());
     let token = MockTokenClient::new(&env, &token_id);
-    token.initialize(&SString::from_str(&env, "USDC"), &SString::from_str(&env, "USDC"), &7);
+    token.initialize(&soroban_sdk::String::from_str(&env, "USDC"), &soroban_sdk::String::from_str(&env, "USDC"), &7);
     let xoxno_id = env.register_at(&Address::from_str(&env, DEFAULT_CONTROLLER), MockXoxnoLending, ());
     let xoxno = MockXoxnoLendingClient::new(&env, &xoxno_id);
     let vault_id = make(&env, &owner, &market, &keeper, &token_id, 1_000_000 * E7, E7, fee).unwrap();
