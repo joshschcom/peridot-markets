@@ -97,8 +97,8 @@ export async function isPriceFeedAllowed(token:string,price:PriceConfig):Promise
  const {oracle,asset}=price.values[0];
  if(!await isOracleAllowed(oracle))return false;
  if(network.useMocks){
-  const {MOCK_USDC,MOCK_XLM,MOCK_EURC}=await import('./mock');
-  const symbols:Record<string,string>={[MOCK_USDC]:'USDC',[MOCK_XLM]:'XLM',[MOCK_EURC]:'EURC'};
+  const {MOCK_USDC,MOCK_XLM,MOCK_EURC,MOCK_DEMO_TOKEN}=await import('./mock');
+  const symbols:Record<string,string>={[MOCK_USDC]:'USDC',[MOCK_XLM]:'XLM',[MOCK_EURC]:'EURC',[MOCK_DEMO_TOKEN]:'PDEMO'};
   if(!symbols[token])return false;
   return asset.tag==='Stellar'?asset.values[0]===token:asset.tag==='Other'&&asset.values[0]===symbols[token];
  }
